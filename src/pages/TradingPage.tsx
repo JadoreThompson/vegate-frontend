@@ -1,14 +1,39 @@
-import { ArrowUp, ChevronDown, Menu, MoreHorizontal, X } from "lucide-react";
+import {
+    ArrowUp,
+    ChevronDown,
+    Lock,
+    LogOut,
+    Mail,
+    Menu,
+    MoreHorizontal,
+    Settings,
+    User,
+    X
+} from "lucide-react";
 import { useState } from "react";
 
 // Shadcn UI Components (assumed available)
 import { Button } from "@/components/ui/button";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+// --- Mock Data Generators ---
 const generateOrderBook = (
   count: number,
   startPrice: number,
@@ -67,6 +92,83 @@ const mockOpenOrders = [
     total: "27,000.00",
   },
 ];
+
+// --- COMPONENT: SETTINGS DIALOG ---
+const SettingsDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) => {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="bg-[#0E0E10] border-zinc-800 text-zinc-100 sm:max-w-[425px] w-[90%] rounded-lg">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold">Account Settings</DialogTitle>
+          <DialogDescription className="text-zinc-500">
+            Manage your account credentials and preferences.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-6 py-4">
+          {/* Change Email Section */}
+          <div className="space-y-3">
+             <div className="flex items-center gap-2 text-sm font-medium text-emerald-500">
+                <Mail className="w-4 h-4" />
+                Change Email
+             </div>
+             <div className="space-y-2">
+                <Label htmlFor="current-email" className="text-xs text-zinc-400">Current Email</Label>
+                <Input 
+                  id="current-email" 
+                  defaultValue="trader@tradepulse.com" 
+                  readOnly 
+                  className="bg-zinc-900/50 border-zinc-800 text-zinc-500 focus-visible:ring-0" 
+                />
+             </div>
+             <div className="space-y-2">
+                <Label htmlFor="new-email" className="text-xs text-zinc-400">New Email</Label>
+                <Input 
+                  id="new-email" 
+                  placeholder="Enter new email address" 
+                  className="bg-zinc-900/50 border-zinc-800 text-white focus:border-emerald-600 transition-colors placeholder:text-zinc-600" 
+                />
+             </div>
+             <div className="flex justify-end">
+                <Button size="sm" className="bg-zinc-800 hover:bg-zinc-700 text-white text-xs h-8">Update Email</Button>
+             </div>
+          </div>
+
+          <Separator className="bg-zinc-800" />
+
+          {/* Change Password Section */}
+          <div className="space-y-3">
+             <div className="flex items-center gap-2 text-sm font-medium text-emerald-500">
+                <Lock className="w-4 h-4" />
+                Change Password
+             </div>
+             <div className="space-y-2">
+                <Label htmlFor="curr-pass" className="text-xs text-zinc-400">Current Password</Label>
+                <Input 
+                  id="curr-pass" 
+                  type="password"
+                  placeholder="••••••••" 
+                  className="bg-zinc-900/50 border-zinc-800 text-white focus:border-emerald-600 transition-colors placeholder:text-zinc-600" 
+                />
+             </div>
+             <div className="space-y-2">
+                <Label htmlFor="new-pass" className="text-xs text-zinc-400">New Password</Label>
+                <Input 
+                  id="new-pass" 
+                  type="password"
+                  placeholder="Enter new password" 
+                  className="bg-zinc-900/50 border-zinc-800 text-white focus:border-emerald-600 transition-colors placeholder:text-zinc-600" 
+                />
+             </div>
+             <div className="flex justify-end">
+                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-8">Update Password</Button>
+             </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 // --- COMPONENT 1: ORDER BOOK ---
 const OrderBook = ({ mobileCompact = false }: { mobileCompact?: boolean }) => {
@@ -416,9 +518,14 @@ const OrderManagement = () => {
 // --- MAIN LAYOUT COMPONENT ---
 export default function TradingPage() {
   const [isTradeModalOpen, setIsTradeModalOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-[#0b0e11] font-sans text-zinc-100">
+      
+      {/* Settings Modal Component */}
+      <SettingsDialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
+
       {/* 1. HEADER - Mobile Optimized */}
       <header className="z-50 flex h-12 flex-shrink-0 items-center justify-between border-b border-zinc-800/60 bg-[#0E0E10] px-4">
         <div className="flex items-center gap-3">
@@ -442,6 +549,70 @@ export default function TradingPage() {
               Futures
             </a>
           </nav>
+        </div>
+
+        {/* User Actions - Popover Implementation */}
+        <div className="flex items-center gap-3">
+           <div className="hidden sm:flex items-center gap-3">
+               <Button size="sm" className="bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 text-xs font-medium h-8 rounded-sm">
+                 Connect Wallet
+               </Button>
+               
+               {/* User Menu Trigger */}
+               <Popover>
+                  <PopoverTrigger asChild>
+                    <div className="w-7 h-7 rounded-full bg-emerald-600/20 text-emerald-500 flex items-center justify-center text-xs font-bold border border-emerald-600/30 cursor-pointer hover:bg-emerald-600/30 transition-colors">
+                      TP
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-48 p-1 bg-[#0E0E10] border-zinc-800 shadow-xl">
+                    <div className="flex flex-col gap-1">
+                      <Button 
+                        variant="ghost" 
+                        className="justify-start text-xs font-medium text-zinc-300 hover:text-white hover:bg-zinc-800 h-8 px-2 w-full"
+                        onClick={() => setIsSettingsOpen(true)}
+                      >
+                         <Settings className="w-3.5 h-3.5 mr-2 text-zinc-500" />
+                         Settings
+                      </Button>
+                      <Separator className="bg-zinc-800/50 my-1" />
+                      <Button variant="ghost" className="justify-start text-xs font-medium text-rose-500 hover:text-rose-400 hover:bg-rose-950/20 h-8 px-2 w-full">
+                         <LogOut className="w-3.5 h-3.5 mr-2" />
+                         Logout
+                      </Button>
+                    </div>
+                  </PopoverContent>
+               </Popover>
+           </div>
+           
+           {/* Mobile Connect (fallback) */}
+           <div className="flex items-center gap-1 sm:hidden bg-zinc-800 px-2 py-1 rounded-sm text-xs font-medium">
+             {/* Note: Mobile usually needs a different menu structure, but putting the Popover here as well for consistency if needed, or keeping the basic wallet connect */}
+             <Popover>
+                  <PopoverTrigger asChild>
+                     <div className="flex items-center gap-1">
+                        <User className="w-3 h-3 text-zinc-400" />
+                        <span>Account</span>
+                     </div>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-48 p-1 bg-[#0E0E10] border-zinc-800 shadow-xl">
+                    <div className="flex flex-col gap-1">
+                      <Button 
+                        variant="ghost" 
+                        className="justify-start text-xs font-medium text-zinc-300 hover:text-white hover:bg-zinc-800 h-8 px-2 w-full"
+                        onClick={() => setIsSettingsOpen(true)}
+                      >
+                         <Settings className="w-3.5 h-3.5 mr-2 text-zinc-500" />
+                         Settings
+                      </Button>
+                      <Button variant="ghost" className="justify-start text-xs font-medium text-rose-500 hover:text-rose-400 hover:bg-rose-950/20 h-8 px-2 w-full">
+                         <LogOut className="w-3.5 h-3.5 mr-2" />
+                         Logout
+                      </Button>
+                    </div>
+                  </PopoverContent>
+               </Popover>
+           </div>
         </div>
       </header>
 
