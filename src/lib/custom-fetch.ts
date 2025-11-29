@@ -1,3 +1,5 @@
+import type { ApiError } from "./types/apiError";
+
 const getBody = <T>(c: Response | Request): Promise<T> => {
   const contentType = c.headers.get("content-type");
 
@@ -39,7 +41,7 @@ const getHeaders = (headers?: HeadersInit): HeadersInit => {
 
 export const customFetch = async <T>(
   url: string,
-  options: RequestInit
+  options: RequestInit,
 ): Promise<T> => {
   const requestUrl = getUrl(url);
 
@@ -53,8 +55,8 @@ export const customFetch = async <T>(
 
   const rsp = await fetch(requestUrl, requestInit);
   if (!rsp.ok) {
-    const errorText = await rsp.json();
-    throw Error(errorText.error);
+    const errorData = await rsp.json();
+    throw { status: rsp.status, ...errorData } satisfies ApiError;
   }
   const data = await getBody<T>(rsp);
 
