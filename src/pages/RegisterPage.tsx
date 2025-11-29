@@ -23,7 +23,7 @@ const RegisterPage: FC = () => {
       username: form.username,
       email: form.email,
       password: form.password,
-    }, {onSuccess: () => navigate("/trade")});
+    }, {onSuccess: () => navigate("/verify-email")});
   };
 
   return (
@@ -32,7 +32,7 @@ const RegisterPage: FC = () => {
       subtitle="Enter your details below to start trading today."
       submitLabel="Create Account"
       loading={registerMutation.isPending}
-      error={registerMutation.error?.message || null}
+      error={registerMutation.error?.error || null}
       onSubmit={handleSubmit}
       footer={
         <>

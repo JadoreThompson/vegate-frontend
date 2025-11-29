@@ -29,8 +29,9 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useCreateOrderMutation } from "@/hooks/queries/order-hooks";
+import { OrderType, Side, type SingleOrderCreate } from "@/openapi";
 import { useParams } from "react-router";
 
 const generateOrderBook = (
@@ -312,54 +313,248 @@ const MarketTrades = () => {
 };
 
 // --- COMPONENT 3: ORDER CREATION ---
+// const OrderForm = ({ mobile = false }: { mobile?: boolean }) => {
+//   const [side, setSide] = useState<Side>(Side.bid);
+//   const [orderType, setOrderType] = useState<OrderType>(OrderType.limit);
+
+//   const handleSubmit = () => {
+
+//   }
+
+//   return (
+//     <div
+//       className={`flex h-full flex-col bg-[#0E0E10] ${!mobile ? "border-l border-zinc-800/60" : "border-t border-zinc-800/60"} px-4 py-4`}
+//     >
+//       <div className="mb-5 grid grid-cols-2 gap-0 rounded-sm bg-zinc-900/50 p-1">
+//         <Button
+//           variant="ghost"
+//           size="sm"
+//           className={`h-7 w-full rounded-sm text-xs font-bold transition-all ${side === Side.bid ? "bg-emerald-600 text-white hover:bg-emerald-700 hover:text-white" : "text-zinc-400 hover:text-zinc-200"}`}
+//           onClick={() => setSide(Side.bid)}
+//         >
+//           Buy
+//         </Button>
+//         <Button
+//           variant="ghost"
+//           size="sm"
+//           className={`h-7 w-full rounded-sm text-xs font-bold transition-all ${side === Side.ask ? "bg-rose-600 text-white hover:bg-rose-700 hover:text-white" : "text-zinc-400 hover:text-zinc-200"}`}
+//           onClick={() => setSide(Side.ask)}
+//         >
+//           Sell
+//         </Button>
+//       </div>
+
+//       <div className="mb-4 flex items-center gap-4">
+//         {Object.values(OrderType).map((type) => (
+//           <span
+//             key={type}
+//             onClick={() => setOrderType(type)}
+//             className={`cursor-pointer border-b-2 pb-0.5 text-xs font-medium transition-colors ${orderType === type ? "border-zinc-100 text-zinc-100" : "border-transparent text-zinc-500 hover:text-zinc-300"}`}
+//           >
+//             {type.charAt(0).toUpperCase() + type.slice(1)}
+//           </span>
+//         ))}
+//       </div>
+
+//       <div className="space-y-4">
+//         {orderType === OrderType.stop && (
+//           <div className="animate-in slide-in-from-top-1 fade-in space-y-1.5 duration-200">
+//             <div className="flex justify-between text-[11px] text-zinc-500">
+//               <span>Trigger Price (USDT)</span>
+//             </div>
+//             <div className="relative">
+//               <Input
+//                 type="text"
+//                 placeholder="-"
+//                 className="h-9 rounded-sm border-transparent bg-zinc-900/50 pr-10 text-right font-mono text-xs transition-colors hover:border-zinc-700 focus:border-emerald-600"
+//               />
+//               <span className="absolute top-2.5 right-3 text-[10px] font-bold text-zinc-500">
+//                 USDT
+//               </span>
+//             </div>
+//           </div>
+//         )}
+
+//         <div className="space-y-1.5">
+//           <div className="flex justify-between text-[11px] text-zinc-500">
+//             <span>
+//               {orderType === OrderType.market ? "Market Price" : "Limit Price"}
+//             </span>
+//           </div>
+//           <div className="relative">
+//             <Input
+//               type="text"
+//               defaultValue={
+//                 orderType === OrderType.market ? "Best Market" : "42095.50"
+//               }
+//               disabled={orderType === OrderType.market}
+//               className={`h-9 rounded-sm border-transparent bg-zinc-900/50 pr-10 text-right font-mono text-xs transition-colors ${orderType === "market" ? "cursor-not-allowed text-zinc-500" : "text-zinc-100 hover:border-zinc-700 focus:border-emerald-600"}`}
+//             />
+//             <span className="absolute top-2.5 right-3 text-[10px] font-bold text-zinc-500">
+//               USDT
+//             </span>
+//           </div>
+//         </div>
+
+//         <div className="space-y-1.5">
+//           <div className="flex justify-between text-[11px] text-zinc-500">
+//             <span>Amount (BTC)</span>
+//           </div>
+//           <div className="relative">
+//             <Input
+//               type="text"
+//               placeholder="0.00"
+//               className="h-9 rounded-sm border-transparent bg-zinc-900/50 pr-10 text-right font-mono text-xs transition-colors hover:border-zinc-700 focus:border-emerald-600"
+//             />
+//             <span className="absolute top-2.5 right-3 text-[10px] font-bold text-zinc-500">
+//               BTC
+//             </span>
+//           </div>
+//         </div>
+
+//         <div className="pt-4">
+//           <div className="mb-2 flex justify-between text-[11px] text-zinc-400">
+//             <span>Avail:</span>
+//             <span className="font-mono text-zinc-200">14,203.44</span>
+//           </div>
+
+//           {side === Side.bid ? (
+//             <Button  type="submit" onClick={handleSubmit} className="h-9 w-full rounded-sm bg-emerald-600 text-sm font-bold hover:bg-emerald-700">
+//               Buy BTC
+//             </Button>
+//           ) : (
+//             <Button type="submit" onClick={handleSubmit} className="h-9 w-full rounded-sm bg-rose-600 text-sm font-bold hover:bg-rose-700">
+//               Sell BTC
+//             </Button>
+//           )}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
 const OrderForm = ({ mobile = false }: { mobile?: boolean }) => {
-  const [side, setSide] = useState<"buy" | "sell">("buy");
+  const [side, setSide] = useState<Side>(Side.bid);
+  const [orderType, setOrderType] = useState<OrderType>(OrderType.limit);
+
+  const [triggerPrice, setTriggerPrice] = useState<string>("");
+  const [price, setPrice] = useState<string>("42095.50");
+  const [amount, setAmount] = useState<string>("");
+
+  const createOrder = useCreateOrderMutation();
+
+  const handleSubmit = () => {
+    const body: SingleOrderCreate = {
+      instrument: "BTCUSDT",
+      side,
+      type: orderType,
+      size: Number(amount),
+      price: orderType === OrderType.market ? undefined : Number(price),
+      triggerPrice:
+        orderType === OrderType.stop ? Number(triggerPrice) : undefined,
+    };
+
+    // call the mutation
+    createOrder
+      .mutateAsync(body)
+      .then((res) => {
+        console.log("Order created:", res);
+      })
+      .catch((err) => {
+        console.error("Order creation failed:", err);
+      });
+  };
 
   return (
     <div
-      className={`flex h-full flex-col bg-[#0E0E10] ${!mobile ? "border-l border-zinc-800/60" : "border-t border-zinc-800/60"} px-4 py-4`}
+      className={`flex h-full flex-col bg-[#0E0E10] ${
+        !mobile ? "border-l border-zinc-800/60" : "border-t border-zinc-800/60"
+      } px-4 py-4`}
     >
+      {/* BUY/SELL buttons */}
       <div className="mb-5 grid grid-cols-2 gap-0 rounded-sm bg-zinc-900/50 p-1">
         <Button
           variant="ghost"
           size="sm"
-          className={`h-7 w-full rounded-sm text-xs font-bold transition-all ${side === "buy" ? "bg-emerald-600 text-white hover:bg-emerald-700 hover:text-white" : "text-zinc-400 hover:text-zinc-200"}`}
-          onClick={() => setSide("buy")}
+          className={`h-7 w-full rounded-sm text-xs font-bold transition-all ${
+            side === Side.bid
+              ? "bg-emerald-600 text-white hover:bg-emerald-700 hover:text-white"
+              : "text-zinc-400 hover:text-zinc-200"
+          }`}
+          onClick={() => setSide(Side.bid)}
         >
           Buy
         </Button>
         <Button
           variant="ghost"
           size="sm"
-          className={`h-7 w-full rounded-sm text-xs font-bold transition-all ${side === "sell" ? "bg-rose-600 text-white hover:bg-rose-700 hover:text-white" : "text-zinc-400 hover:text-zinc-200"}`}
-          onClick={() => setSide("sell")}
+          className={`h-7 w-full rounded-sm text-xs font-bold transition-all ${
+            side === Side.ask
+              ? "bg-rose-600 text-white hover:bg-rose-700 hover:text-white"
+              : "text-zinc-400 hover:text-zinc-200"
+          }`}
+          onClick={() => setSide(Side.ask)}
         >
           Sell
         </Button>
       </div>
 
+      {/* Order type tabs */}
       <div className="mb-4 flex items-center gap-4">
-        <span className="cursor-pointer border-b-2 border-zinc-500 pb-0.5 text-xs font-medium text-zinc-100">
-          Limit
-        </span>
-        <span className="cursor-pointer text-xs font-medium text-zinc-500 hover:text-zinc-300">
-          Market
-        </span>
-        <span className="cursor-pointer text-xs font-medium text-zinc-500 hover:text-zinc-300">
-          Stop
-        </span>
+        {Object.values(OrderType).map((type) => (
+          <span
+            key={type}
+            onClick={() => setOrderType(type)}
+            className={`cursor-pointer border-b-2 pb-0.5 text-xs font-medium transition-colors ${
+              orderType === type
+                ? "border-zinc-100 text-zinc-100"
+                : "border-transparent text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            {type.charAt(0).toUpperCase() + type.slice(1)}
+          </span>
+        ))}
       </div>
 
       <div className="space-y-4">
+        {/* Trigger for STOP orders */}
+        {orderType === OrderType.stop && (
+          <div className="animate-in slide-in-from-top-1 fade-in space-y-1.5 duration-200">
+            <div className="flex justify-between text-[11px] text-zinc-500">
+              <span>Trigger Price (USDT)</span>
+            </div>
+            <div className="relative">
+              <Input
+                type="text"
+                placeholder="-"
+                value={triggerPrice}
+                onChange={(e) => setTriggerPrice(e.target.value)}
+                className="h-9 rounded-sm border-transparent bg-zinc-900/50 pr-10 text-right font-mono text-xs transition-colors hover:border-zinc-700 focus:border-emerald-600"
+              />
+              <span className="absolute top-2.5 right-3 text-[10px] font-bold text-zinc-500">
+                USDT
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Price input */}
         <div className="space-y-1.5">
           <div className="flex justify-between text-[11px] text-zinc-500">
-            <span>Price (USDT)</span>
+            <span>
+              {orderType === OrderType.market ? "Market Price" : "Limit Price"}
+            </span>
           </div>
           <div className="relative">
             <Input
               type="text"
-              defaultValue="42095.50"
-              className="h-9 rounded-sm border-transparent bg-zinc-900/50 pr-10 text-right font-mono text-xs transition-colors hover:border-zinc-700 focus:border-emerald-600"
+              value={orderType === OrderType.market ? "Best Market" : price}
+              disabled={orderType === OrderType.market}
+              onChange={(e) => setPrice(e.target.value)}
+              className={`h-9 rounded-sm border-transparent bg-zinc-900/50 pr-10 text-right font-mono text-xs transition-colors ${
+                orderType === OrderType.market
+                  ? "cursor-not-allowed text-zinc-500"
+                  : "text-zinc-100 hover:border-zinc-700 focus:border-emerald-600"
+              }`}
             />
             <span className="absolute top-2.5 right-3 text-[10px] font-bold text-zinc-500">
               USDT
@@ -367,6 +562,7 @@ const OrderForm = ({ mobile = false }: { mobile?: boolean }) => {
           </div>
         </div>
 
+        {/* Amount input */}
         <div className="space-y-1.5">
           <div className="flex justify-between text-[11px] text-zinc-500">
             <span>Amount (BTC)</span>
@@ -375,6 +571,8 @@ const OrderForm = ({ mobile = false }: { mobile?: boolean }) => {
             <Input
               type="text"
               placeholder="0.00"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
               className="h-9 rounded-sm border-transparent bg-zinc-900/50 pr-10 text-right font-mono text-xs transition-colors hover:border-zinc-700 focus:border-emerald-600"
             />
             <span className="absolute top-2.5 right-3 text-[10px] font-bold text-zinc-500">
@@ -383,41 +581,27 @@ const OrderForm = ({ mobile = false }: { mobile?: boolean }) => {
           </div>
         </div>
 
-        <div className="pt-2 pb-2">
-          <Slider
-            defaultValue={[25]}
-            max={100}
-            step={25}
-            className={`w-full ${side === "buy" ? "text-emerald-600" : "text-rose-600"}`}
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <div className="relative">
-            <Input
-              type="text"
-              placeholder="Total (USDT)"
-              readOnly
-              className="h-9 rounded-sm border-transparent bg-zinc-900/30 pr-10 text-right font-mono text-xs opacity-80"
-            />
-            <span className="absolute top-2.5 right-3 text-[10px] font-bold text-zinc-500">
-              USDT
-            </span>
-          </div>
-        </div>
-
+        {/* Submit */}
         <div className="pt-4">
           <div className="mb-2 flex justify-between text-[11px] text-zinc-400">
             <span>Avail:</span>
             <span className="font-mono text-zinc-200">14,203.44</span>
           </div>
 
-          {side === "buy" ? (
-            <Button className="h-9 w-full rounded-sm bg-emerald-600 text-sm font-bold hover:bg-emerald-700">
+          {side === Side.bid ? (
+            <Button
+              type="submit"
+              onClick={handleSubmit}
+              className="h-9 w-full rounded-sm bg-emerald-600 text-sm font-bold hover:bg-emerald-700"
+            >
               Buy BTC
             </Button>
           ) : (
-            <Button className="h-9 w-full rounded-sm bg-rose-600 text-sm font-bold hover:bg-rose-700">
+            <Button
+              type="submit"
+              onClick={handleSubmit}
+              className="h-9 w-full rounded-sm bg-rose-600 text-sm font-bold hover:bg-rose-700"
+            >
               Sell BTC
             </Button>
           )}
@@ -427,7 +611,6 @@ const OrderForm = ({ mobile = false }: { mobile?: boolean }) => {
   );
 };
 
-// --- COMPONENT 4: ORDER MANAGEMENT (Optimized for Mobile) ---
 const OrderManagement = () => {
   return (
     <div className="flex h-full flex-col border-t border-zinc-800/60 bg-[#0E0E10]">
@@ -542,7 +725,7 @@ const OrderManagement = () => {
 
 // --- MAIN LAYOUT COMPONENT ---
 const TradingPage: FC = () => {
-  const symbol = useParams() as {symbol: string};
+  const symbol = useParams() as { symbol: string };
   const [isTradeModalOpen, setIsTradeModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 

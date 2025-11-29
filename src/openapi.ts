@@ -5,6 +5,12 @@
  * OpenAPI spec version: 0.1.0
  */
 import { customFetch } from "./lib/custom-fetch";
+export interface ContactForm {
+  name: string;
+  email: string;
+  message: string;
+}
+
 export interface HTTPValidationError {
   detail?: ValidationError[];
 }
@@ -18,7 +24,7 @@ export interface InstrumentCreate {
 
 export interface OCOOrderCreate {
   strategy_type: StrategyType;
-  instrument_id: string;
+  symbol: string;
   /**
    * @minItems 2
    * @maxItems 2
@@ -45,7 +51,7 @@ export interface OTOCOOrderCreate {
 
 export interface OTOOrderCreate {
   strategy_type: StrategyType;
-  instrument_id: string;
+  symbol: string;
   parent: OrderBase;
   child: OrderBase;
 }
@@ -146,7 +152,7 @@ export interface SingleOrderCreate {
   limit_price?: SingleOrderCreateLimitPrice;
   stop_price?: SingleOrderCreateStopPrice;
   strategy_type: StrategyType;
-  instrument_id: string;
+  symbol: string;
 }
 
 export type Stats24hPrice = number | null;
@@ -180,6 +186,14 @@ export const TimeFrame = {
   "1d": "1d",
 } as const;
 
+export interface UpdatePassword {
+  password: string;
+}
+
+export interface UpdateUsername {
+  username: string;
+}
+
 export interface UserCreate {
   username: string;
   email: string;
@@ -196,12 +210,34 @@ export interface UserLogin {
   password: string;
 }
 
+export interface UserMe {
+  username: string;
+}
+
 export type ValidationErrorLocItem = string | number;
 
 export interface ValidationError {
   loc: ValidationErrorLocItem[];
   msg: string;
   type: string;
+}
+
+export type VerifyActionAction =
+  (typeof VerifyActionAction)[keyof typeof VerifyActionAction];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const VerifyActionAction = {
+  change_username: "change_username",
+  change_password: "change_password",
+} as const;
+
+export interface VerifyAction {
+  code: string;
+  action: VerifyActionAction;
+}
+
+export interface VerifyCode {
+  code: string;
 }
 
 export type GetInstrumentsInstrumentsGetParams = {
@@ -229,6 +265,10 @@ export type GetOrdersOrdersGetParams = {
   side?: Side[];
 };
 
+export type CancelAllOrdersOrdersSymbolDeleteParams = {
+  symbol: string | null;
+};
+
 export type GetUserOverviewUserGetParams = {
   /**
    * @minimum 1
@@ -254,86 +294,82 @@ export const GetUserPortfolioHistoryUserHistoryGetInterval = {
 } as const;
 
 /**
- * @summary Login User
+ * @summary Login
  */
-export type loginUserAuthLoginPostResponse200 = {
+export type loginAuthLoginPostResponse200 = {
   data: unknown;
   status: 200;
 };
 
-export type loginUserAuthLoginPostResponse422 = {
+export type loginAuthLoginPostResponse422 = {
   data: HTTPValidationError;
   status: 422;
 };
 
-export type loginUserAuthLoginPostResponseSuccess =
-  loginUserAuthLoginPostResponse200 & {
+export type loginAuthLoginPostResponseSuccess =
+  loginAuthLoginPostResponse200 & {
     headers: Headers;
   };
-export type loginUserAuthLoginPostResponseError =
-  loginUserAuthLoginPostResponse422 & {
-    headers: Headers;
-  };
+export type loginAuthLoginPostResponseError = loginAuthLoginPostResponse422 & {
+  headers: Headers;
+};
 
-export type loginUserAuthLoginPostResponse =
-  | loginUserAuthLoginPostResponseSuccess
-  | loginUserAuthLoginPostResponseError;
+export type loginAuthLoginPostResponse =
+  | loginAuthLoginPostResponseSuccess
+  | loginAuthLoginPostResponseError;
 
-export const getLoginUserAuthLoginPostUrl = () => {
+export const getLoginAuthLoginPostUrl = () => {
   return `/auth/login`;
 };
 
-export const loginUserAuthLoginPost = async (
+export const loginAuthLoginPost = async (
   userLogin: UserLogin,
   options?: RequestInit,
-): Promise<loginUserAuthLoginPostResponse> => {
-  return customFetch<loginUserAuthLoginPostResponse>(
-    getLoginUserAuthLoginPostUrl(),
-    {
-      ...options,
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...options?.headers },
-      body: JSON.stringify(userLogin),
-    },
-  );
+): Promise<loginAuthLoginPostResponse> => {
+  return customFetch<loginAuthLoginPostResponse>(getLoginAuthLoginPostUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(userLogin),
+  });
 };
 
 /**
- * @summary Register User
+ * @summary Register
  */
-export type registerUserAuthRegisterPostResponse200 = {
+export type registerAuthRegisterPostResponse202 = {
   data: unknown;
-  status: 200;
+  status: 202;
 };
 
-export type registerUserAuthRegisterPostResponse422 = {
+export type registerAuthRegisterPostResponse422 = {
   data: HTTPValidationError;
   status: 422;
 };
 
-export type registerUserAuthRegisterPostResponseSuccess =
-  registerUserAuthRegisterPostResponse200 & {
+export type registerAuthRegisterPostResponseSuccess =
+  registerAuthRegisterPostResponse202 & {
     headers: Headers;
   };
-export type registerUserAuthRegisterPostResponseError =
-  registerUserAuthRegisterPostResponse422 & {
+export type registerAuthRegisterPostResponseError =
+  registerAuthRegisterPostResponse422 & {
     headers: Headers;
   };
 
-export type registerUserAuthRegisterPostResponse =
-  | registerUserAuthRegisterPostResponseSuccess
-  | registerUserAuthRegisterPostResponseError;
+export type registerAuthRegisterPostResponse =
+  | registerAuthRegisterPostResponseSuccess
+  | registerAuthRegisterPostResponseError;
 
-export const getRegisterUserAuthRegisterPostUrl = () => {
+export const getRegisterAuthRegisterPostUrl = () => {
   return `/auth/register`;
 };
 
-export const registerUserAuthRegisterPost = async (
+export const registerAuthRegisterPost = async (
   userCreate: UserCreate,
   options?: RequestInit,
-): Promise<registerUserAuthRegisterPostResponse> => {
-  return customFetch<registerUserAuthRegisterPostResponse>(
-    getRegisterUserAuthRegisterPostUrl(),
+): Promise<registerAuthRegisterPostResponse> => {
+  return customFetch<registerAuthRegisterPostResponse>(
+    getRegisterAuthRegisterPostUrl(),
     {
       ...options,
       method: "POST",
@@ -344,32 +380,270 @@ export const registerUserAuthRegisterPost = async (
 };
 
 /**
- * @summary Get Current User
+ * @summary Request Email Verification
  */
-export type getCurrentUserAuthMeGetResponse200 = {
+export type requestEmailVerificationAuthRequestEmailVerificationPostResponse200 =
+  {
+    data: unknown;
+    status: 200;
+  };
+
+export type requestEmailVerificationAuthRequestEmailVerificationPostResponseSuccess =
+  requestEmailVerificationAuthRequestEmailVerificationPostResponse200 & {
+    headers: Headers;
+  };
+export type requestEmailVerificationAuthRequestEmailVerificationPostResponse =
+  requestEmailVerificationAuthRequestEmailVerificationPostResponseSuccess;
+
+export const getRequestEmailVerificationAuthRequestEmailVerificationPostUrl =
+  () => {
+    return `/auth/request-email-verification`;
+  };
+
+export const requestEmailVerificationAuthRequestEmailVerificationPost = async (
+  options?: RequestInit,
+): Promise<requestEmailVerificationAuthRequestEmailVerificationPostResponse> => {
+  return customFetch<requestEmailVerificationAuthRequestEmailVerificationPostResponse>(
+    getRequestEmailVerificationAuthRequestEmailVerificationPostUrl(),
+    {
+      ...options,
+      method: "POST",
+    },
+  );
+};
+
+/**
+ * @summary Verify Email
+ */
+export type verifyEmailAuthVerifyEmailPostResponse200 = {
   data: unknown;
   status: 200;
 };
 
-export type getCurrentUserAuthMeGetResponseSuccess =
-  getCurrentUserAuthMeGetResponse200 & {
+export type verifyEmailAuthVerifyEmailPostResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type verifyEmailAuthVerifyEmailPostResponseSuccess =
+  verifyEmailAuthVerifyEmailPostResponse200 & {
     headers: Headers;
   };
-export type getCurrentUserAuthMeGetResponse =
-  getCurrentUserAuthMeGetResponseSuccess;
+export type verifyEmailAuthVerifyEmailPostResponseError =
+  verifyEmailAuthVerifyEmailPostResponse422 & {
+    headers: Headers;
+  };
 
-export const getGetCurrentUserAuthMeGetUrl = () => {
+export type verifyEmailAuthVerifyEmailPostResponse =
+  | verifyEmailAuthVerifyEmailPostResponseSuccess
+  | verifyEmailAuthVerifyEmailPostResponseError;
+
+export const getVerifyEmailAuthVerifyEmailPostUrl = () => {
+  return `/auth/verify-email`;
+};
+
+export const verifyEmailAuthVerifyEmailPost = async (
+  verifyCode: VerifyCode,
+  options?: RequestInit,
+): Promise<verifyEmailAuthVerifyEmailPostResponse> => {
+  return customFetch<verifyEmailAuthVerifyEmailPostResponse>(
+    getVerifyEmailAuthVerifyEmailPostUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(verifyCode),
+    },
+  );
+};
+
+/**
+ * @summary Logout
+ */
+export type logoutAuthLogoutPostResponse200 = {
+  data: unknown;
+  status: 200;
+};
+
+export type logoutAuthLogoutPostResponseSuccess =
+  logoutAuthLogoutPostResponse200 & {
+    headers: Headers;
+  };
+export type logoutAuthLogoutPostResponse = logoutAuthLogoutPostResponseSuccess;
+
+export const getLogoutAuthLogoutPostUrl = () => {
+  return `/auth/logout`;
+};
+
+export const logoutAuthLogoutPost = async (
+  options?: RequestInit,
+): Promise<logoutAuthLogoutPostResponse> => {
+  return customFetch<logoutAuthLogoutPostResponse>(
+    getLogoutAuthLogoutPostUrl(),
+    {
+      ...options,
+      method: "POST",
+    },
+  );
+};
+
+/**
+ * @summary Get Me
+ */
+export type getMeAuthMeGetResponse200 = {
+  data: UserMe;
+  status: 200;
+};
+
+export type getMeAuthMeGetResponseSuccess = getMeAuthMeGetResponse200 & {
+  headers: Headers;
+};
+export type getMeAuthMeGetResponse = getMeAuthMeGetResponseSuccess;
+
+export const getGetMeAuthMeGetUrl = () => {
   return `/auth/me`;
 };
 
-export const getCurrentUserAuthMeGet = async (
+export const getMeAuthMeGet = async (
   options?: RequestInit,
-): Promise<getCurrentUserAuthMeGetResponse> => {
-  return customFetch<getCurrentUserAuthMeGetResponse>(
-    getGetCurrentUserAuthMeGetUrl(),
+): Promise<getMeAuthMeGetResponse> => {
+  return customFetch<getMeAuthMeGetResponse>(getGetMeAuthMeGetUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+/**
+ * @summary Change Username
+ */
+export type changeUsernameAuthChangeUsernamePostResponse202 = {
+  data: unknown;
+  status: 202;
+};
+
+export type changeUsernameAuthChangeUsernamePostResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type changeUsernameAuthChangeUsernamePostResponseSuccess =
+  changeUsernameAuthChangeUsernamePostResponse202 & {
+    headers: Headers;
+  };
+export type changeUsernameAuthChangeUsernamePostResponseError =
+  changeUsernameAuthChangeUsernamePostResponse422 & {
+    headers: Headers;
+  };
+
+export type changeUsernameAuthChangeUsernamePostResponse =
+  | changeUsernameAuthChangeUsernamePostResponseSuccess
+  | changeUsernameAuthChangeUsernamePostResponseError;
+
+export const getChangeUsernameAuthChangeUsernamePostUrl = () => {
+  return `/auth/change-username`;
+};
+
+export const changeUsernameAuthChangeUsernamePost = async (
+  updateUsername: UpdateUsername,
+  options?: RequestInit,
+): Promise<changeUsernameAuthChangeUsernamePostResponse> => {
+  return customFetch<changeUsernameAuthChangeUsernamePostResponse>(
+    getChangeUsernameAuthChangeUsernamePostUrl(),
     {
       ...options,
-      method: "GET",
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(updateUsername),
+    },
+  );
+};
+
+/**
+ * @summary Change Password
+ */
+export type changePasswordAuthChangePasswordPostResponse202 = {
+  data: unknown;
+  status: 202;
+};
+
+export type changePasswordAuthChangePasswordPostResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type changePasswordAuthChangePasswordPostResponseSuccess =
+  changePasswordAuthChangePasswordPostResponse202 & {
+    headers: Headers;
+  };
+export type changePasswordAuthChangePasswordPostResponseError =
+  changePasswordAuthChangePasswordPostResponse422 & {
+    headers: Headers;
+  };
+
+export type changePasswordAuthChangePasswordPostResponse =
+  | changePasswordAuthChangePasswordPostResponseSuccess
+  | changePasswordAuthChangePasswordPostResponseError;
+
+export const getChangePasswordAuthChangePasswordPostUrl = () => {
+  return `/auth/change-password`;
+};
+
+export const changePasswordAuthChangePasswordPost = async (
+  updatePassword: UpdatePassword,
+  options?: RequestInit,
+): Promise<changePasswordAuthChangePasswordPostResponse> => {
+  return customFetch<changePasswordAuthChangePasswordPostResponse>(
+    getChangePasswordAuthChangePasswordPostUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(updatePassword),
+    },
+  );
+};
+
+/**
+ * @summary Verify Action
+ */
+export type verifyActionAuthVerifyActionPostResponse200 = {
+  data: unknown;
+  status: 200;
+};
+
+export type verifyActionAuthVerifyActionPostResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type verifyActionAuthVerifyActionPostResponseSuccess =
+  verifyActionAuthVerifyActionPostResponse200 & {
+    headers: Headers;
+  };
+export type verifyActionAuthVerifyActionPostResponseError =
+  verifyActionAuthVerifyActionPostResponse422 & {
+    headers: Headers;
+  };
+
+export type verifyActionAuthVerifyActionPostResponse =
+  | verifyActionAuthVerifyActionPostResponseSuccess
+  | verifyActionAuthVerifyActionPostResponseError;
+
+export const getVerifyActionAuthVerifyActionPostUrl = () => {
+  return `/auth/verify-action`;
+};
+
+export const verifyActionAuthVerifyActionPost = async (
+  verifyAction: VerifyAction,
+  options?: RequestInit,
+): Promise<verifyActionAuthVerifyActionPostResponse> => {
+  return customFetch<verifyActionAuthVerifyActionPostResponse>(
+    getVerifyActionAuthVerifyActionPostUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(verifyAction),
     },
   );
 };
@@ -755,38 +1029,6 @@ export const getOrdersOrdersGet = async (
 };
 
 /**
- * Sends requests to cancel all PENDING or PARTIALLY_FILLED orders.
- * @summary Cancel all active orders for the user
- */
-export type cancelAllOrdersOrdersDeleteResponse202 = {
-  data: unknown;
-  status: 202;
-};
-
-export type cancelAllOrdersOrdersDeleteResponseSuccess =
-  cancelAllOrdersOrdersDeleteResponse202 & {
-    headers: Headers;
-  };
-export type cancelAllOrdersOrdersDeleteResponse =
-  cancelAllOrdersOrdersDeleteResponseSuccess;
-
-export const getCancelAllOrdersOrdersDeleteUrl = () => {
-  return `/orders/`;
-};
-
-export const cancelAllOrdersOrdersDelete = async (
-  options?: RequestInit,
-): Promise<cancelAllOrdersOrdersDeleteResponse> => {
-  return customFetch<cancelAllOrdersOrdersDeleteResponse>(
-    getCancelAllOrdersOrdersDeleteUrl(),
-    {
-      ...options,
-      method: "DELETE",
-    },
-  );
-};
-
-/**
  * Accepts a new OCO (One-Cancels-the-Other) order group.
  * @summary Create Oco Order
  */
@@ -1060,6 +1302,64 @@ export const cancelOrderOrdersOrderIdDelete = async (
 };
 
 /**
+ * Sends requests to cancel all PENDING or PARTIALLY_FILLED orders.
+ * @summary Cancel all active orders for the user
+ */
+export type cancelAllOrdersOrdersSymbolDeleteResponse202 = {
+  data: unknown;
+  status: 202;
+};
+
+export type cancelAllOrdersOrdersSymbolDeleteResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type cancelAllOrdersOrdersSymbolDeleteResponseSuccess =
+  cancelAllOrdersOrdersSymbolDeleteResponse202 & {
+    headers: Headers;
+  };
+export type cancelAllOrdersOrdersSymbolDeleteResponseError =
+  cancelAllOrdersOrdersSymbolDeleteResponse422 & {
+    headers: Headers;
+  };
+
+export type cancelAllOrdersOrdersSymbolDeleteResponse =
+  | cancelAllOrdersOrdersSymbolDeleteResponseSuccess
+  | cancelAllOrdersOrdersSymbolDeleteResponseError;
+
+export const getCancelAllOrdersOrdersSymbolDeleteUrl = (
+  params: CancelAllOrdersOrdersSymbolDeleteParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/orders/symbol?${stringifiedParams}`
+    : `/orders/symbol`;
+};
+
+export const cancelAllOrdersOrdersSymbolDelete = async (
+  params: CancelAllOrdersOrdersSymbolDeleteParams,
+  options?: RequestInit,
+): Promise<cancelAllOrdersOrdersSymbolDeleteResponse> => {
+  return customFetch<cancelAllOrdersOrdersSymbolDeleteResponse>(
+    getCancelAllOrdersOrdersSymbolDeleteUrl(params),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+/**
  * @summary Healthcheck
  */
 export type healthcheckPublicHealthcheckGetResponse200 = {
@@ -1086,6 +1386,51 @@ export const healthcheckPublicHealthcheckGet = async (
     {
       ...options,
       method: "GET",
+    },
+  );
+};
+
+/**
+ * @summary Contact Us
+ */
+export type contactUsPublicContactPostResponse202 = {
+  data: unknown;
+  status: 202;
+};
+
+export type contactUsPublicContactPostResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type contactUsPublicContactPostResponseSuccess =
+  contactUsPublicContactPostResponse202 & {
+    headers: Headers;
+  };
+export type contactUsPublicContactPostResponseError =
+  contactUsPublicContactPostResponse422 & {
+    headers: Headers;
+  };
+
+export type contactUsPublicContactPostResponse =
+  | contactUsPublicContactPostResponseSuccess
+  | contactUsPublicContactPostResponseError;
+
+export const getContactUsPublicContactPostUrl = () => {
+  return `/public/contact`;
+};
+
+export const contactUsPublicContactPost = async (
+  contactForm: ContactForm,
+  options?: RequestInit,
+): Promise<contactUsPublicContactPostResponse> => {
+  return customFetch<contactUsPublicContactPostResponse>(
+    getContactUsPublicContactPostUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(contactForm),
     },
   );
 };

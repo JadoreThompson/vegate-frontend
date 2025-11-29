@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
+import EmailVerificationPage from "./pages/EmailVerifcationPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import TradingPage from "./pages/TradingPage";
@@ -11,6 +12,7 @@ function App() {
           <Route path="*" element={<Navigate to="/trade/BTC-USD" />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/verify-email" element={<EmailVerificationPage />} />
           <Route path="/trade/:symbol" element={<TradingPage />} />
         </Routes>
       </BrowserRouter>
