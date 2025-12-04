@@ -1,6 +1,6 @@
 import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { FastForward, Pause, Play, Rewind } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
@@ -110,114 +110,16 @@ export default function ReplaySessionPage() {
 
   return (
     <DashboardLayout>
-      {/* <div className="space-y-6"> */}
       <div>
-        {/* Header with Breadcrumb */}
-        {/* <div>
-          <div className="mb-2 flex items-center gap-2">
-            <Link
-              to={sessionType === "backtest" ? "/backtests" : "/live-trading"}
-              className="text-muted-foreground hover:text-foreground text-sm"
-            >
-              {sessionType === "backtest" ? "Backtests" : "Live Trading"}
-            </Link>
-            <span className="text-muted-foreground">/</span>
-            <span className="text-sm">Session {sessionId}</span>
-          </div>
-          <h2 className="text-3xl font-bold tracking-tight">
-            {sessionType === "backtest" ? "Backtest" : "Deployment"} Replay
-          </h2>
-          <p className="text-muted-foreground">
-            Candle {currentCandleIndex + 1} of {candles.length}
-          </p>
-        </div> */}
 
         {/* Chart Card */}
-        <Card className="">
-          <CardHeader>
-            <CardTitle>Market Replay</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="bg-background/50 border-border relative h-[600px] w-full rounded border">
-              <svg className="h-full w-full" viewBox="0 0 1000 400">
-                {/* Price Grid Lines */}
-                {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
-                  const y = 20 + ratio * 360;
-                  const price = (maxPrice - ratio * priceRange).toFixed(2);
-                  return (
-                    <g key={i}>
-                      <line
-                        x1="50"
-                        y1={y}
-                        x2="980"
-                        y2={y}
-                        stroke="currentColor"
-                        strokeWidth="0.5"
-                        className="text-border"
-                        opacity="0.3"
-                      />
-                      <text
-                        x="35"
-                        y={y + 4}
-                        className="text-muted-foreground text-xs"
-                        fontSize="10"
-                        textAnchor="end"
-                      >
-                        {price}
-                      </text>
-                    </g>
-                  );
-                })}
-
-                {/* Candles */}
-                {visibleCandles.map((candle, i) => {
-                  const x =
-                    60 + (i / Math.max(visibleCandles.length - 1, 1)) * 920;
-                  const isGreen = candle.close >= candle.open;
-
-                  const highY =
-                    20 + ((maxPrice - candle.high) / priceRange) * 360;
-                  const lowY =
-                    20 + ((maxPrice - candle.low) / priceRange) * 360;
-                  const openY =
-                    20 + ((maxPrice - candle.open) / priceRange) * 360;
-                  const closeY =
-                    20 + ((maxPrice - candle.close) / priceRange) * 360;
-
-                  const bodyTop = Math.min(openY, closeY);
-                  const bodyHeight = Math.abs(closeY - openY) || 1;
-
-                  return (
-                    <g key={i}>
-                      {/* Wick */}
-                      <line
-                        x1={x}
-                        y1={highY}
-                        x2={x}
-                        y2={lowY}
-                        stroke={isGreen ? "#22c55e" : "#ef4444"}
-                        strokeWidth="1"
-                      />
-                      {/* Body */}
-                      <rect
-                        x={x - 3}
-                        y={bodyTop}
-                        width="6"
-                        height={bodyHeight}
-                        fill={isGreen ? "#22c55e" : "#ef4444"}
-                      />
-                    </g>
-                  );
-                })}
-              </svg>
+        <Card className="h-[42rem]">
+          <CardContent className="h-full flex flex-col">
+            <div className="h-full w-full flex-grow">
+            <span>Chart goes here</span>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Playback Controls */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-center gap-2">
+            <div className="w-full h-10 flex items-center justify-center gap-2">
               <Button
                 variant="ghost"
                 size="icon"
@@ -264,6 +166,8 @@ export default function ReplaySessionPage() {
             </div>
           </CardContent>
         </Card>
+
+
       </div>
     </DashboardLayout>
   );
