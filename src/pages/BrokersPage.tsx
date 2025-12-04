@@ -143,7 +143,7 @@ const BrokersPage: FC = () => {
                 key={broker.id}
                 onClick={() => handleBrokerClick(broker)}
                 disabled={broker.status === "coming_soon"}
-                className={`group relative flex aspect-square flex-col items-center justify-center gap-3 rounded-2xl border-2 p-6 transition-all ${
+                className={`h-36 w-36 group relative flex aspect-square flex-col items-center justify-center gap-3 rounded-2xl border-2 p-6 transition-all ${
                   broker.status === "connected"
                     ? "border-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/10"
                     : broker.status === "coming_soon"
