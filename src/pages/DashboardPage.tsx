@@ -1,11 +1,11 @@
 import {
-    ArrowDown,
-    ArrowUp,
-    Bot,
-    DollarSign,
-    LineChart,
-    Plus,
-    TrendingUp,
+  ArrowDown,
+  ArrowUp,
+  Bot,
+  DollarSign,
+  LineChart,
+  Plus,
+  TrendingUp,
 } from "lucide-react";
 import { type FC } from "react";
 import { Link } from "react-router";

@@ -1,9 +1,9 @@
 import {
   Calendar,
-  Download
+  CirclePlay
 } from "lucide-react";
 import { type FC } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 
 import EquityGraph from "@/components/EquityGraph";
 import PerformanceMetrics from "@/components/PerformanceMetrics";
@@ -291,6 +291,11 @@ const TradesTable: FC<TradesTableProps> = (props) => {
 };
 
 const BacktestResultsPage: FC = () => {
+  const navigate = useNavigate();
+  
+  // Mock backtest ID - replace with actual ID from params/context
+  const backtestId = "1";
+  
   const metrics = {
     totalReturn: 45.6,
     sharpeRatio: 1.87,
@@ -403,9 +408,12 @@ const BacktestResultsPage: FC = () => {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline">
-              <Download className="mr-2 h-4 w-4" />
-              Export
+            <Button
+              variant="outline"
+              onClick={() => navigate(`/replay/backtest/${backtestId}`)}
+            >
+              <CirclePlay className="mr-2 h-4 w-4" />
+              Replay
             </Button>
             <Link to="/strategies/1/deploy">
               <Button className="bg-emerald-600 hover:bg-emerald-700">

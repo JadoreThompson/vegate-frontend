@@ -1026,12 +1026,12 @@ const TradingPage: FC = () => {
             {/* Handle / Header */}
             <div className="relative flex shrink-0 items-center justify-center pt-3 pb-2">
               <div className="h-1.5 w-12 rounded-full bg-zinc-700" />
-              <button
+              <Button
                 onClick={() => setIsTradeModalOpen(false)}
                 className="absolute top-4 right-4 text-zinc-500 hover:text-white"
               >
                 <X className="h-5 w-5" />
-              </button>
+              </Button>
             </div>
 
             {/* Content */}

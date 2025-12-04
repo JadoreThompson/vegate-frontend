@@ -139,7 +139,7 @@ const BrokersPage: FC = () => {
         <div className="flex justify-center">
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             {brokers.map((broker) => (
-              <button
+              <Button
                 key={broker.id}
                 onClick={() => handleBrokerClick(broker)}
                 disabled={broker.status === "coming_soon"}
@@ -174,7 +174,7 @@ const BrokersPage: FC = () => {
                 <div className="text-center">
                   <p className="text-sm font-semibold">{broker.name}</p>
                 </div>
-              </button>
+              </Button>
             ))}
           </div>
         </div>

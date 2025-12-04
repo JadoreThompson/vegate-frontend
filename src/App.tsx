@@ -9,6 +9,7 @@ import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import PricingPage from "./pages/PricingPage";
 import RegisterPage from "./pages/RegisterPage";
+import ReplaySessionPage from "./pages/ReplaySessionPage";
 import StrategiesPage from "./pages/StrategiesPage";
 import StrategyCreatePage from "./pages/StrategyCreatePage";
 import StrategyDetailPage from "./pages/StrategyDetailPage";
@@ -42,6 +43,12 @@ function App() {
           {/* Backtest Routes */}
           <Route path="/backtests" element={<BacktestResultsPage />} />
           <Route path="/backtests/:id" element={<BacktestResultsPage />} />
+
+          {/* Replay Routes */}
+          <Route
+            path="/replay/:sessionType/:sessionId"
+            element={<ReplaySessionPage />}
+          />
 
           {/* Trading Routes */}
           <Route path="/live-trading" element={<ExecutionLogsPage />} />
