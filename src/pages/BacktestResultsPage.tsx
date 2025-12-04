@@ -1,22 +1,294 @@
 import {
-    ArrowDown,
-    ArrowUp,
-    BarChart3,
-    Calendar,
-    Download,
-    LineChart,
-    Percent,
-    TrendingDown,
-    TrendingUp
+  Calendar,
+  Download
 } from "lucide-react";
 import { type FC } from "react";
 import { Link } from "react-router";
 
+import EquityGraph from "@/components/EquityGraph";
+import PerformanceMetrics from "@/components/PerformanceMetrics";
 import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+// Internal Components
+interface SummaryMetricCardProps {
+  title: string;
+  value: string | number;
+  subtitle: React.ReactNode;
+  icon: React.ReactNode;
+  valueColor?: string;
+}
+
+const SummaryMetricCard: FC<SummaryMetricCardProps> = (props) => {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{props.title}</CardTitle>
+        {props.icon}
+      </CardHeader>
+      <CardContent>
+        <div className={`text-2xl font-bold ${props.valueColor || ""}`}>
+          {props.value}
+        </div>
+        <p className="text-muted-foreground text-xs">{props.subtitle}</p>
+      </CardContent>
+    </Card>
+  );
+};
+
+interface DetailedMetricsCardProps {
+  metrics: {
+    totalReturn: number;
+    sharpeRatio: number;
+    maxDrawdown: number;
+    profitFactor: number;
+    expectancy: number;
+    avgWin: number;
+    avgLoss: number;
+    largestWin: number;
+    largestLoss: number;
+    totalTrades: number;
+    winRate: number;
+    avgTradeDuration: string;
+  };
+}
+
+const DetailedMetricsCard: FC<DetailedMetricsCardProps> = (props) => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Performance Metrics</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="space-y-4">
+            <h4 className="font-semibold">Returns</h4>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground text-sm">
+                  Total Return
+                </span>
+                <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                  +{props.metrics.totalReturn}%
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground text-sm">
+                  Sharpe Ratio
+                </span>
+                <span className="font-medium">{props.metrics.sharpeRatio}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground text-sm">
+                  Profit Factor
+                </span>
+                <span className="font-medium">
+                  {props.metrics.profitFactor}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground text-sm">
+                  Expectancy
+                </span>
+                <span className="font-medium">{props.metrics.expectancy}%</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="font-semibold">Risk</h4>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground text-sm">
+                  Max Drawdown
+                </span>
+                <span className="font-medium text-red-600 dark:text-red-400">
+                  {props.metrics.maxDrawdown}%
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground text-sm">Avg Win</span>
+                <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                  +{props.metrics.avgWin}%
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground text-sm">Avg Loss</span>
+                <span className="font-medium text-red-600 dark:text-red-400">
+                  {props.metrics.avgLoss}%
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground text-sm">
+                  Largest Win
+                </span>
+                <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                  +{props.metrics.largestWin}%
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="font-semibold">Trading</h4>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground text-sm">
+                  Total Trades
+                </span>
+                <span className="font-medium">{props.metrics.totalTrades}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground text-sm">Win Rate</span>
+                <span className="font-medium">{props.metrics.winRate}%</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground text-sm">
+                  Avg Duration
+                </span>
+                <span className="font-medium">
+                  {props.metrics.avgTradeDuration}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground text-sm">
+                  Largest Loss
+                </span>
+                <span className="font-medium text-red-600 dark:text-red-400">
+                  {props.metrics.largestLoss}%
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+interface MonthlyReturnsGridProps {
+  monthlyReturns: Array<{ month: string; return: number }>;
+}
+
+const MonthlyReturnsGrid: FC<MonthlyReturnsGridProps> = (props) => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Calendar className="h-5 w-5" />
+          Monthly Performance
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6">
+          {props.monthlyReturns.map((item) => (
+            <div
+              key={item.month}
+              className="border-border rounded-lg border p-3 text-center"
+            >
+              <p className="text-muted-foreground mb-1 text-xs">{item.month}</p>
+              <p
+                className={`font-semibold ${
+                  item.return > 0
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-red-600 dark:text-red-400"
+                }`}
+              >
+                {item.return > 0 ? "+" : ""}
+                {item.return}%
+              </p>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+interface Trade {
+  id: number;
+  date: string;
+  symbol: string;
+  side: string;
+  entry: string;
+  exit: string;
+  pnl: string;
+  pnlPercent: string;
+  duration: string;
+}
+
+interface TradesTableProps {
+  trades: Trade[];
+}
+
+const TradesTable: FC<TradesTableProps> = (props) => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Recent Trades</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Date</TableHead>
+              <TableHead>Symbol</TableHead>
+              <TableHead>Side</TableHead>
+              <TableHead>Entry</TableHead>
+              <TableHead>Exit</TableHead>
+              <TableHead>Duration</TableHead>
+              <TableHead className="text-right">P&L</TableHead>
+              <TableHead className="text-right">P&L %</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {props.trades.map((trade) => (
+              <TableRow key={trade.id}>
+                <TableCell>{trade.date}</TableCell>
+                <TableCell className="font-semibold">{trade.symbol}</TableCell>
+                <TableCell>
+                  <span
+                    className={`rounded px-2 py-0.5 text-xs font-medium ${
+                      trade.side === "LONG"
+                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                        : "bg-red-500/10 text-red-600 dark:text-red-400"
+                    }`}
+                  >
+                    {trade.side}
+                  </span>
+                </TableCell>
+                <TableCell>{trade.entry}</TableCell>
+                <TableCell>{trade.exit}</TableCell>
+                <TableCell>{trade.duration}</TableCell>
+                <TableCell
+                  className={`text-right font-semibold ${
+                    trade.pnl.startsWith("+")
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-red-600 dark:text-red-400"
+                  }`}
+                >
+                  {trade.pnl}
+                </TableCell>
+                <TableCell className="text-muted-foreground text-right">
+                  {trade.pnlPercent}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+};
 
 const BacktestResultsPage: FC = () => {
   const metrics = {
@@ -116,7 +388,7 @@ const BacktestResultsPage: FC = () => {
             <div className="mb-2 flex items-center gap-2">
               <Link
                 to="/backtests"
-                className="text-sm text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground text-sm"
               >
                 Backtests
               </Link>
@@ -144,322 +416,91 @@ const BacktestResultsPage: FC = () => {
         </div>
 
         {/* Key Metrics */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Return
-              </CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                +{metrics.totalReturn}%
-              </div>
-              <p className="flex items-center text-xs text-muted-foreground">
-                <ArrowUp className="mr-1 h-3 w-3 text-emerald-500" />
-                ${(10000 * (metrics.totalReturn / 100)).toFixed(0)} on $10k
-              </p>
-            </CardContent>
-          </Card>
+        {/* <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <SummaryMetricCard
+            title="Total Return"
+            value={`+${metrics.totalReturn}%`}
+            subtitle={
+              <>
+                <ArrowUp className="mr-1 h-3 w-3 text-emerald-500" />$
+                {(10000 * (metrics.totalReturn / 100)).toFixed(0)} on $10k
+              </>
+            }
+            icon={<TrendingUp className="text-muted-foreground h-4 w-4" />}
+            valueColor="text-emerald-600 dark:text-emerald-400"
+          />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Sharpe Ratio
-              </CardTitle>
-              <BarChart3 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{metrics.sharpeRatio}</div>
-              <p className="text-xs text-muted-foreground">
-                Risk-adjusted return
-              </p>
-            </CardContent>
-          </Card>
+          <SummaryMetricCard
+            title="Sharpe Ratio"
+            value={metrics.sharpeRatio}
+            subtitle="Risk-adjusted return"
+            icon={<BarChart3 className="text-muted-foreground h-4 w-4" />}
+          />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Max Drawdown
-              </CardTitle>
-              <TrendingDown className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600 dark:text-red-400">
-                {metrics.maxDrawdown}%
-              </div>
-              <p className="flex items-center text-xs text-muted-foreground">
+          <SummaryMetricCard
+            title="Max Drawdown"
+            value={`${metrics.maxDrawdown}%`}
+            subtitle={
+              <>
                 <ArrowDown className="mr-1 h-3 w-3 text-red-500" />
                 Largest peak-to-trough
-              </p>
-            </CardContent>
-          </Card>
+              </>
+            }
+            icon={<TrendingDown className="text-muted-foreground h-4 w-4" />}
+            valueColor="text-red-600 dark:text-red-400"
+          />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Win Rate</CardTitle>
-              <Percent className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{metrics.winRate}%</div>
-              <p className="text-xs text-muted-foreground">
-                {Math.round((metrics.totalTrades * metrics.winRate) / 100)} of{" "}
-                {metrics.totalTrades} trades
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+          <SummaryMetricCard
+            title="Win Rate"
+            value={`${metrics.winRate}%`}
+            subtitle={`${Math.round((metrics.totalTrades * metrics.winRate) / 100)} of ${metrics.totalTrades} trades`}
+            icon={<Percent className="text-muted-foreground h-4 w-4" />}
+          />
+        </div> */}
 
-        {/* Charts */}
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Equity Curve */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Equity Curve</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex h-[300px] items-center justify-center rounded-lg border border-dashed border-border bg-muted/20">
-                <div className="text-center">
-                  <LineChart className="mx-auto mb-2 h-12 w-12 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">
-                    Equity curve visualization
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Equity Curve with Statistics */}
+        <div className="flex flex-col gap-4 lg:flex-row">
+          {/* Statistics Card */}
+          <PerformanceMetrics
+            totalPnl={10000 * (metrics.totalReturn / 100)}
+            returnPercentage={metrics.totalReturn}
+            totalTrades={metrics.totalTrades}
+            winRate={metrics.winRate}
+            avgWin={metrics.avgWin}
+            avgLoss={metrics.avgLoss}
+            sharpeRatio={metrics.sharpeRatio}
+            maxDrawdown={metrics.maxDrawdown}
+          />
 
-          {/* Drawdown Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Drawdown</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex h-[300px] items-center justify-center rounded-lg border border-dashed border-border bg-muted/20">
-                <div className="text-center">
-                  <TrendingDown className="mx-auto mb-2 h-12 w-12 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">
-                    Drawdown visualization
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Equity Graph */}
+          <EquityGraph
+            equityData={undefined}
+            drawdownData={undefined}
+            title="Equity Curve"
+          />
         </div>
 
         {/* Detailed Metrics */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Performance Metrics</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              <div className="space-y-4">
-                <h4 className="font-semibold">Returns</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      Total Return
-                    </span>
-                    <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                      +{metrics.totalReturn}%
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      Sharpe Ratio
-                    </span>
-                    <span className="font-medium">{metrics.sharpeRatio}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      Profit Factor
-                    </span>
-                    <span className="font-medium">{metrics.profitFactor}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      Expectancy
-                    </span>
-                    <span className="font-medium">{metrics.expectancy}%</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h4 className="font-semibold">Risk</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      Max Drawdown
-                    </span>
-                    <span className="font-medium text-red-600 dark:text-red-400">
-                      {metrics.maxDrawdown}%
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      Avg Win
-                    </span>
-                    <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                      +{metrics.avgWin}%
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      Avg Loss
-                    </span>
-                    <span className="font-medium text-red-600 dark:text-red-400">
-                      {metrics.avgLoss}%
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      Largest Win
-                    </span>
-                    <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                      +{metrics.largestWin}%
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h4 className="font-semibold">Trading</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      Total Trades
-                    </span>
-                    <span className="font-medium">{metrics.totalTrades}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      Win Rate
-                    </span>
-                    <span className="font-medium">{metrics.winRate}%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      Avg Duration
-                    </span>
-                    <span className="font-medium">
-                      {metrics.avgTradeDuration}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      Largest Loss
-                    </span>
-                    <span className="font-medium text-red-600 dark:text-red-400">
-                      {metrics.largestLoss}%
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <DetailedMetricsCard metrics={metrics} />
 
         {/* Monthly Returns & Trade List */}
-        <Tabs defaultValue="monthly" className="space-y-4">
+        {/* <Tabs defaultValue="monthly" className="space-y-4">
           <TabsList>
             <TabsTrigger value="monthly">Monthly Returns</TabsTrigger>
             <TabsTrigger value="trades">Trade List</TabsTrigger>
           </TabsList>
 
           <TabsContent value="monthly">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
-                  Monthly Performance
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6">
-                  {monthlyReturns.map((item) => (
-                    <div
-                      key={item.month}
-                      className="rounded-lg border border-border p-3 text-center"
-                    >
-                      <p className="mb-1 text-xs text-muted-foreground">
-                        {item.month}
-                      </p>
-                      <p
-                        className={`font-semibold ${
-                          item.return > 0
-                            ? "text-emerald-600 dark:text-emerald-400"
-                            : "text-red-600 dark:text-red-400"
-                        }`}
-                      >
-                        {item.return > 0 ? "+" : ""}
-                        {item.return}%
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <MonthlyReturnsGrid monthlyReturns={monthlyReturns} />
           </TabsContent>
 
           <TabsContent value="trades">
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Trades</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {recentTrades.map((trade) => (
-                    <div key={trade.id}>
-                      <div className="flex items-center justify-between rounded-lg border border-border p-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3">
-                            <span className="font-semibold">{trade.symbol}</span>
-                            <span
-                              className={`rounded px-2 py-0.5 text-xs font-medium ${
-                                trade.side === "LONG"
-                                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                                  : "bg-red-500/10 text-red-600 dark:text-red-400"
-                              }`}
-                            >
-                              {trade.side}
-                            </span>
-                          </div>
-                          <div className="mt-1 flex gap-4 text-sm text-muted-foreground">
-                            <span>{trade.date}</span>
-                            <span>
-                              {trade.entry} → {trade.exit}
-                            </span>
-                            <span>{trade.duration}</span>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p
-                            className={`font-semibold ${
-                              trade.pnl.startsWith("+")
-                                ? "text-emerald-600 dark:text-emerald-400"
-                                : "text-red-600 dark:text-red-400"
-                            }`}
-                          >
-                            {trade.pnl}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {trade.pnlPercent}
-                          </p>
-                        </div>
-                      </div>
-                      {trade.id < recentTrades.length && (
-                        <Separator className="my-3" />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <TradesTable trades={recentTrades} />
           </TabsContent>
-        </Tabs>
+        </Tabs> */}
+
+        <MonthlyReturnsGrid monthlyReturns={monthlyReturns} />
+        <TradesTable trades={recentTrades} />
       </div>
     </DashboardLayout>
   );

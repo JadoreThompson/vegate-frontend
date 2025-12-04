@@ -7,7 +7,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useState, type FC } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 
 import EquityGraph from "@/components/EquityGraph";
 import DashboardLayout from "@/components/layouts/dashboard-layout";
@@ -187,9 +187,15 @@ const BacktestsTable: FC<{
   tickerOptions: string[];
   onTickerToggle: (ticker: string) => void;
 }> = (props) => {
+  const navigate = useNavigate();
+
   const filteredBacktests = props.backtests.filter((b) =>
     props.selectedTickers.includes(b.ticker),
   );
+
+  const handleRowClick = (backtestId: number) => {
+    navigate(`/backtests/${backtestId}`);
+  };
 
   return (
     <Card>
@@ -274,6 +280,7 @@ const BacktestsTable: FC<{
                 <TableRow
                   key={backtest.id}
                   className="hover:bg-muted/50 cursor-pointer"
+                  onClick={() => handleRowClick(backtest.id)}
                 >
                   <TableCell className="font-medium">
                     {backtest.ticker}
