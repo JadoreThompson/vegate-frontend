@@ -1,4 +1,3 @@
-// src/components/auth/AuthLayout.tsx
 import { ArrowRight, Loader2, TrendingUp } from "lucide-react";
 import React, { useState, type FC } from "react";
 
@@ -50,7 +49,7 @@ const AuthLayout: FC<AuthLayoutProps> = (props) => {
           <div className="mr-2 flex h-8 w-8 items-center justify-center rounded-sm bg-emerald-500">
             <TrendingUp className="h-5 w-5 text-[#0b0e11]" />
           </div>
-          Spectuel
+          Brand Name
         </div>
 
         <div className="relative z-20 mt-auto max-w-lg p-10">
@@ -64,7 +63,7 @@ const AuthLayout: FC<AuthLayoutProps> = (props) => {
               ))}
             </div>
             <p className="text-lg leading-relaxed font-medium text-zinc-300">
-              "Spectuel's the best exchange we've traded on in a while."
+              "brand name's the best exchange we've traded on in a while."
             </p>
             <footer className="mt-4 text-sm text-zinc-500">
               <span className="font-semibold text-zinc-200">Elena Rostova</span>
