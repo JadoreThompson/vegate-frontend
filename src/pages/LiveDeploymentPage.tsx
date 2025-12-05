@@ -1,23 +1,14 @@
-import {
-  Calendar,
-  CirclePlay
-} from "lucide-react";
-import { type FC } from "react";
-import { Link, useNavigate } from "react-router";
+import { Calendar, CirclePlay } from "lucide-react";
+import { type FC, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router";
 
 import EquityGraph from "@/components/EquityGraph";
+import LiveLogs, { type LogEntry } from "@/components/LiveLogs";
 import PerformanceMetrics from "@/components/PerformanceMetrics";
+import TradesTable from "@/components/TradesTable";
 import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 // Internal Components
 interface SummaryMetricCardProps {
@@ -214,88 +205,13 @@ const MonthlyReturnsGrid: FC<MonthlyReturnsGridProps> = (props) => {
   );
 };
 
-interface Trade {
-  id: number;
-  date: string;
-  symbol: string;
-  side: string;
-  entry: string;
-  exit: string;
-  pnl: string;
-  pnlPercent: string;
-  duration: string;
-}
-
-interface TradesTableProps {
-  trades: Trade[];
-}
-
-const TradesTable: FC<TradesTableProps> = (props) => {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Recent Trades</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Symbol</TableHead>
-              <TableHead>Side</TableHead>
-              <TableHead>Entry</TableHead>
-              <TableHead>Exit</TableHead>
-              <TableHead>Duration</TableHead>
-              <TableHead className="text-right">P&L</TableHead>
-              <TableHead className="text-right">P&L %</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {props.trades.map((trade) => (
-              <TableRow key={trade.id}>
-                <TableCell>{trade.date}</TableCell>
-                <TableCell className="font-semibold">{trade.symbol}</TableCell>
-                <TableCell>
-                  <span
-                    className={`rounded px-2 py-0.5 text-xs font-medium ${
-                      trade.side === "LONG"
-                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                        : "bg-red-500/10 text-red-600 dark:text-red-400"
-                    }`}
-                  >
-                    {trade.side}
-                  </span>
-                </TableCell>
-                <TableCell>{trade.entry}</TableCell>
-                <TableCell>{trade.exit}</TableCell>
-                <TableCell>{trade.duration}</TableCell>
-                <TableCell
-                  className={`text-right font-semibold ${
-                    trade.pnl.startsWith("+")
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-red-600 dark:text-red-400"
-                  }`}
-                >
-                  {trade.pnl}
-                </TableCell>
-                <TableCell className="text-muted-foreground text-right">
-                  {trade.pnlPercent}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
-  );
-};
-
-const BacktestResultsPage: FC = () => {
+const LiveDeploymentPage: FC = () => {
   const navigate = useNavigate();
-  
-  // Mock backtest ID - replace with actual ID from params/context
+  const { id: strategyId } = useParams<{ id: string }>();
+
+  // Mock backtest ID for replay functionality
   const backtestId = "1";
-  
+
   const metrics = {
     totalReturn: 45.6,
     sharpeRatio: 1.87,
@@ -384,6 +300,44 @@ const BacktestResultsPage: FC = () => {
     },
   ];
 
+  // Mock log data
+  const [logs, setLogs] = useState<LogEntry[]>([
+    {
+      id: 1,
+      timestamp: "2024-12-05T10:30:15Z",
+      level: "INFO",
+      message: "Strategy started successfully",
+    },
+    {
+      id: 2,
+      timestamp: "2024-12-05T10:30:20Z",
+      level: "INFO",
+      message: "Market data connection established",
+    },
+    {
+      id: 3,
+      timestamp: "2024-12-05T10:31:45Z",
+      level: "INFO",
+      message: "Entry signal detected for AAPL at $175.23",
+    },
+    {
+      id: 4,
+      timestamp: "2024-12-05T10:32:10Z",
+      level: "WARNING",
+      message: "High volatility detected, adjusting position size",
+    },
+    {
+      id: 5,
+      timestamp: "2024-12-05T10:35:30Z",
+      level: "ERROR",
+      message: "Order execution failed: Insufficient margin",
+    },
+  ]);
+
+  const handleClearLogs = () => {
+    setLogs([]);
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -392,19 +346,19 @@ const BacktestResultsPage: FC = () => {
           <div>
             <div className="mb-2 flex items-center gap-2">
               <Link
-                to="/backtests"
+                to="/strategies"
                 className="text-muted-foreground hover:text-foreground text-sm"
               >
-                Backtests
+                Strategies
               </Link>
               <span className="text-muted-foreground">/</span>
               <span className="text-sm">RSI Mean Reversion</span>
             </div>
             <h2 className="text-3xl font-bold tracking-tight">
-              Backtest Results
+              Live Deployment
             </h2>
             <p className="text-muted-foreground">
-              Testing period: Jan 1, 2023 - Dec 31, 2023 (1 year)
+              Strategy ID: {strategyId} • Running since Dec 1, 2024
             </p>
           </div>
           <div className="flex gap-2">
@@ -504,9 +458,10 @@ const BacktestResultsPage: FC = () => {
 
         <MonthlyReturnsGrid monthlyReturns={monthlyReturns} />
         <TradesTable trades={recentTrades} />
+        <LiveLogs logs={logs} onClearLogs={handleClearLogs} />
       </div>
     </DashboardLayout>
   );
 };
 
-export default BacktestResultsPage;
+export default LiveDeploymentPage;

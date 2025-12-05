@@ -3,7 +3,9 @@ import {
   Bot,
   Filter,
   MoreVertical,
-  Pause,
+  NotepadText,
+  OctagonXIcon,
+  RadioTowerIcon,
   Trash2,
 } from "lucide-react";
 import { useState, type FC } from "react";
@@ -38,6 +40,7 @@ const StrategyHeader: FC<{
     lastUpdated: string;
   };
   getStatusColor: (status: string) => string;
+  onManageClick: () => void;
 }> = (props) => (
   <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
     <div className="flex items-start gap-4">
@@ -76,12 +79,21 @@ const StrategyHeader: FC<{
         <PopoverContent align="end" className="w-48">
           <div className="space-y-1">
             <Button variant="ghost" className="w-full justify-start" size="sm">
-              <Pause className="mr-2 h-4 w-4" />
+              <NotepadText className="mr-2 h-4 w-4" />
               System Prompt
             </Button>
+            <Button
+              variant="ghost"
+              className="w-full justify-start"
+              size="sm"
+              onClick={props.onManageClick}
+            >
+              <RadioTowerIcon className="mr-2 h-4 w-4" />
+              Manage
+            </Button>
             <Button variant="ghost" className="w-full justify-start" size="sm">
-              <Pause className="mr-2 h-4 w-4" />
-              Pause Strategy
+              <OctagonXIcon className="mr-2 h-4 w-4" />
+              Stop
             </Button>
             <Button
               variant="ghost"
@@ -89,7 +101,7 @@ const StrategyHeader: FC<{
               size="sm"
             >
               <Trash2 className="mr-2 h-4 w-4" />
-              Delete Strategy
+              Delete
             </Button>
           </div>
         </PopoverContent>
@@ -325,6 +337,7 @@ const BacktestsTable: FC<{
 // Main Page Component
 const StrategyDetailPage: FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [selectedTickers, setSelectedTickers] = useState<string[]>([
     "AAPL",
     "GOOGL",
@@ -466,6 +479,10 @@ Time Filters:
     }
   };
 
+  const handleManageClick = () => {
+    navigate(`/strategies/${id}/live`);
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -476,7 +493,11 @@ Time Filters:
           </Button>
         </Link>
 
-        <StrategyHeader strategy={strategy} getStatusColor={getStatusColor} />
+        <StrategyHeader
+          strategy={strategy}
+          getStatusColor={getStatusColor}
+          onManageClick={handleManageClick}
+        />
 
         <div className="flex flex-col gap-4 lg:flex-row">
           <PerformanceMetrics strategy={strategy} />

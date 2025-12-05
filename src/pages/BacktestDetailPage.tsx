@@ -1,12 +1,12 @@
 import {
-    ArrowLeft,
-    FastForward,
-    Maximize,
-    Pause,
-    Play,
-    Rewind,
-    TrendingUp,
-    X,
+  ArrowLeft,
+  FastForward,
+  Maximize,
+  Pause,
+  Play,
+  Rewind,
+  TrendingUp,
+  X,
 } from "lucide-react";
 import { useState, type FC } from "react";
 import { Link, useParams } from "react-router";
@@ -19,12 +19,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import { usePagination } from "@/hooks/use-pagination";
 

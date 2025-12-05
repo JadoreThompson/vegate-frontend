@@ -6,6 +6,7 @@ import DashboardPage from "./pages/DashboardPage";
 import EmailVerificationPage from "./pages/EmailVerifcationPage";
 import ExecutionLogsPage from "./pages/ExecutionLogsPage";
 import LandingPage from "./pages/LandingPage";
+import LiveDeploymentPage from "./pages/LiveDeploymentPage";
 import LoginPage from "./pages/LoginPage";
 import PricingPage from "./pages/PricingPage";
 import RegisterPage from "./pages/RegisterPage";
@@ -39,6 +40,7 @@ function App() {
           <Route path="/strategies" element={<StrategiesPage />} />
           <Route path="/strategies/new" element={<StrategyCreatePage />} />
           <Route path="/strategies/:id" element={<StrategyDetailPage />} />
+          <Route path="/strategies/:id/live" element={<LiveDeploymentPage />} />
 
           {/* Backtest Routes */}
           <Route path="/backtests" element={<BacktestResultsPage />} />
