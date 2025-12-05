@@ -12,6 +12,7 @@ import LoginPage from "./pages/LoginPage";
 import PricingPage from "./pages/PricingPage";
 import RegisterPage from "./pages/RegisterPage";
 import ReplaySessionPage from "./pages/ReplaySessionPage";
+import SettingsPage from "./pages/SettingsPage";
 import StrategiesPage from "./pages/StrategiesPage";
 import StrategyCreatePage from "./pages/StrategyCreatePage";
 import StrategyDetailPage from "./pages/StrategyDetailPage";
@@ -62,7 +63,7 @@ function App() {
           <Route path="/performance" element={<DashboardPage />} />
 
           {/* Settings */}
-          <Route path="/settings" element={<DashboardPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
           <Route path="/brokers" element={<BrokersPage />} />
 
           {/* Fallback */}

@@ -47,13 +47,9 @@ const DashboardSidebar: FC<DashboardSidebarProps> = (props) => {
     { name: "Dashboard", href: "/dashboard", icon: Home },
     { name: "Strategies", href: "/strategies", icon: Bot },
     { name: "Backtests", href: "/backtests", icon: BarChart3 },
-    // { name: "Live Trading", href: "/live-trading", icon: PlayCircle },
-    // { name: "Performance", href: "/performance", icon: LineChart },
-    // { name: "Trade History", href: "/trade-history", icon: History },
   ];
 
   const secondaryNavigation = [
-    { name: "Settings", href: "/settings", icon: Settings },
     { name: "Brokers", href: "/brokers", icon: Wallet },
   ];
 
@@ -188,6 +184,16 @@ const DashboardSidebar: FC<DashboardSidebarProps> = (props) => {
                   <SunIcon className="mr-2 h-4 w-4" />
                   Theme
                 </Button> */}
+              </Link>
+              <Link to="/settings">
+              <Button
+                variant="ghost"
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive w-full justify-start"
+                size="sm"
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </Button>
               </Link>
               <Button
                 variant="ghost"
