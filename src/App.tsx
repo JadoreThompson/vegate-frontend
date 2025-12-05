@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import ThemeProvider from "./components/providers/theme-provider";
 import BacktestResultsPage from "./pages/BacktestResultsPage";
+import BacktestsPage from "./pages/BacktestsPage";
 import BrokersPage from "./pages/BrokersPage";
 import DashboardPage from "./pages/DashboardPage";
 import EmailVerificationPage from "./pages/EmailVerifcationPage";
@@ -43,7 +44,7 @@ function App() {
           <Route path="/strategies/:id/live" element={<LiveDeploymentPage />} />
 
           {/* Backtest Routes */}
-          <Route path="/backtests" element={<BacktestResultsPage />} />
+          <Route path="/backtests" element={<BacktestsPage />} />
           <Route path="/backtests/:id" element={<BacktestResultsPage />} />
 
           {/* Replay Routes */}

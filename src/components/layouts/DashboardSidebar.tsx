@@ -1,42 +1,39 @@
 import {
-    BarChart3,
-    Bot,
-    History,
-    Home,
-    LineChart,
-    LogOut,
-    PlayCircle,
-    Settings,
-    SunIcon,
-    TrendingUp,
-    User,
-    Wallet,
+  BarChart3,
+  Bot,
+  Home,
+  LogOut,
+  Settings,
+  SunIcon,
+  TrendingUp,
+  User,
+  Wallet
 } from "lucide-react";
 import { type FC } from "react";
 import { Link, useLocation } from "react-router";
 
 import { Button } from "@/components/ui/button";
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
 } from "@/components/ui/popover";
 import {
-    Sidebar,
-    SidebarContent,
-    SidebarFooter,
-    SidebarGroup,
-    SidebarGroupContent,
-    SidebarHeader,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
-    SidebarSeparator,
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarSeparator,
 } from "@/components/ui/sidebar";
 import {
-    HoverCard,
-    HoverCardContent,
-    HoverCardTrigger,
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
 } from "@radix-ui/react-hover-card";
 
 interface DashboardSidebarProps {
@@ -50,9 +47,9 @@ const DashboardSidebar: FC<DashboardSidebarProps> = (props) => {
     { name: "Dashboard", href: "/dashboard", icon: Home },
     { name: "Strategies", href: "/strategies", icon: Bot },
     { name: "Backtests", href: "/backtests", icon: BarChart3 },
-    { name: "Live Trading", href: "/live-trading", icon: PlayCircle },
-    { name: "Performance", href: "/performance", icon: LineChart },
-    { name: "Trade History", href: "/trade-history", icon: History },
+    // { name: "Live Trading", href: "/live-trading", icon: PlayCircle },
+    // { name: "Performance", href: "/performance", icon: LineChart },
+    // { name: "Trade History", href: "/trade-history", icon: History },
   ];
 
   const secondaryNavigation = [
