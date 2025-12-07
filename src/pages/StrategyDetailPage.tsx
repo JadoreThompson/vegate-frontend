@@ -182,6 +182,117 @@ const PerformanceMetrics: FC<{
   </Card>
 );
 
+const DeploymentsTable: FC<{
+  deployments: Array<{
+    id: number;
+    name: string;
+    broker: string;
+    ticker: string;
+    status: string;
+    startDate: string;
+    capital: string;
+    currentPnL: string;
+    totalTrades: number;
+    winRate: number;
+  }>;
+}> = (props) => {
+  const navigate = useNavigate();
+
+  const handleRowClick = (deploymentId: number) => {
+    navigate(`/deployments/${deploymentId}`);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "running":
+        return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20";
+      case "paused":
+        return "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20";
+      case "stopped":
+        return "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20";
+      default:
+        return "bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20";
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Live Deployments</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Broker</TableHead>
+              <TableHead>Ticker</TableHead>
+              <TableHead>Started</TableHead>
+              <TableHead>Capital</TableHead>
+              <TableHead>Current P&L</TableHead>
+              <TableHead>Trades</TableHead>
+              <TableHead>Win Rate</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {props.deployments.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={9}
+                  className="text-muted-foreground text-center"
+                >
+                  No live deployments
+                </TableCell>
+              </TableRow>
+            ) : (
+              props.deployments.map((deployment) => (
+                <TableRow
+                  key={deployment.id}
+                  className="hover:bg-muted/50 cursor-pointer"
+                  onClick={() => handleRowClick(deployment.id)}
+                >
+                  <TableCell className="font-medium">
+                    {deployment.name}
+                  </TableCell>
+                  <TableCell>{deployment.broker}</TableCell>
+                  <TableCell className="font-medium">
+                    {deployment.ticker}
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {deployment.startDate}
+                  </TableCell>
+                  <TableCell>{deployment.capital}</TableCell>
+                  <TableCell>
+                    <span
+                      className={
+                        deployment.currentPnL.startsWith("+")
+                          ? "font-semibold text-emerald-600 dark:text-emerald-400"
+                          : "font-semibold text-red-600 dark:text-red-400"
+                      }
+                    >
+                      {deployment.currentPnL}
+                    </span>
+                  </TableCell>
+                  <TableCell>{deployment.totalTrades}</TableCell>
+                  <TableCell>{deployment.winRate}%</TableCell>
+                  <TableCell>
+                    <span
+                      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${getStatusColor(deployment.status)}`}
+                    >
+                      {deployment.status}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+};
+
 const BacktestsTable: FC<{
   backtests: Array<{
     id: number;
@@ -450,6 +561,46 @@ Time Filters:
 
   const tickerOptions = ["AAPL", "GOOGL", "MSFT", "TSLA"];
 
+  // Mock deployment data
+  const deployments = [
+    {
+      id: 1,
+      name: "AAPL Production",
+      broker: "Interactive Brokers",
+      ticker: "AAPL",
+      status: "running",
+      startDate: "2024-01-15",
+      capital: "$10,000",
+      currentPnL: "+$1,250.50",
+      totalTrades: 23,
+      winRate: 65,
+    },
+    {
+      id: 2,
+      name: "GOOGL Live",
+      broker: "Alpaca",
+      ticker: "GOOGL",
+      status: "running",
+      startDate: "2024-01-20",
+      capital: "$15,000",
+      currentPnL: "+$890.25",
+      totalTrades: 18,
+      winRate: 72,
+    },
+    {
+      id: 3,
+      name: "MSFT Testing",
+      broker: "TD Ameritrade",
+      ticker: "MSFT",
+      status: "paused",
+      startDate: "2024-01-10",
+      capital: "$8,000",
+      currentPnL: "-$120.75",
+      totalTrades: 15,
+      winRate: 53,
+    },
+  ];
+
   const handleTickerToggle = (ticker: string) => {
     if (selectedTickers.includes(ticker)) {
       if (selectedTickers.length > 1) {
@@ -510,6 +661,8 @@ Time Filters:
           tickerOptions={tickerOptions}
           onTickerToggle={handleTickerToggle}
         />
+
+        <DeploymentsTable deployments={deployments} />
       </div>
     </DashboardLayout>
   );
