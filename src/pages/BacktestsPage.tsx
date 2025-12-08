@@ -1,4 +1,4 @@
-import { BarChart3, Filter, Search } from "lucide-react";
+import { BarChart3, Filter, Loader2, Search, Trash2 } from "lucide-react";
 import { useState, type FC } from "react";
 import { Link } from "react-router";
 
@@ -6,225 +6,64 @@ import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
 } from "@/components/ui/popover";
-
-interface Backtest {
-  id: string;
-  name: string;
-  strategy_id: string;
-  strategy_name: string;
-  ticker: string;
-  start_date: string;
-  end_date: string;
-  status: "completed" | "running" | "failed";
-  total_return: number;
-  sharpe_ratio: number;
-  max_drawdown: number;
-  total_trades: number;
-  win_rate: number;
-  created_at: string;
-}
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  useBacktestsQuery,
+  useDeleteBacktest,
+} from "@/hooks/queries/backtest-hooks";
+import type { BacktestResponse } from "@/openapi";
 
 const BacktestsPage: FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedStrategies, setSelectedStrategies] = useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([
     "completed",
-    "running",
+    "in_progress",
+    "pending",
     "failed",
   ]);
   const [selectedTickers, setSelectedTickers] = useState<string[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [backtestToDelete, setBacktestToDelete] = useState<string | null>(null);
 
-  // Mock data - 10 sample backtests
-  const backtests: Backtest[] = [
-    {
-      id: "1",
-      name: "AAPL Q4 2023",
-      strategy_id: "1",
-      strategy_name: "RSI Mean Reversion",
-      ticker: "AAPL",
-      start_date: "2023-10-01",
-      end_date: "2023-12-31",
-      status: "completed",
-      total_return: 15.7,
-      sharpe_ratio: 1.85,
-      max_drawdown: -8.2,
-      total_trades: 42,
-      win_rate: 68,
-      created_at: "2024-01-15",
-    },
-    {
-      id: "2",
-      name: "TSLA Full Year",
-      strategy_id: "2",
-      strategy_name: "Momentum Breakout",
-      ticker: "TSLA",
-      start_date: "2023-01-01",
-      end_date: "2023-12-31",
-      status: "completed",
-      total_return: 32.4,
-      sharpe_ratio: 2.15,
-      max_drawdown: -12.5,
-      total_trades: 89,
-      win_rate: 72,
-      created_at: "2024-01-20",
-    },
-    {
-      id: "3",
-      name: "SPY H1 2023",
-      strategy_id: "3",
-      strategy_name: "Trend Following MA Cross",
-      ticker: "SPY",
-      start_date: "2023-01-01",
-      end_date: "2023-06-30",
-      status: "completed",
-      total_return: -5.3,
-      sharpe_ratio: 0.45,
-      max_drawdown: -18.7,
-      total_trades: 28,
-      win_rate: 42,
-      created_at: "2024-01-10",
-    },
-    {
-      id: "4",
-      name: "GOOGL Q3 2023",
-      strategy_id: "4",
-      strategy_name: "Volatility Squeeze",
-      ticker: "GOOGL",
-      start_date: "2023-07-01",
-      end_date: "2023-09-30",
-      status: "running",
-      total_return: 0,
-      sharpe_ratio: 0,
-      max_drawdown: 0,
-      total_trades: 0,
-      win_rate: 0,
-      created_at: "2024-01-25",
-    },
-    {
-      id: "5",
-      name: "MSFT Full Year",
-      strategy_id: "5",
-      strategy_name: "Support & Resistance",
-      ticker: "MSFT",
-      start_date: "2023-01-01",
-      end_date: "2023-12-31",
-      status: "completed",
-      total_return: 22.8,
-      sharpe_ratio: 1.92,
-      max_drawdown: -9.4,
-      total_trades: 65,
-      win_rate: 70,
-      created_at: "2024-01-18",
-    },
-    {
-      id: "6",
-      name: "NVDA Q2 2023",
-      strategy_id: "6",
-      strategy_name: "MACD Divergence",
-      ticker: "NVDA",
-      start_date: "2023-04-01",
-      end_date: "2023-06-30",
-      status: "failed",
-      total_return: 0,
-      sharpe_ratio: 0,
-      max_drawdown: 0,
-      total_trades: 0,
-      win_rate: 0,
-      created_at: "2024-01-22",
-    },
-    {
-      id: "7",
-      name: "AMZN H2 2023",
-      strategy_id: "1",
-      strategy_name: "RSI Mean Reversion",
-      ticker: "AMZN",
-      start_date: "2023-07-01",
-      end_date: "2023-12-31",
-      status: "completed",
-      total_return: 18.3,
-      sharpe_ratio: 1.78,
-      max_drawdown: -10.1,
-      total_trades: 53,
-      win_rate: 66,
-      created_at: "2024-01-12",
-    },
-    {
-      id: "8",
-      name: "META Q4 2023",
-      strategy_id: "2",
-      strategy_name: "Momentum Breakout",
-      ticker: "META",
-      start_date: "2023-10-01",
-      end_date: "2023-12-31",
-      status: "completed",
-      total_return: -8.5,
-      sharpe_ratio: -0.32,
-      max_drawdown: -22.3,
-      total_trades: 31,
-      win_rate: 38,
-      created_at: "2024-01-08",
-    },
-    {
-      id: "9",
-      name: "SPY Q1 2024",
-      strategy_id: "3",
-      strategy_name: "Trend Following MA Cross",
-      ticker: "SPY",
-      start_date: "2024-01-01",
-      end_date: "2024-03-31",
-      status: "running",
-      total_return: 0,
-      sharpe_ratio: 0,
-      max_drawdown: 0,
-      total_trades: 0,
-      win_rate: 0,
-      created_at: "2024-01-26",
-    },
-    {
-      id: "10",
-      name: "AAPL Full Year",
-      strategy_id: "4",
-      strategy_name: "Volatility Squeeze",
-      ticker: "AAPL",
-      start_date: "2023-01-01",
-      end_date: "2023-12-31",
-      status: "completed",
-      total_return: 45.2,
-      sharpe_ratio: 2.45,
-      max_drawdown: -7.8,
-      total_trades: 78,
-      win_rate: 75,
-      created_at: "2024-01-05",
-    },
-  ];
+  // Fetch backtests from API
+  const { data: response, isLoading, error } = useBacktestsQuery();
+  const deleteBacktestMutation = useDeleteBacktest();
+
+  const backtests: BacktestResponse[] = response?.data || [];
+
+  // Remove mock data
+  const mockBacktests: never[] = [];
 
   // Get unique values for filters
-  const uniqueStrategies = Array.from(
-    new Set(backtests.map((b) => b.strategy_name)),
-  ).sort();
   const uniqueTickers = Array.from(
-    new Set(backtests.map((b) => b.ticker)),
+    new Set(backtests.map((b) => b.symbol)),
   ).sort();
+
+  // Initialize selected tickers with all available tickers
+  if (selectedTickers.length === 0 && uniqueTickers.length > 0) {
+    setSelectedTickers(uniqueTickers);
+  }
 
   const statusOptions = [
     { value: "completed", label: "Completed" },
-    { value: "running", label: "Running" },
+    { value: "in_progress", label: "In Progress" },
+    { value: "pending", label: "Pending" },
     { value: "failed", label: "Failed" },
   ];
-
-  const handleStrategyToggle = (strategy: string) => {
-    setSelectedStrategies((prev) =>
-      prev.includes(strategy)
-        ? prev.filter((s) => s !== strategy)
-        : [...prev, strategy],
-    );
-  };
 
   const handleStatusToggle = (status: string) => {
     if (selectedStatuses.includes(status)) {
@@ -248,8 +87,10 @@ const BacktestsPage: FC = () => {
     switch (status) {
       case "completed":
         return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20";
-      case "running":
+      case "in_progress":
         return "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20";
+      case "pending":
+        return "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20";
       case "failed":
         return "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20";
       default:
@@ -259,20 +100,30 @@ const BacktestsPage: FC = () => {
 
   const filteredBacktests = backtests.filter((backtest) => {
     const matchesSearch =
-      backtest.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      backtest.ticker.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      backtest.strategy_name.toLowerCase().includes(searchQuery.toLowerCase());
+      backtest.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      backtest.backtest_id.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = selectedStatuses.includes(backtest.status);
-    const matchesStrategy =
-      selectedStrategies.length === 0 ||
-      selectedStrategies.includes(backtest.strategy_name);
     const matchesTicker =
-      selectedTickers.length === 0 || selectedTickers.includes(backtest.ticker);
-    return matchesSearch && matchesStatus && matchesStrategy && matchesTicker;
+      selectedTickers.length === 0 || selectedTickers.includes(backtest.symbol);
+    return matchesSearch && matchesStatus && matchesTicker;
   });
 
-  const BacktestCard = ({ backtest }: { backtest: Backtest }) => (
-    <Link to={`/backtests/${backtest.id}`}>
+  const handleDeleteClick = (e: React.MouseEvent, backtestId: string) => {
+    e.preventDefault();
+    setBacktestToDelete(backtestId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (backtestToDelete) {
+      await deleteBacktestMutation.mutateAsync(backtestToDelete);
+      setDeleteDialogOpen(false);
+      setBacktestToDelete(null);
+    }
+  };
+
+  const BacktestCard = ({ backtest }: { backtest: BacktestResponse }) => (
+    <Link to={`/backtests/${backtest.backtest_id}`}>
       <Card className="group h-[220px] cursor-pointer transition-all hover:border-emerald-500/50 hover:shadow-lg">
         <CardContent className="flex h-full flex-col p-6">
           <div className="space-y-4">
@@ -284,62 +135,41 @@ const BacktestsPage: FC = () => {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <h3 className="truncate text-lg font-semibold group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
-                    {backtest.ticker}
+                    {backtest.symbol}
                   </h3>
                   <Badge
                     className={`flex-shrink-0 ${getStatusColor(backtest.status)}`}
                   >
-                    {backtest.status}
+                    {backtest.status.replace("_", " ")}
                   </Badge>
                 </div>
                 <p className="text-muted-foreground mt-1 truncate text-sm">
-                  {backtest.strategy_name}
+                  ID: {backtest.backtest_id.substring(0, 8)}...
                 </p>
                 <p className="text-muted-foreground mt-0.5 text-xs">
-                  {new Date(backtest.start_date).toLocaleDateString("en-US", {
+                  Created:{" "}
+                  {new Date(backtest.created_at).toLocaleDateString("en-US", {
                     month: "short",
-                    year: "numeric",
-                  })}{" "}
-                  -{" "}
-                  {new Date(backtest.end_date).toLocaleDateString("en-US", {
-                    month: "short",
+                    day: "numeric",
                     year: "numeric",
                   })}
                 </p>
               </div>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-4 gap-4">
-              <div>
-                <p className="text-muted-foreground text-xs">Return</p>
-                <p
-                  className={`mt-1 font-semibold ${
-                    backtest.total_return > 0
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : backtest.total_return < 0
-                        ? "text-red-600 dark:text-red-400"
-                        : ""
-                  }`}
-                >
-                  {backtest.total_return > 0 ? "+" : ""}
-                  {backtest.total_return.toFixed(1)}%
-                </p>
+            {/* Info & Actions */}
+            <div className="flex items-center justify-between">
+              <div className="text-muted-foreground flex items-center gap-2 text-sm">
+                <span>Balance: ${backtest.starting_balance}</span>
               </div>
-              <div>
-                <p className="text-muted-foreground text-xs">Sharpe</p>
-                <p className="mt-1 font-semibold">
-                  {backtest.sharpe_ratio.toFixed(2)}
-                </p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-xs">Trades</p>
-                <p className="mt-1 font-semibold">{backtest.total_trades}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-xs">Win Rate</p>
-                <p className="mt-1 font-semibold">{backtest.win_rate}%</p>
-              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-red-600 hover:bg-red-500/10 hover:text-red-700"
+                onClick={(e) => handleDeleteClick(e, backtest.backtest_id)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </CardContent>
@@ -348,9 +178,78 @@ const BacktestsPage: FC = () => {
   );
 
   const activeFilterCount =
-    selectedStrategies.length +
     selectedTickers.length +
     (selectedStatuses.length < statusOptions.length ? 1 : 0);
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-3xl font-bold tracking-tight">Backtests</h2>
+              <p className="text-muted-foreground">
+                View and analyze all backtest results across your strategies
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Card key={i} className="h-[220px]">
+                <CardContent className="flex h-full flex-col p-6">
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3">
+                      <Skeleton className="h-12 w-12 rounded-xl" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-6 w-32" />
+                        <Skeleton className="h-4 w-48" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-4 gap-4">
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-3xl font-bold tracking-tight">Backtests</h2>
+              <p className="text-muted-foreground">
+                View and analyze all backtest results across your strategies
+              </p>
+            </div>
+          </div>
+
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-16">
+              <BarChart3 className="text-muted-foreground mb-4 h-12 w-12" />
+              <h3 className="mb-2 text-lg font-semibold">
+                Error loading backtests
+              </h3>
+              <p className="text-muted-foreground text-sm">
+                {error?.message || "Failed to load backtests"}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -377,51 +276,6 @@ const BacktestsPage: FC = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-
-          {/* Strategy Filter */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="default">
-                <Filter className="mr-2 h-4 w-4" />
-                Strategy
-                {selectedStrategies.length > 0 && (
-                  <span className="ml-2 rounded-full bg-emerald-500 px-1.5 py-0.5 text-xs text-white">
-                    {selectedStrategies.length}
-                  </span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="start" className="w-56">
-              <div className="space-y-4">
-                <div>
-                  <h4 className="mb-3 font-semibold">Strategy</h4>
-                  <div className="space-y-2">
-                    {uniqueStrategies.map((strategy) => (
-                      <label
-                        key={strategy}
-                        className="hover:bg-accent flex cursor-pointer items-center gap-2 rounded-md p-2"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedStrategies.includes(strategy)}
-                          onChange={() => handleStrategyToggle(strategy)}
-                          className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
-                        />
-                        <span className="text-sm">{strategy}</span>
-                        <span className="text-muted-foreground ml-auto text-xs">
-                          {
-                            backtests.filter(
-                              (b) => b.strategy_name === strategy,
-                            ).length
-                          }
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
 
           {/* Status Filter */}
           <Popover>
@@ -502,7 +356,7 @@ const BacktestsPage: FC = () => {
                         />
                         <span className="text-sm">{ticker}</span>
                         <span className="text-muted-foreground ml-auto text-xs">
-                          {backtests.filter((b) => b.ticker === ticker).length}
+                          {backtests.filter((b) => b.symbol === ticker).length}
                         </span>
                       </label>
                     ))}
@@ -533,10 +387,46 @@ const BacktestsPage: FC = () => {
             </div>
           ) : (
             filteredBacktests.map((backtest) => (
-              <BacktestCard key={backtest.id} backtest={backtest} />
+              <BacktestCard key={backtest.backtest_id} backtest={backtest} />
             ))
           )}
         </div>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Backtest</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this backtest? This action
+                cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setDeleteDialogOpen(false)}
+                disabled={deleteBacktestMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteConfirm}
+                disabled={deleteBacktestMutation.isPending}
+              >
+                {deleteBacktestMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );

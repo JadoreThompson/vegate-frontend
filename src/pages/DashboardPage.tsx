@@ -7,116 +7,131 @@ import {
   Plus,
   TrendingUp,
 } from "lucide-react";
-import { type FC } from "react";
+import { type FC, useMemo } from "react";
 import { Link } from "react-router";
 
 import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useBacktestsQuery } from "@/hooks/queries/backtest-hooks";
+import { useStrategySummaries } from "@/hooks/queries/strategy-hooks";
+import type { BacktestResponse } from "@/openapi";
 
 const DashboardPage: FC = () => {
-  const stats = [
-    {
-      title: "Total Portfolio Value",
-      value: "$124,580.32",
-      change: "+12.5%",
-      trend: "up",
-      icon: DollarSign,
-    },
-    {
-      title: "Active Strategies",
-      value: "8",
-      change: "+2 this week",
-      trend: "up",
-      icon: Bot,
-    },
-    {
-      title: "Total Return",
-      value: "+18.7%",
-      change: "+2.3% this month",
-      trend: "up",
-      icon: TrendingUp,
-    },
-    {
-      title: "Win Rate",
-      value: "64.2%",
-      change: "-1.2% this week",
-      trend: "down",
-      icon: LineChart,
-    },
-  ];
+  // Fetch strategy summaries with metrics
+  const { data: strategiesData, isLoading: strategiesLoading } =
+    useStrategySummaries({ limit: 100 });
 
-  const recentStrategies = [
-    {
-      id: 1,
-      name: "RSI Mean Reversion",
-      status: "active",
-      pnl: "+$2,450.00",
-      pnlPercent: "+12.3%",
-      trades: 45,
-      winRate: "68%",
-    },
-    {
-      id: 2,
-      name: "Momentum Breakout",
-      status: "active",
-      pnl: "+$1,820.00",
-      pnlPercent: "+9.1%",
-      trades: 32,
-      winRate: "62%",
-    },
-    {
-      id: 3,
-      name: "Trend Following MA Cross",
-      status: "active",
-      pnl: "-$340.00",
-      pnlPercent: "-1.7%",
-      trades: 18,
-      winRate: "44%",
-    },
-    {
-      id: 4,
-      name: "Volatility Squeeze",
-      status: "paused",
-      pnl: "+$5,120.00",
-      pnlPercent: "+25.6%",
-      trades: 67,
-      winRate: "71%",
-    },
-  ];
+  // Fetch recent backtests to show as proxy for trades
+  const { data: backtestsData, isLoading: backtestsLoading } =
+    useBacktestsQuery({
+      limit: 5,
+    });
 
-  const recentTrades = [
-    {
-      id: 1,
-      strategy: "RSI Mean Reversion",
-      symbol: "AAPL",
-      side: "BUY",
-      entry: "$175.23",
-      exit: "$178.45",
-      pnl: "+$322.00",
-      time: "2 hours ago",
-    },
-    {
-      id: 2,
-      strategy: "Momentum Breakout",
-      symbol: "TSLA",
-      side: "SELL",
-      entry: "$242.50",
-      exit: "$238.20",
-      pnl: "+$430.00",
-      time: "4 hours ago",
-    },
-    {
-      id: 3,
-      strategy: "Trend Following MA Cross",
-      symbol: "SPY",
-      side: "BUY",
-      entry: "$445.67",
-      exit: "$443.12",
-      pnl: "-$255.00",
-      time: "6 hours ago",
-    },
-  ];
+  // Calculate aggregate stats from strategy summaries
+  const stats = useMemo(() => {
+    if (!strategiesData?.data) {
+      return [
+        {
+          title: "Total Portfolio Value",
+          value: "$0.00",
+          change: "+0%",
+          trend: "up" as const,
+          icon: DollarSign,
+        },
+        {
+          title: "Active Strategies",
+          value: "0",
+          change: "No strategies yet",
+          trend: "up" as const,
+          icon: Bot,
+        },
+        {
+          title: "Total Return",
+          value: "+0%",
+          change: "+0% this month",
+          trend: "up" as const,
+          icon: TrendingUp,
+        },
+        {
+          title: "Win Rate",
+          value: "0%",
+          change: "No trades yet",
+          trend: "up" as const,
+          icon: LineChart,
+        },
+      ];
+    }
+
+    const strategies = strategiesData.data;
+    const totalStrategies = strategies.length;
+
+    // Calculate average metrics across all strategies
+    const avgReturn =
+      strategies.reduce(
+        (sum: number, s: { metrics: { total_return: number } }) =>
+          sum + (s.metrics?.total_return || 0),
+        0,
+      ) / (totalStrategies || 1);
+    const avgWinRate =
+      strategies.reduce(
+        (sum: number, s: { metrics: { win_rate: number } }) =>
+          sum + (s.metrics?.win_rate || 0),
+        0,
+      ) / (totalStrategies || 1);
+
+    // Note: Without actual portfolio value data, we show aggregated metrics
+    return [
+      {
+        title: "Active Strategies",
+        value: totalStrategies.toString(),
+        change:
+          totalStrategies > 0
+            ? `${totalStrategies} total`
+            : "Create your first",
+        trend: "up",
+        icon: Bot,
+      },
+      {
+        title: "Avg Strategy Return",
+        value: `${avgReturn > 0 ? "+" : ""}${avgReturn.toFixed(2)}%`,
+        change: "Across all strategies",
+        trend: avgReturn >= 0 ? "up" : "down",
+        icon: TrendingUp,
+      },
+      {
+        title: "Avg Win Rate",
+        value: `${avgWinRate.toFixed(1)}%`,
+        change: "Across all strategies",
+        trend: avgWinRate >= 50 ? "up" : "down",
+        icon: LineChart,
+      },
+      {
+        title: "Total Backtests",
+        value: (backtestsData?.data?.length || 0).toString(),
+        change: "Historical tests",
+        trend: "up",
+        icon: DollarSign,
+      },
+    ];
+  }, [strategiesData, backtestsData]);
+
+  // Get top strategies by total return
+  const topStrategies = useMemo(() => {
+    if (!strategiesData?.data) return [];
+    return [...strategiesData.data]
+      .sort(
+        (a, b) =>
+          (b.metrics?.total_return || 0) - (a.metrics?.total_return || 0),
+      )
+      .slice(0, 4);
+  }, [strategiesData]);
+
+  // Get recent backtests as proxy for trades
+  const recentBacktests = useMemo(() => {
+    return backtestsData?.data || [];
+  }, [backtestsData]);
 
   return (
     <DashboardLayout>
@@ -141,36 +156,49 @@ const DashboardPage: FC = () => {
 
         {/* Stats Grid */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {stats.map((stat) => {
-            const Icon = stat.icon;
-            return (
-              <Card key={stat.title}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    {stat.title}
-                  </CardTitle>
-                  <Icon className="text-muted-foreground h-4 w-4" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stat.value}</div>
-                  <p
-                    className={`flex items-center text-xs ${
-                      stat.trend === "up"
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : "text-red-600 dark:text-red-400"
-                    }`}
-                  >
-                    {stat.trend === "up" ? (
-                      <ArrowUp className="mr-1 h-3 w-3" />
-                    ) : (
-                      <ArrowDown className="mr-1 h-3 w-3" />
-                    )}
-                    {stat.change}
-                  </p>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {strategiesLoading || backtestsLoading
+            ? Array.from({ length: 4 }).map((_, i) => (
+                <Card key={i}>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-4 rounded" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="mb-2 h-8 w-24" />
+                    <Skeleton className="h-3 w-32" />
+                  </CardContent>
+                </Card>
+              ))
+            : stats.map((stat) => {
+                const Icon = stat.icon;
+                return (
+                  <Card key={stat.title}>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">
+                        {stat.title}
+                      </CardTitle>
+                      <Icon className="text-muted-foreground h-4 w-4" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{stat.value}</div>
+                      <p
+                        className={`flex items-center text-xs ${
+                          stat.trend === "up"
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : "text-red-600 dark:text-red-400"
+                        }`}
+                      >
+                        {stat.trend === "up" ? (
+                          <ArrowUp className="mr-1 h-3 w-3" />
+                        ) : (
+                          <ArrowDown className="mr-1 h-3 w-3" />
+                        )}
+                        {stat.change}
+                      </p>
+                    </CardContent>
+                  </Card>
+                );
+              })}
         </div>
 
         {/* Performance Chart Placeholder */}
@@ -195,7 +223,7 @@ const DashboardPage: FC = () => {
           {/* Active Strategies */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Active Strategies</CardTitle>
+              <CardTitle>Top Strategies</CardTitle>
               <Link to="/strategies">
                 <Button variant="ghost" size="sm">
                   View All
@@ -203,103 +231,145 @@ const DashboardPage: FC = () => {
               </Link>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {recentStrategies.map((strategy) => (
-                  <div
-                    key={strategy.id}
-                    className="border-border hover:bg-accent flex items-center justify-between rounded-lg border p-4 transition-colors"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold">{strategy.name}</h3>
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                            strategy.status === "active"
-                              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                              : "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400"
+              {strategiesLoading ? (
+                <div className="space-y-4">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="border-border rounded-lg border p-4"
+                    >
+                      <Skeleton className="mb-2 h-5 w-48" />
+                      <Skeleton className="mb-2 h-4 w-32" />
+                      <Skeleton className="h-4 w-24" />
+                    </div>
+                  ))}
+                </div>
+              ) : topStrategies.length > 0 ? (
+                <div className="space-y-4">
+                  {topStrategies.map((strategy) => (
+                    <Link
+                      key={strategy.id}
+                      to={`/strategies/${strategy.id}`}
+                      className="border-border hover:bg-accent flex items-center justify-between rounded-lg border p-4 transition-colors"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold">{strategy.name}</h3>
+                        </div>
+                        <div className="text-muted-foreground mt-1 flex gap-4 text-sm">
+                          <span>
+                            {strategy.metrics?.win_rate
+                              ? `${strategy.metrics.win_rate.toFixed(1)}% win rate`
+                              : "No data"}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p
+                          className={`font-semibold ${
+                            (strategy.metrics?.total_return || 0) >= 0
+                              ? "text-emerald-600 dark:text-emerald-400"
+                              : "text-red-600 dark:text-red-400"
                           }`}
                         >
-                          {strategy.status}
-                        </span>
+                          {(strategy.metrics?.total_return || 0) >= 0
+                            ? "+"
+                            : ""}
+                          {(strategy.metrics?.total_return || 0).toFixed(2)}%
+                        </p>
+                        <p className="text-muted-foreground text-sm">
+                          Total Return
+                        </p>
                       </div>
-                      <div className="text-muted-foreground mt-1 flex gap-4 text-sm">
-                        <span>{strategy.trades} trades</span>
-                        <span>{strategy.winRate} win rate</span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p
-                        className={`font-semibold ${
-                          strategy.pnl.startsWith("+")
-                            ? "text-emerald-600 dark:text-emerald-400"
-                            : "text-red-600 dark:text-red-400"
-                        }`}
-                      >
-                        {strategy.pnl}
-                      </p>
-                      <p className="text-muted-foreground text-sm">
-                        {strategy.pnlPercent}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="border-border flex h-32 items-center justify-center rounded-lg border border-dashed">
+                  <p className="text-muted-foreground text-sm">
+                    No strategies yet. Create your first strategy to get
+                    started.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          {/* Recent Trades */}
+          {/* Recent Backtests */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Recent Trades</CardTitle>
-              <Link to="/trade-history">
+              <CardTitle>Recent Backtests</CardTitle>
+              <Link to="/backtests">
                 <Button variant="ghost" size="sm">
                   View All
                 </Button>
               </Link>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {recentTrades.map((trade) => (
-                  <div
-                    key={trade.id}
-                    className="border-border hover:bg-accent flex items-center justify-between rounded-lg border p-4 transition-colors"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold">{trade.symbol}</h3>
-                        <span
-                          className={`rounded px-1.5 py-0.5 text-xs font-medium ${
-                            trade.side === "BUY"
-                              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                              : "bg-red-500/10 text-red-600 dark:text-red-400"
-                          }`}
-                        >
-                          {trade.side}
-                        </span>
+              {backtestsLoading ? (
+                <div className="space-y-4">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="border-border rounded-lg border p-4"
+                    >
+                      <Skeleton className="mb-2 h-5 w-48" />
+                      <Skeleton className="mb-2 h-4 w-32" />
+                      <Skeleton className="h-4 w-24" />
+                    </div>
+                  ))}
+                </div>
+              ) : recentBacktests.length > 0 ? (
+                <div className="space-y-4">
+                  {recentBacktests.map((backtest: BacktestResponse) => (
+                    <Link
+                      key={backtest.backtest_id}
+                      to={`/backtests/${backtest.backtest_id}`}
+                      className="border-border hover:bg-accent flex items-center justify-between rounded-lg border p-4 transition-colors"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold">
+                            Backtest {backtest.symbol}
+                          </h3>
+                          <span
+                            className={`rounded px-1.5 py-0.5 text-xs font-medium ${
+                              backtest.status === "completed"
+                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                : backtest.status === "in_progress"
+                                  ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                                  : backtest.status === "failed"
+                                    ? "bg-red-500/10 text-red-600 dark:text-red-400"
+                                    : "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400"
+                            }`}
+                          >
+                            {backtest.status}
+                          </span>
+                        </div>
+                        <p className="text-muted-foreground mt-1 text-sm">
+                          {new Date(backtest.created_at).toLocaleDateString()}
+                        </p>
                       </div>
-                      <p className="text-muted-foreground mt-1 text-sm">
-                        {trade.strategy}
-                      </p>
-                      <p className="text-muted-foreground text-xs">
-                        {trade.entry} → {trade.exit}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p
-                        className={`font-semibold ${
-                          trade.pnl.startsWith("+")
-                            ? "text-emerald-600 dark:text-emerald-400"
-                            : "text-red-600 dark:text-red-400"
-                        }`}
-                      >
-                        {trade.pnl}
-                      </p>
-                      <p className="text-muted-foreground text-xs">
-                        {trade.time}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                      <div className="text-right">
+                        <p className="text-muted-foreground text-xs">
+                          View details
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="border-border flex h-32 items-center justify-center rounded-lg border border-dashed">
+                  <p className="text-muted-foreground text-sm">
+                    No backtests yet. Run a backtest to see results here.
+                  </p>
+                </div>
+              )}
+              <div className="border-border mt-4 rounded-lg border bg-blue-50 p-3 dark:bg-blue-950/20">
+                <p className="text-muted-foreground text-xs">
+                  📊 <strong>Note:</strong> Live trading is not yet available.
+                  These are backtest results showing historical performance.
+                </p>
               </div>
             </CardContent>
           </Card>

@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, ExternalLink } from "lucide-react";
+import { AlertCircle, CheckCircle2, ExternalLink, Loader2 } from "lucide-react";
 import { useState, type FC } from "react";
 
 import DashboardLayout from "@/components/layouts/dashboard-layout";
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAlpacaOAuthUrl } from "@/hooks/queries/broker-hooks";
 
 type Broker = {
   id: string;
@@ -32,6 +33,13 @@ const BrokersPage: FC = () => {
   const [selectedBroker, setSelectedBroker] = useState<Broker | null>(null);
   const [connectDialogOpen, setConnectDialogOpen] = useState(false);
 
+  // Fetch Alpaca OAuth URL
+  const {
+    data: oauthData,
+    isLoading: isLoadingOAuth,
+    error: oauthError,
+  } = useAlpacaOAuthUrl();
+
   const brokers: Broker[] = [
     {
       id: "alpaca",
@@ -39,13 +47,8 @@ const BrokersPage: FC = () => {
       logo: "🦙",
       description: "Commission-free trading API",
       authType: "oauth",
-      oauthUrl: "https://app.alpaca.markets/oauth/authorize",
-      status: "connected",
-      connectedAccount: {
-        accountId: "PAXXX12345",
-        balance: 124580.32,
-        lastSync: "2 minutes ago",
-      },
+      oauthUrl: oauthData?.oauth_url,
+      status: "available",
     },
     {
       id: "ig",
@@ -111,7 +114,10 @@ const BrokersPage: FC = () => {
   };
 
   const handleOAuthConnect = () => {
-    if (selectedBroker?.oauthUrl) {
+    if (selectedBroker?.id === "alpaca" && oauthData?.oauth_url) {
+      window.open(oauthData.oauth_url, "_blank");
+      setConnectDialogOpen(false);
+    } else if (selectedBroker?.oauthUrl) {
       window.open(selectedBroker.oauthUrl, "_blank");
       setConnectDialogOpen(false);
     }
@@ -143,7 +149,7 @@ const BrokersPage: FC = () => {
                 key={broker.id}
                 onClick={() => handleBrokerClick(broker)}
                 disabled={broker.status === "coming_soon"}
-                className={`h-36 w-36 group relative flex aspect-square flex-col items-center justify-center gap-3 rounded-2xl border-2 p-6 transition-all ${
+                className={`group relative flex aspect-square h-36 w-36 flex-col items-center justify-center gap-3 rounded-2xl border-2 p-6 transition-all ${
                   broker.status === "connected"
                     ? "border-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/10"
                     : broker.status === "coming_soon"
@@ -248,6 +254,21 @@ const BrokersPage: FC = () => {
             {selectedBroker?.status === "available" &&
               selectedBroker?.authType === "oauth" && (
                 <div className="space-y-4">
+                  {/* Show error if OAuth URL fetch failed */}
+                  {selectedBroker.id === "alpaca" && oauthError && (
+                    <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="h-4 w-4 flex-shrink-0 text-red-600 dark:text-red-400" />
+                        <div className="text-sm text-red-600 dark:text-red-400">
+                          <p className="font-medium">Connection Error</p>
+                          <p className="mt-1">
+                            Failed to load OAuth URL. Please try again later.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-4">
                     <div className="flex items-start gap-2">
                       <AlertCircle className="h-4 w-4 flex-shrink-0 text-blue-600 dark:text-blue-400" />
@@ -265,9 +286,24 @@ const BrokersPage: FC = () => {
                   <Button
                     className="w-full bg-emerald-600 hover:bg-emerald-700"
                     onClick={handleOAuthConnect}
+                    disabled={
+                      (selectedBroker.id === "alpaca" &&
+                        (isLoadingOAuth || !oauthData?.oauth_url)) ||
+                      (!selectedBroker.oauthUrl &&
+                        selectedBroker.id !== "alpaca")
+                    }
                   >
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    Continue to {selectedBroker.name}
+                    {selectedBroker.id === "alpaca" && isLoadingOAuth ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                        Continue to {selectedBroker.name}
+                      </>
+                    )}
                   </Button>
                 </div>
               )}

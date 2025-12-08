@@ -1,157 +1,83 @@
-import { Calendar, ChevronDown, Download, Filter, Search } from "lucide-react";
-import { useState, type FC } from "react";
+import { Download } from "lucide-react";
+import { useMemo, useState, type FC } from "react";
 
 import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
+import {
+  useBacktestOrders,
+  useBacktestsQuery,
+} from "@/hooks/queries/backtest-hooks";
+import type { BacktestResponse, OrderResponseOutput } from "@/openapi";
 
 const TradeHistoryPage: FC = () => {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedBacktestId, setSelectedBacktestId] = useState<string>("");
 
-  const trades = [
-    {
-      id: 1,
-      date: "2024-01-26 14:32:15",
-      strategy: "RSI Mean Reversion",
-      symbol: "AAPL",
-      side: "LONG",
-      entryPrice: 175.23,
-      exitPrice: 178.45,
-      quantity: 100,
-      pnl: 322.0,
-      pnlPercent: 1.84,
-      commission: 2.0,
-      duration: "2d 5h",
-    },
-    {
-      id: 2,
-      date: "2024-01-24 10:15:42",
-      strategy: "Momentum Breakout",
-      symbol: "TSLA",
-      side: "SHORT",
-      entryPrice: 242.5,
-      exitPrice: 238.2,
-      quantity: 100,
-      pnl: 430.0,
-      pnlPercent: 1.77,
-      commission: 2.0,
-      duration: "1d 4h",
-    },
-    {
-      id: 3,
-      date: "2024-01-22 09:45:30",
-      strategy: "Trend Following MA Cross",
-      symbol: "SPY",
-      side: "LONG",
-      entryPrice: 445.67,
-      exitPrice: 443.12,
-      quantity: 100,
-      pnl: -255.0,
-      pnlPercent: -0.57,
-      commission: 2.0,
-      duration: "3d 2h",
-    },
-    {
-      id: 4,
-      date: "2024-01-20 13:20:18",
-      strategy: "RSI Mean Reversion",
-      symbol: "NVDA",
-      side: "LONG",
-      entryPrice: 520.3,
-      exitPrice: 532.45,
-      quantity: 100,
-      pnl: 1215.0,
-      pnlPercent: 2.34,
-      commission: 2.0,
-      duration: "4d 6h",
-    },
-    {
-      id: 5,
-      date: "2024-01-18 11:55:22",
-      strategy: "Volatility Squeeze",
-      symbol: "MSFT",
-      side: "LONG",
-      entryPrice: 402.15,
-      exitPrice: 398.9,
-      quantity: 100,
-      pnl: -325.0,
-      pnlPercent: -0.81,
-      commission: 2.0,
-      duration: "2d 8h",
-    },
-    {
-      id: 6,
-      date: "2024-01-16 15:40:55",
-      strategy: "Momentum Breakout",
-      symbol: "GOOGL",
-      side: "LONG",
-      entryPrice: 142.8,
-      exitPrice: 146.2,
-      quantity: 150,
-      pnl: 510.0,
-      pnlPercent: 2.38,
-      commission: 2.5,
-      duration: "3d 1h",
-    },
-    {
-      id: 7,
-      date: "2024-01-14 08:30:12",
-      strategy: "RSI Mean Reversion",
-      symbol: "META",
-      side: "SHORT",
-      entryPrice: 385.6,
-      exitPrice: 380.4,
-      quantity: 80,
-      pnl: 416.0,
-      pnlPercent: 1.35,
-      commission: 1.8,
-      duration: "1d 9h",
-    },
-    {
-      id: 8,
-      date: "2024-01-12 12:18:45",
-      strategy: "Trend Following MA Cross",
-      symbol: "AMD",
-      side: "LONG",
-      entryPrice: 158.9,
-      exitPrice: 163.2,
-      quantity: 120,
-      pnl: 516.0,
-      pnlPercent: 2.71,
-      commission: 2.2,
-      duration: "5d 3h",
-    },
-  ];
+  // Fetch list of backtests to populate selector
+  const { data: backtestsData, isLoading: backtestsLoading } =
+    useBacktestsQuery({
+      limit: 100,
+    });
 
-  const summary = {
-    totalTrades: trades.length,
-    winningTrades: trades.filter((t) => t.pnl > 0).length,
-    losingTrades: trades.filter((t) => t.pnl < 0).length,
-    totalPnL: trades.reduce((sum, t) => sum + t.pnl, 0),
-    totalCommissions: trades.reduce((sum, t) => sum + t.commission, 0),
-    avgWin:
-      trades.filter((t) => t.pnl > 0).reduce((sum, t) => sum + t.pnl, 0) /
-      trades.filter((t) => t.pnl > 0).length,
-    avgLoss:
-      trades.filter((t) => t.pnl < 0).reduce((sum, t) => sum + t.pnl, 0) /
-      trades.filter((t) => t.pnl < 0).length,
-  };
+  // Fetch orders for selected backtest
+  const { data: ordersData, isLoading: ordersLoading } = useBacktestOrders(
+    selectedBacktestId,
+    { limit: 100 },
+  );
 
-  const winRate = (summary.winningTrades / summary.totalTrades) * 100;
+  // Set first backtest as selected when data loads
+  useMemo(() => {
+    if (
+      backtestsData?.data &&
+      backtestsData.data.length > 0 &&
+      !selectedBacktestId
+    ) {
+      setSelectedBacktestId(backtestsData.data[0].backtest_id);
+    }
+  }, [backtestsData, selectedBacktestId]);
+
+  const orders = ordersData?.data || [];
+
+  // Calculate summary from orders
+  const summary = useMemo(() => {
+    if (!orders || orders.length === 0) {
+      return {
+        totalOrders: 0,
+        filledOrders: 0,
+        pendingOrders: 0,
+      };
+    }
+
+    const filledOrders = orders.filter(
+      (o: OrderResponseOutput) =>
+        o.status === "filled" || o.status === "closed",
+    );
+    const pendingOrders = orders.filter(
+      (o: OrderResponseOutput) => o.status === "pending",
+    );
+
+    return {
+      totalOrders: orders.length,
+      filledOrders: filledOrders.length,
+      pendingOrders: pendingOrders.length,
+    };
+  }, [orders]);
 
   return (
     <DashboardLayout>
@@ -161,271 +87,216 @@ const TradeHistoryPage: FC = () => {
           <div>
             <h2 className="text-3xl font-bold tracking-tight">Trade History</h2>
             <p className="text-muted-foreground">
-              Complete record of all executed trades
+              View orders from backtest simulations
             </p>
           </div>
-          <Button variant="outline">
+          <Button variant="outline" disabled>
             <Download className="mr-2 h-4 w-4" />
             Export CSV
           </Button>
         </div>
 
-        {/* Summary Stats */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Total P&L</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div
-                className={`text-2xl font-bold ${
-                  summary.totalPnL > 0
-                    ? "text-emerald-600 dark:text-emerald-400"
-                    : "text-red-600 dark:text-red-400"
-                }`}
-              >
-                {summary.totalPnL > 0 ? "+" : ""}${summary.totalPnL.toFixed(2)}
-              </div>
-              <p className="text-muted-foreground text-xs">
-                ${summary.totalCommissions.toFixed(2)} in commissions
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Win Rate</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{winRate.toFixed(1)}%</div>
-              <p className="text-muted-foreground text-xs">
-                {summary.winningTrades} wins / {summary.losingTrades} losses
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Avg Win</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                +${summary.avgWin.toFixed(2)}
-              </div>
-              <p className="text-muted-foreground text-xs">Per winning trade</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Avg Loss</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600 dark:text-red-400">
-                ${summary.avgLoss.toFixed(2)}
-              </div>
-              <p className="text-muted-foreground text-xs">Per losing trade</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Filters */}
-        <Card>
+        {/* Info Alert */}
+        <Card className="border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/20">
           <CardContent className="pt-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-              <div className="relative flex-1">
-                <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-                <Input
-                  placeholder="Search by symbol or strategy..."
-                  className="pl-9"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <div className="flex gap-2">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline">
-                      <Filter className="mr-2 h-4 w-4" />
-                      Filter
-                      <ChevronDown className="ml-2 h-4 w-4" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent align="end" className="w-64">
-                    <div className="space-y-4">
-                      <div>
-                        <h4 className="mb-2 font-semibold">Strategy</h4>
-                        <div className="space-y-2 text-sm">
-                          <label className="flex items-center gap-2">
-                            <input type="checkbox" />
-                            <span>RSI Mean Reversion</span>
-                          </label>
-                          <label className="flex items-center gap-2">
-                            <input type="checkbox" />
-                            <span>Momentum Breakout</span>
-                          </label>
-                          <label className="flex items-center gap-2">
-                            <input type="checkbox" />
-                            <span>Trend Following</span>
-                          </label>
-                        </div>
-                      </div>
-                      <div>
-                        <h4 className="mb-2 font-semibold">Side</h4>
-                        <div className="space-y-2 text-sm">
-                          <label className="flex items-center gap-2">
-                            <input type="checkbox" />
-                            <span>Long</span>
-                          </label>
-                          <label className="flex items-center gap-2">
-                            <input type="checkbox" />
-                            <span>Short</span>
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline">
-                      <Calendar className="mr-2 h-4 w-4" />
-                      Date Range
-                      <ChevronDown className="ml-2 h-4 w-4" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent align="end">
-                    <div className="space-y-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start"
-                      >
-                        Last 7 days
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start"
-                      >
-                        Last 30 days
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start"
-                      >
-                        Last 90 days
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start"
-                      >
-                        This year
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start"
-                      >
-                        All time
-                      </Button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
+            <p className="text-sm text-blue-900 dark:text-blue-100">
+              <strong>📊 Note:</strong> Live trading is not yet implemented.
+              This page shows orders from backtest simulations. Select a
+              backtest below to view its orders. Once live trading is enabled,
+              this page will display your actual trade history.
+            </p>
           </CardContent>
         </Card>
 
-        {/* Trade Table */}
+        {/* Backtest Selector */}
         <Card>
           <CardHeader>
-            <CardTitle>All Trades ({trades.length})</CardTitle>
+            <CardTitle>Select Backtest</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Strategy</TableHead>
-                    <TableHead>Symbol</TableHead>
-                    <TableHead>Side</TableHead>
-                    <TableHead className="text-right">Entry</TableHead>
-                    <TableHead className="text-right">Exit</TableHead>
-                    <TableHead className="text-right">Qty</TableHead>
-                    <TableHead className="text-right">P&L</TableHead>
-                    <TableHead className="text-right">%</TableHead>
-                    <TableHead>Duration</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {trades.map((trade) => (
-                    <TableRow
-                      key={trade.id}
-                      className="hover:bg-accent cursor-pointer"
+            {backtestsLoading ? (
+              <Skeleton className="h-10 w-full" />
+            ) : backtestsData?.data && backtestsData.data.length > 0 ? (
+              <Select
+                value={selectedBacktestId}
+                onValueChange={setSelectedBacktestId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a backtest..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {backtestsData.data.map((backtest: BacktestResponse) => (
+                    <SelectItem
+                      key={backtest.backtest_id}
+                      value={backtest.backtest_id}
                     >
-                      <TableCell className="font-mono text-xs">
-                        {trade.date}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {trade.strategy}
-                      </TableCell>
-                      <TableCell className="font-semibold">
-                        {trade.symbol}
-                      </TableCell>
-                      <TableCell>
-                        <span
-                          className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${
-                            trade.side === "LONG"
-                              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                              : "bg-red-500/10 text-red-600 dark:text-red-400"
-                          }`}
-                        >
-                          {trade.side}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-sm">
-                        ${trade.entryPrice.toFixed(2)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-sm">
-                        ${trade.exitPrice.toFixed(2)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-sm">
-                        {trade.quantity}
-                      </TableCell>
-                      <TableCell
-                        className={`text-right font-mono font-semibold ${
-                          trade.pnl > 0
-                            ? "text-emerald-600 dark:text-emerald-400"
-                            : "text-red-600 dark:text-red-400"
-                        }`}
-                      >
-                        {trade.pnl > 0 ? "+" : ""}${trade.pnl.toFixed(2)}
-                      </TableCell>
-                      <TableCell
-                        className={`text-right font-mono text-sm ${
-                          trade.pnlPercent > 0
-                            ? "text-emerald-600 dark:text-emerald-400"
-                            : "text-red-600 dark:text-red-400"
-                        }`}
-                      >
-                        {trade.pnlPercent > 0 ? "+" : ""}
-                        {trade.pnlPercent.toFixed(2)}%
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {trade.duration}
-                      </TableCell>
-                    </TableRow>
+                      {backtest.symbol} - {backtest.status} (
+                      {new Date(backtest.created_at).toLocaleDateString()})
+                    </SelectItem>
                   ))}
-                </TableBody>
-              </Table>
-            </div>
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="text-muted-foreground text-center text-sm">
+                No backtests available. Run a backtest first to view orders.
+              </div>
+            )}
           </CardContent>
         </Card>
+
+        {/* Summary Stats */}
+        {selectedBacktestId && (
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Total Orders
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {ordersLoading ? (
+                  <Skeleton className="h-8 w-16" />
+                ) : (
+                  <div className="text-2xl font-bold">
+                    {summary.totalOrders}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Filled Orders
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {ordersLoading ? (
+                  <Skeleton className="h-8 w-16" />
+                ) : (
+                  <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                    {summary.filledOrders}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Pending Orders
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {ordersLoading ? (
+                  <Skeleton className="h-8 w-16" />
+                ) : (
+                  <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                    {summary.pendingOrders}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Orders Table */}
+        {selectedBacktestId && (
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                Orders ({ordersLoading ? "..." : orders.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {ordersLoading ? (
+                <div className="space-y-4">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Skeleton key={i} className="h-12 w-full" />
+                  ))}
+                </div>
+              ) : orders.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Submitted</TableHead>
+                        <TableHead>Symbol</TableHead>
+                        <TableHead>Side</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead className="text-right">Quantity</TableHead>
+                        <TableHead className="text-right">Filled Qty</TableHead>
+                        <TableHead className="text-right">
+                          Avg Fill Price
+                        </TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {orders.map((order: OrderResponseOutput) => (
+                        <TableRow
+                          key={order.order_id}
+                          className="hover:bg-accent"
+                        >
+                          <TableCell className="font-mono text-xs">
+                            {new Date(order.submitted_at).toLocaleString()}
+                          </TableCell>
+                          <TableCell className="font-semibold">
+                            {order.symbol}
+                          </TableCell>
+                          <TableCell>
+                            <span
+                              className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${
+                                order.side.toUpperCase() === "BUY"
+                                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                  : "bg-red-500/10 text-red-600 dark:text-red-400"
+                              }`}
+                            >
+                              {order.side}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {order.order_type}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-sm">
+                            {order.quantity}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-sm">
+                            {order.filled_quantity}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-sm">
+                            {order.average_fill_price
+                              ? `$${order.average_fill_price}`
+                              : "-"}
+                          </TableCell>
+                          <TableCell>
+                            <span
+                              className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${
+                                order.status === "filled"
+                                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                  : order.status === "pending"
+                                    ? "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400"
+                                    : "bg-gray-500/10 text-gray-600 dark:text-gray-400"
+                              }`}
+                            >
+                              {order.status}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="border-border flex h-32 items-center justify-center rounded-lg border border-dashed">
+                  <p className="text-muted-foreground text-sm">
+                    No orders found for this backtest.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
     </DashboardLayout>
   );

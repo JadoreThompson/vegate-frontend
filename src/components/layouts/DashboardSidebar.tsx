@@ -7,10 +7,10 @@ import {
   SunIcon,
   TrendingUp,
   User,
-  Wallet
+  Wallet,
 } from "lucide-react";
 import { type FC } from "react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +30,7 @@ import {
   SidebarMenuItem,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
+import { useCurrentUser, useLogoutMutation } from "@/hooks/queries/auth-hooks";
 import {
   HoverCard,
   HoverCardContent,
@@ -42,6 +43,20 @@ interface DashboardSidebarProps {
 
 const DashboardSidebar: FC<DashboardSidebarProps> = (props) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { data: currentUser } = useCurrentUser();
+  const logoutMutation = useLogoutMutation();
+
+  const handleLogout = async () => {
+    try {
+      await logoutMutation.mutateAsync();
+      navigate("/login", { replace: true });
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Still navigate to login even if logout fails
+      navigate("/login", { replace: true });
+    }
+  };
 
   const navigation = [
     { name: "Dashboard", href: "/dashboard", icon: Home },
@@ -134,8 +149,10 @@ const DashboardSidebar: FC<DashboardSidebarProps> = (props) => {
                 <User size={10} />
               </div>
               <div className="flex-1 text-left">
-                <p className="font-medium">John Trader</p>
-                <p className="text-muted-foreground text-xs">Pro Plan</p>
+                <p className="font-medium">{currentUser?.username || "User"}</p>
+                <p className="text-muted-foreground text-xs">
+                  {currentUser?.is_verified ? "Verified" : "Unverified"}
+                </p>
               </div>
             </Button>
           </PopoverTrigger>
@@ -186,22 +203,24 @@ const DashboardSidebar: FC<DashboardSidebarProps> = (props) => {
                 </Button> */}
               </Link>
               <Link to="/settings">
-              <Button
-                variant="ghost"
-                className="text-destructive hover:bg-destructive/10 hover:text-destructive w-full justify-start"
-                size="sm"
-              >
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </Button>
+                <Button
+                  variant="ghost"
+                  className="text-destructive hover:bg-destructive/10 hover:text-destructive w-full justify-start"
+                  size="sm"
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </Button>
               </Link>
               <Button
                 variant="ghost"
                 className="text-destructive hover:bg-destructive/10 hover:text-destructive w-full justify-start"
                 size="sm"
+                onClick={handleLogout}
+                disabled={logoutMutation.isPending}
               >
                 <LogOut className="mr-2 h-4 w-4" />
-                Log out
+                {logoutMutation.isPending ? "Logging out..." : "Log out"}
               </Button>
             </div>
           </PopoverContent>

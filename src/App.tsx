@@ -3,9 +3,9 @@ import ThemeProvider from "./components/providers/theme-provider";
 import BacktestResultsPage from "./pages/BacktestResultsPage";
 import BacktestsPage from "./pages/BacktestsPage";
 import BrokersPage from "./pages/BrokersPage";
+import ContactPage from "./pages/ContactPage";
 import DashboardPage from "./pages/DashboardPage";
 import EmailVerificationPage from "./pages/EmailVerifcationPage";
-import ExecutionLogsPage from "./pages/ExecutionLogsPage";
 import LandingPage from "./pages/LandingPage";
 import LiveDeploymentPage from "./pages/LiveDeploymentPage";
 import LoginPage from "./pages/LoginPage";
@@ -17,7 +17,7 @@ import StrategiesPage from "./pages/StrategiesPage";
 import StrategyCreatePage from "./pages/StrategyCreatePage";
 import StrategyDetailPage from "./pages/StrategyDetailPage";
 import TradeHistoryPage from "./pages/TradeHistoryPage";
-import TradingPage from "./pages/TradingPage";
+
 function App() {
   return (
     <ThemeProvider>
@@ -26,6 +26,7 @@ function App() {
           {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/contact" element={<ContactPage />} />
           <Route path="/features" element={<LandingPage />} />
           <Route path="/docs" element={<LandingPage />} />
           <Route path="/blog" element={<LandingPage />} />
@@ -54,9 +55,6 @@ function App() {
             element={<ReplaySessionPage />}
           />
 
-          {/* Trading Routes */}
-          <Route path="/live-trading" element={<ExecutionLogsPage />} />
-          <Route path="/trade/:symbol" element={<TradingPage />} />
 
           {/* History & Analytics */}
           <Route path="/trade-history" element={<TradeHistoryPage />} />

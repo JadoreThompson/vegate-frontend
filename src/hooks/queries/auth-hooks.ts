@@ -1,8 +1,10 @@
+import { queryClient } from "@/lib/query/query-client";
 import { queryKeys } from "@/lib/query/query-keys";
 import type { ApiError } from "@/lib/types/apiError";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import {
+  changeEmailAuthChangeEmailPost,
   changePasswordAuthChangePasswordPost,
   changeUsernameAuthChangeUsernamePost,
   getMeAuthMeGet,
@@ -12,6 +14,7 @@ import {
   requestEmailVerificationAuthRequestEmailVerificationPost,
   verifyActionAuthVerifyActionPost,
   verifyEmailAuthVerifyEmailPost,
+  type changeEmailAuthChangeEmailPostResponse,
   type changePasswordAuthChangePasswordPostResponse,
   type changeUsernameAuthChangeUsernamePostResponse,
   type getMeAuthMeGetResponse,
@@ -19,6 +22,7 @@ import {
   type logoutAuthLogoutPostResponse,
   type registerAuthRegisterPostResponse,
   type requestEmailVerificationAuthRequestEmailVerificationPostResponse,
+  type UpdateEmail,
   type UpdatePassword,
   type UpdateUsername,
   type UserCreate,
@@ -34,7 +38,6 @@ export function useLoginMutation() {
     mutationFn: (payload: UserLogin) => loginAuthLoginPost(payload),
   });
 }
-
 
 export function useRegisterMutation() {
   return useMutation<
@@ -93,6 +96,9 @@ export function useChangeUsernameMutation() {
   >({
     mutationFn: (payload: UpdateUsername) =>
       changeUsernameAuthChangeUsernamePost(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
+    },
   });
 }
 
@@ -105,17 +111,42 @@ export function useChangePasswordMutation() {
   >({
     mutationFn: (payload: UpdatePassword) =>
       changePasswordAuthChangePasswordPost(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
+    },
   });
 }
 
-// export function useVerifyActionMutation() {
-//   return useMutation<
-//     verifyActionAuthVerifyActionPostResponse,
-//     ApiError,
-//     VerifyAction,
-//     unknown
-//   >({
-//     mutationFn: (payload: VerifyAction) =>
-//       verifyActionAuthVerifyActionPost(payload),
-//   });
-// }
+export function useChangeEmailMutation() {
+  return useMutation<
+    changeEmailAuthChangeEmailPostResponse,
+    ApiError,
+    UpdateEmail,
+    unknown
+  >({
+    mutationFn: (payload: UpdateEmail) =>
+      changeEmailAuthChangeEmailPost(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
+    },
+  });
+}
+
+export function useVerifyActionMutation() {
+  return useMutation<
+    verifyActionAuthVerifyActionPostResponse,
+    ApiError,
+    VerifyAction,
+    unknown
+  >({
+    mutationFn: (payload: VerifyAction) =>
+      verifyActionAuthVerifyActionPost(payload),
+  });
+}
+
+/**
+ * Alias for useMeQuery to match the naming convention
+ */
+export function useCurrentUser() {
+  return useMeQuery();
+}

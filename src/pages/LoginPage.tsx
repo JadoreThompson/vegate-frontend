@@ -21,20 +21,21 @@ const LoginPage: FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Hi")
     loginMutation.mutate(
       {
         username: form.username,
         email: form.email,
         password: form.password,
       },
-      { onSuccess: () => navigate("/trade") },
+      { onSuccess: () => navigate("/dashboard") },
     );
   };
 
   return (
     <AuthLayout
       title="Welcome back"
-      subtitle="Enter your credentials to access your portfolio."
+      subtitle="Enter your credentials to access your strategies."
       submitLabel="Sign In"
       loading={loginMutation.isPending}
       error={loginMutation.error?.error || null}

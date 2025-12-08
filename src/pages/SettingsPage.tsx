@@ -22,8 +22,20 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  useChangeEmailMutation,
+  useChangePasswordMutation,
+  useChangeUsernameMutation,
+  useCurrentUser,
+} from "@/hooks/queries/auth-hooks";
 
 type ModalType = "username" | "email" | "password" | null;
+
+type VerificationModalState = {
+  type: ModalType;
+  showVerification: boolean;
+  actionToken?: string;
+};
 
 type SettingRowProps = {
   icon: React.ComponentType<{ className?: string }>;
@@ -63,10 +75,15 @@ const SettingRow: FC<SettingRowProps> = ({
 };
 
 const SettingsPage: FC = () => {
+  const { data: currentUser } = useCurrentUser();
+  const changeUsernameMutation = useChangeUsernameMutation();
+  const changePasswordMutation = useChangePasswordMutation();
+  const changeEmailMutation = useChangeEmailMutation();
+
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [selectedTab, setSelectedTab] = useState("general");
+  const [error, setError] = useState<string | null>(null);
 
   // Form values
   const [username, setUsername] = useState("");
@@ -78,6 +95,7 @@ const SettingsPage: FC = () => {
   const handleOpenModal = (type: ModalType) => {
     setActiveModal(type);
     setShowSuccess(false);
+    setError(null);
     // Reset form values
     setUsername("");
     setEmail("");
@@ -89,16 +107,43 @@ const SettingsPage: FC = () => {
   const handleCloseModal = () => {
     setActiveModal(null);
     setShowSuccess(false);
-    setIsLoading(false);
+    setError(null);
   };
 
   const handleSubmit = async () => {
-    setIsLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsLoading(false);
-    setShowSuccess(true);
+    setError(null);
+
+    try {
+      switch (activeModal) {
+        case "username":
+          await changeUsernameMutation.mutateAsync({ new_username: username });
+          setShowSuccess(true);
+          break;
+        case "email":
+          await changeEmailMutation.mutateAsync({ new_email: email });
+          setShowSuccess(true);
+          break;
+        case "password":
+          if (newPassword !== confirmPassword) {
+            setError("Passwords do not match");
+            return;
+          }
+          await changePasswordMutation.mutateAsync({
+            current_password: currentPassword,
+            new_password: newPassword,
+          });
+          setShowSuccess(true);
+          break;
+      }
+    } catch (err: any) {
+      setError(err?.error || "An error occurred. Please try again.");
+    }
   };
+
+  const isLoading =
+    changeUsernameMutation.isPending ||
+    changePasswordMutation.isPending ||
+    changeEmailMutation.isPending;
 
   const renderModalContent = () => {
     if (showSuccess) {
@@ -116,6 +161,23 @@ const SettingsPage: FC = () => {
             className="bg-emerald-600 hover:bg-emerald-700"
           >
             Close
+          </Button>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="py-4">
+          <div className="mb-4 rounded-lg bg-red-500/10 p-3 text-sm text-red-600 dark:text-red-400">
+            {error}
+          </div>
+          <Button
+            onClick={() => setError(null)}
+            variant="outline"
+            className="w-full"
+          >
+            Try Again
           </Button>
         </div>
       );
@@ -297,30 +359,51 @@ const SettingsPage: FC = () => {
           </TabsList>
 
           <TabsContent value="general" className="space-y-6">
+            {/* Current User Info */}
+            {currentUser && (
+              <div className="rounded-lg bg-emerald-500/10 p-4">
+                <h3 className="mb-2 font-semibold">Current Account</h3>
+                <div className="space-y-1 text-sm">
+                  <p>
+                    <span className="text-muted-foreground">Username:</span>{" "}
+                    {currentUser.username}
+                  </p>
+                  <p>
+                    <span className="text-muted-foreground">Email:</span>{" "}
+                    {currentUser.email}
+                  </p>
+                  <p>
+                    <span className="text-muted-foreground">Verified:</span>{" "}
+                    {currentUser.is_verified ? "Yes" : "No"}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Setting Rows */}
             <div>
               <SettingRow
-                icon={Lock}
-                title="Password"
-                description="Set a password to access your account"
-                buttonText="Set a password"
-                onClick={() => handleOpenModal("password")}
-              />
-              <Separator />
-              <SettingRow
                 icon={User}
                 title="Username"
-                description="Set a username to access your account"
-                buttonText="Set a username"
+                description={`Current: ${currentUser?.username || "Not set"}`}
+                buttonText="Change username"
                 onClick={() => handleOpenModal("username")}
               />
               <Separator />
               <SettingRow
                 icon={Mail}
                 title="Email"
-                description="Update your email address"
+                description={`Current: ${currentUser?.email || "Not set"}`}
                 buttonText="Change email"
                 onClick={() => handleOpenModal("email")}
+              />
+              <Separator />
+              <SettingRow
+                icon={Lock}
+                title="Password"
+                description="Update your password"
+                buttonText="Change password"
+                onClick={() => handleOpenModal("password")}
               />
             </div>
           </TabsContent>
@@ -329,28 +412,48 @@ const SettingsPage: FC = () => {
         {/* Mobile Tab Content (when using Select) */}
         {selectedTab === "general" && (
           <div className="md:hidden">
-            <SettingRow
-              icon={Lock}
-              title="Password"
-              description="Set a password to access your account"
-              buttonText="Set a password"
-              onClick={() => handleOpenModal("password")}
-            />
-            <Separator />
+            {currentUser && (
+              <div className="mb-4 rounded-lg bg-emerald-500/10 p-4">
+                <h3 className="mb-2 font-semibold">Current Account</h3>
+                <div className="space-y-1 text-sm">
+                  <p>
+                    <span className="text-muted-foreground">Username:</span>{" "}
+                    {currentUser.username}
+                  </p>
+                  <p>
+                    <span className="text-muted-foreground">Email:</span>{" "}
+                    {currentUser.email}
+                  </p>
+                  <p>
+                    <span className="text-muted-foreground">Verified:</span>{" "}
+                    {currentUser.is_verified ? "Yes" : "No"}
+                  </p>
+                </div>
+              </div>
+            )}
+
             <SettingRow
               icon={User}
               title="Username"
-              description="Set a username to access your account"
-              buttonText="Set a username"
+              description={`Current: ${currentUser?.username || "Not set"}`}
+              buttonText="Change username"
               onClick={() => handleOpenModal("username")}
             />
             <Separator />
             <SettingRow
               icon={Mail}
               title="Email"
-              description="Update your email address"
+              description={`Current: ${currentUser?.email || "Not set"}`}
               buttonText="Change email"
               onClick={() => handleOpenModal("email")}
+            />
+            <Separator />
+            <SettingRow
+              icon={Lock}
+              title="Password"
+              description="Update your password"
+              buttonText="Change password"
+              onClick={() => handleOpenModal("password")}
             />
           </div>
         )}

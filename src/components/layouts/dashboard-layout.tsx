@@ -1,8 +1,8 @@
-import { type FC, type ReactNode } from "react";
-import { useLocation } from "react-router";
+import { type FC, type ReactNode, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router";
 
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { useThemeStore } from "@/stores/theme-store";
+import { useCurrentUser } from "@/hooks/queries/auth-hooks";
 import DashboardSidebar from "./DashboardSidebar";
 
 type DashboardLayoutProps = {
@@ -11,7 +11,32 @@ type DashboardLayoutProps = {
 
 const DashboardLayout: FC<DashboardLayoutProps> = ({ children }) => {
   const location = useLocation();
-  const { theme, toggleTheme } = useThemeStore();
+  const navigate = useNavigate();
+  const { data: currentUser, isLoading, isError } = useCurrentUser();
+
+  useEffect(() => {
+    // Redirect to login if not authenticated
+    if (!isLoading && (isError || !currentUser)) {
+      navigate("/login", { replace: true });
+    }
+  }, [currentUser, isError, isLoading, navigate]);
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
+  if (!currentUser) {
+    return null;
+  }
 
   const navigation = [
     { name: "Dashboard", href: "/dashboard" },

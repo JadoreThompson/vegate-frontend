@@ -1,16 +1,23 @@
-import { Bot, Lightbulb, Sparkles, Zap } from "lucide-react";
+import { Bot, Lightbulb, Loader2, Sparkles, Zap } from "lucide-react";
 import { useState, type FC } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 
 import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useCreateStrategy } from "@/hooks/queries/strategy-hooks";
 
 const StrategyCreatePage: FC = () => {
+  const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [prompt, setPrompt] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  const createStrategyMutation = useCreateStrategy();
 
   const examples = [
     {
@@ -30,13 +37,31 @@ const StrategyCreatePage: FC = () => {
     },
   ];
 
-  const handleGenerate = () => {
-    setIsGenerating(true);
-    // Simulate AI processing
-    setTimeout(() => {
-      setIsGenerating(false);
-      // Navigate to review page
-    }, 2000);
+  const handleGenerate = async () => {
+    setError(null);
+
+    if (!name.trim() || !prompt.trim()) {
+      setError("Please provide both a strategy name and prompt.");
+      return;
+    }
+
+    try {
+      const result = await createStrategyMutation.mutateAsync({
+        name: name.trim(),
+        description: description.trim() || undefined,
+        prompt: prompt.trim(),
+      });
+
+      // Navigate to the strategy detail page
+      navigate(`/strategies/${result.data.strategy_id}`);
+    } catch (err: any) {
+      setError(err.message || "An error occurred while creating the strategy.");
+    }
+  };
+
+  const handleExampleClick = (example: (typeof examples)[0]) => {
+    setName(example.title);
+    setPrompt(example.description);
   };
 
   return (
@@ -63,13 +88,39 @@ const StrategyCreatePage: FC = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="strategy-description">Strategy Description</Label>
-              <Textarea
+              <Label htmlFor="strategy-name">Strategy Name</Label>
+              <Input
+                id="strategy-name"
+                placeholder="e.g., RSI Mean Reversion"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                maxLength={20}
+              />
+              <p className="text-muted-foreground text-sm">
+                Give your strategy a descriptive name (max 20 characters).
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="strategy-description">
+                Description (Optional)
+              </Label>
+              <Input
                 id="strategy-description"
-                placeholder="Example: Buy when RSI drops below 30 and MACD crosses above signal line. Sell when price reaches 3% profit or 1.5% loss. Trade only between 9:30 AM and 3:30 PM EST on SPY..."
-                className="min-h-[200px] resize-none"
+                placeholder="Brief description of your strategy"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="strategy-prompt">Strategy Prompt</Label>
+              <Textarea
+                id="strategy-prompt"
+                placeholder="Example: Buy when RSI drops below 30 and MACD crosses above signal line. Sell when price reaches 3% profit or 1.5% loss. Trade only between 9:30 AM and 3:30 PM EST on SPY..."
+                className="min-h-[200px] resize-none"
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
               />
               <p className="text-muted-foreground text-sm">
                 Be as detailed as possible. Include entry conditions, exit
@@ -77,16 +128,28 @@ const StrategyCreatePage: FC = () => {
               </p>
             </div>
 
+            {error && (
+              <div className="rounded-md border border-red-500/20 bg-red-500/10 p-3">
+                <p className="text-sm text-red-600 dark:text-red-400">
+                  {error}
+                </p>
+              </div>
+            )}
+
             <div className="flex items-center gap-4">
               <Button
                 onClick={handleGenerate}
-                disabled={!description.trim() || isGenerating}
+                disabled={
+                  !name.trim() ||
+                  !prompt.trim() ||
+                  createStrategyMutation.isPending
+                }
                 className="bg-emerald-600 hover:bg-emerald-700"
                 size="lg"
               >
-                {isGenerating ? (
+                {createStrategyMutation.isPending ? (
                   <>
-                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Generating...
                   </>
                 ) : (
@@ -153,7 +216,7 @@ const StrategyCreatePage: FC = () => {
               <Card
                 key={example.title}
                 className="cursor-pointer transition-colors hover:border-emerald-500/50"
-                onClick={() => setDescription(example.description)}
+                onClick={() => handleExampleClick(example)}
               >
                 <CardHeader>
                   <CardTitle className="text-base">{example.title}</CardTitle>

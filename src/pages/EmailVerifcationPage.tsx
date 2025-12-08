@@ -1,16 +1,25 @@
 // src\pages\EmailVerificationPage.tsx
 import AuthLayout from "@/components/layouts/auth-layout";
-import React, { useState, type FC } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useVerifyEmailMutation } from "@/hooks/queries/auth-hooks";
+import {
+  useRequestEmailVerificationMutation,
+  useVerifyEmailMutation,
+} from "@/hooks/queries/auth-hooks";
+import React, { useState, type FC } from "react";
 import { useNavigate } from "react-router";
 
 const EmailVerificationPage: FC = () => {
   const navigate = useNavigate();
   const verifyEmailMutation = useVerifyEmailMutation();
+  const requestVerificationMutation = useRequestEmailVerificationMutation();
 
   const [code, setCode] = useState("");
+
+  const handleResendCode = (e: React.MouseEvent) => {
+    e.preventDefault();
+    requestVerificationMutation.mutate();
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,11 +36,12 @@ const EmailVerificationPage: FC = () => {
     );
   };
 
-
   return (
     <AuthLayout
       title="Verify Your Email"
-      subtitle={"Please enter the verification token sent to your registered email address.\nThe token expires in 60 seconds. You have a maximum of 5 verification attempts."}
+      subtitle={
+        "Please enter the verification token sent to your registered email address.\nThe token expires in 60 seconds. You have a maximum of 5 verification attempts."
+      }
       submitLabel="Verify Email"
       loading={verifyEmailMutation.isPending}
       // Display error message returned from the API (e.g., token invalid, expired, or max attempts reached)
@@ -40,10 +50,18 @@ const EmailVerificationPage: FC = () => {
       footer={
         <>
           Didn't receive the token?{" "}
-          {/* Note: In a real application, this link would trigger useRequestEmailVerificationMutation */}
-          <a href="#" className="text-emerald-500 underline">
-            Resend Code
-          </a>
+          <button
+            onClick={handleResendCode}
+            disabled={requestVerificationMutation.isPending}
+            className="text-emerald-500 underline disabled:opacity-50"
+          >
+            {requestVerificationMutation.isPending
+              ? "Sending..."
+              : "Resend Code"}
+          </button>
+          {requestVerificationMutation.isSuccess && (
+            <span className="ml-2 text-xs text-emerald-600">Code sent!</span>
+          )}
         </>
       }
       fields={
