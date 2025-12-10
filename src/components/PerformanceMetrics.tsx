@@ -6,9 +6,6 @@ interface PerformanceMetricsProps {
   totalPnl: number;
   returnPercentage: number;
   totalTrades: number;
-  winRate: number;
-  avgWin: number;
-  avgLoss: number;
   sharpeRatio: number;
   maxDrawdown: number;
 }
@@ -36,25 +33,6 @@ const PerformanceMetrics: FC<PerformanceMetricsProps> = (props) => {
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground text-sm">Total Trades</span>
             <span className="font-semibold">{props.totalTrades}</span>
-          </div>
-          <Separator />
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-sm">Win Rate</span>
-            <span className="font-semibold">{props.winRate}%</span>
-          </div>
-          <Separator />
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-sm">Avg Win</span>
-            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-              +{props.avgWin}%
-            </span>
-          </div>
-          <Separator />
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-sm">Avg Loss</span>
-            <span className="font-semibold text-red-600 dark:text-red-400">
-              {props.avgLoss}%
-            </span>
           </div>
           <Separator />
           <div className="flex items-center justify-between">

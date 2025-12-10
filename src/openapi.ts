@@ -15,6 +15,9 @@ export interface BacktestCreate {
    */
   symbol: string;
   starting_balance: BacktestCreateStartingBalance;
+  timeframe: Timeframe;
+  start_date: string;
+  end_date: string;
 }
 
 export type BacktestDetailResponseMetrics = BacktestMetrics | null;
@@ -36,7 +39,6 @@ export interface BacktestMetrics {
   total_return: number;
   sharpe_ratio: number;
   max_drawdown: number;
-  win_rate: number;
   total_trades: number;
 }
 
@@ -249,13 +251,15 @@ export interface StrategyDetailResponse {
   code: string;
 }
 
+export type StrategyMetricsEquityCurveItemItem1 = number | string;
+
 export interface StrategyMetrics {
   realised_pnl: number;
   unrealised_pnl: number;
   total_return: number;
   sharpe_ratio: number;
   max_drawdown: number;
-  equity_curve: [string, number][];
+  equity_curve: [string, StrategyMetricsEquityCurveItemItem1][];
 }
 
 export type StrategyResponseDescription = string | null;
@@ -287,6 +291,21 @@ export interface StrategyUpdate {
   name?: StrategyUpdateName;
   description?: StrategyUpdateDescription;
 }
+
+/**
+ * Supported timeframes for OHLC data.
+ */
+export type Timeframe = (typeof Timeframe)[keyof typeof Timeframe];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const Timeframe = {
+  "1m": "1m",
+  "5m": "5m",
+  "15m": "15m",
+  "30m": "30m",
+  "1h": "1h",
+  "1d": "1d",
+} as const;
 
 export interface UpdateEmail {
   email: string;

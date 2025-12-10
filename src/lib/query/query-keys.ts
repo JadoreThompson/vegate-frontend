@@ -1,10 +1,10 @@
 import type {
-  GetBacktestOrdersEndpointBacktestsBacktestIdOrdersGetParams,
-  ListAllDeploymentsEndpointDeploymentsGetParams,
-  ListBacktestsEndpointBacktestsGetParams,
-  ListStrategiesEndpointStrategiesGetParams,
-  ListStrategyDeploymentsEndpointDeploymentsStrategiesStrategyIdDeploymentsGetParams,
-  ListStrategySummariesEndpointStrategiesSummariesGetParams,
+    GetBacktestOrdersEndpointBacktestsBacktestIdOrdersGetParams,
+    ListAllDeploymentsEndpointDeploymentsGetParams,
+    ListBacktestsEndpointBacktestsGetParams,
+    ListStrategiesEndpointStrategiesGetParams,
+    ListStrategyDeploymentsEndpointDeploymentsStrategiesStrategyIdDeploymentsGetParams,
+    ListStrategySummariesEndpointStrategiesSummariesGetParams,
 } from "@/openapi";
 
 export const queryKeys = {

@@ -170,11 +170,8 @@ const BacktestDetailPage: FC = () => {
           <div className="flex flex-col gap-4 lg:flex-row">
             <PerformanceMetrics
               totalPnl={metrics.realised_pnl}
-              returnPercentage={metrics.total_return * 100}
+              returnPercentage={metrics.total_return_pct}
               totalTrades={metrics.total_trades}
-              winRate={metrics.win_rate * 100}
-              avgWin={0}
-              avgLoss={0}
               sharpeRatio={metrics.sharpe_ratio}
               maxDrawdown={metrics.max_drawdown * 100}
             />

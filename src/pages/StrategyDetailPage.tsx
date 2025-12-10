@@ -33,6 +33,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -55,6 +62,7 @@ import {
 import {
   BacktestStatus,
   StrategyDeploymentStatus,
+  Timeframe,
   type BacktestResponse,
   type DeploymentResponse,
   type StrategyMetrics,
@@ -327,13 +335,30 @@ const BacktestsTable: FC<{
   onCreateClick: () => void;
 }> = (props) => {
   const navigate = useNavigate();
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 20;
 
   const filteredBacktests = props.backtests.filter((b) =>
     props.selectedTickers.includes(b.symbol),
   );
 
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredBacktests.length / itemsPerPage);
+  const startIndex = (page - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedBacktests = filteredBacktests.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  const handleTickerChange = () => {
+    setPage(1);
+  };
+
   const handleRowClick = (backtestId: string) => {
     navigate(`/backtests/${backtestId}`);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
   };
 
   const getStatusColor = (status: BacktestStatus) => {
@@ -435,7 +460,7 @@ const BacktestsTable: FC<{
                 </TableCell>
               </TableRow>
             ) : (
-              filteredBacktests.map((backtest) => (
+              paginatedBacktests.map((backtest) => (
                 <TableRow
                   key={backtest.backtest_id}
                   className="hover:bg-muted/50 cursor-pointer"
@@ -464,6 +489,36 @@ const BacktestsTable: FC<{
             )}
           </TableBody>
         </Table>
+        {filteredBacktests.length > itemsPerPage && (
+          <div className="mt-4 flex items-center justify-between">
+            <div className="text-muted-foreground text-sm">
+              Showing {startIndex + 1} to{" "}
+              {Math.min(endIndex, filteredBacktests.length)} of{" "}
+              {filteredBacktests.length} backtests
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(page - 1)}
+                disabled={page === 1}
+              >
+                Previous
+              </Button>
+              <span className="text-muted-foreground text-sm">
+                Page {page} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(page + 1)}
+                disabled={page === totalPages}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -480,6 +535,11 @@ const StrategyDetailPage: FC = () => {
     useState(false);
   const [newBacktestTicker, setNewBacktestTicker] = useState("");
   const [newBacktestBalance, setNewBacktestBalance] = useState("10000");
+  const [newBacktestTimeframe, setNewBacktestTimeframe] = useState<Timeframe>(
+    Timeframe["1d"],
+  );
+  const [newBacktestStartDate, setNewBacktestStartDate] = useState("");
+  const [newBacktestEndDate, setNewBacktestEndDate] = useState("");
 
   // Fetch strategy summary with metrics
   const strategySummaryQuery = useStrategySummary(id || "");
@@ -546,17 +606,30 @@ const StrategyDetailPage: FC = () => {
 
   const handleCreateBacktest = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!id || !newBacktestTicker || !newBacktestBalance) return;
+    if (
+      !id ||
+      !newBacktestTicker ||
+      !newBacktestBalance ||
+      !newBacktestStartDate ||
+      !newBacktestEndDate
+    )
+      return;
 
     try {
       await createBacktestMutation.mutateAsync({
         strategy_id: id,
         symbol: newBacktestTicker.toUpperCase(),
         starting_balance: newBacktestBalance,
+        timeframe: newBacktestTimeframe,
+        start_date: newBacktestStartDate,
+        end_date: newBacktestEndDate,
       });
       setCreateBacktestDialogOpen(false);
       setNewBacktestTicker("");
       setNewBacktestBalance("10000");
+      setNewBacktestTimeframe(Timeframe["1d"]);
+      setNewBacktestStartDate("");
+      setNewBacktestEndDate("");
     } catch (error) {
       // Error handling is done by the mutation
       console.error("Failed to create backtest:", error);
@@ -729,6 +802,60 @@ const StrategyDetailPage: FC = () => {
                   />
                   <p className="text-muted-foreground text-xs">
                     The initial capital for the backtest
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="timeframe">Timeframe</Label>
+                  <Select
+                    value={newBacktestTimeframe}
+                    onValueChange={(value) =>
+                      setNewBacktestTimeframe(value as Timeframe)
+                    }
+                  >
+                    <SelectTrigger id="timeframe">
+                      <SelectValue placeholder="Select timeframe" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={Timeframe["1m"]}>1 minute</SelectItem>
+                      <SelectItem value={Timeframe["5m"]}>5 minutes</SelectItem>
+                      <SelectItem value={Timeframe["15m"]}>
+                        15 minutes
+                      </SelectItem>
+                      <SelectItem value={Timeframe["30m"]}>
+                        30 minutes
+                      </SelectItem>
+                      <SelectItem value={Timeframe["1h"]}>1 hour</SelectItem>
+                      <SelectItem value={Timeframe["1d"]}>1 day</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-muted-foreground text-xs">
+                    The time interval for the backtest data
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="start-date">Start Date</Label>
+                  <Input
+                    id="start-date"
+                    type="date"
+                    value={newBacktestStartDate}
+                    onChange={(e) => setNewBacktestStartDate(e.target.value)}
+                    required
+                  />
+                  <p className="text-muted-foreground text-xs">
+                    The start date for the backtest period
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="end-date">End Date</Label>
+                  <Input
+                    id="end-date"
+                    type="date"
+                    value={newBacktestEndDate}
+                    onChange={(e) => setNewBacktestEndDate(e.target.value)}
+                    required
+                  />
+                  <p className="text-muted-foreground text-xs">
+                    The end date for the backtest period
                   </p>
                 </div>
               </div>
