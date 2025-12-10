@@ -76,10 +76,18 @@ interface BacktestStatisticsSectionProps {
   totalTrades: number;
   sharpeRatio: number;
   maxDrawdown: number;
+  equityCurve?: [string, number | string][];
 }
 
 const BacktestStatisticsSection: FC<BacktestStatisticsSectionProps> = memo(
-  ({ totalPnl, returnPercentage, totalTrades, sharpeRatio, maxDrawdown }) => {
+  ({
+    totalPnl,
+    returnPercentage,
+    totalTrades,
+    sharpeRatio,
+    maxDrawdown,
+    equityCurve,
+  }) => {
     return (
       <div className="flex flex-col gap-4 lg:flex-row">
         <PerformanceMetrics
@@ -89,11 +97,7 @@ const BacktestStatisticsSection: FC<BacktestStatisticsSectionProps> = memo(
           sharpeRatio={sharpeRatio}
           maxDrawdown={maxDrawdown}
         />
-        <EquityGraph
-          equityData={undefined}
-          drawdownData={undefined}
-          title="Equity Curve"
-        />
+        <EquityGraph equityData={equityCurve} title="Equity Curve" />
       </div>
     );
   },
@@ -419,10 +423,11 @@ const BacktestResultsPage: FC = () => {
         {/* Equity Curve with Statistics */}
         <BacktestStatisticsSection
           totalPnl={metrics.realised_pnl}
-          returnPercentage={metrics.total_return}
+          returnPercentage={metrics.total_return_pct}
           totalTrades={metrics.total_trades}
           sharpeRatio={metrics.sharpe_ratio}
           maxDrawdown={metrics.max_drawdown}
+          equityCurve={(metrics as any).equity_curve}
         />
 
         {/* Monthly Returns */}
