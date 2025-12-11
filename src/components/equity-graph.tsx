@@ -1,81 +1,39 @@
-import {
-  AreaSeries,
-  ColorType,
-  createChart,
-  type IChartApi,
-  type Time,
-} from "lightweight-charts";
-import { BarChart3 } from "lucide-react";
-import { useEffect, useRef, type FC } from "react";
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
+import { BarChart3 } from "lucide-react";
+import { type FC } from "react";
+import {
+  Area,
+  AreaChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 interface EquityGraphProps {
   equityData?: [string, number | string][];
   title?: string;
 }
 
 const EquityGraph: FC<EquityGraphProps> = (props) => {
-  const chartContainerRef = useRef<HTMLDivElement>(null);
-  const chartRef = useRef<IChartApi | null>(null);
-
   const equityData = props.equityData ?? [];
   const title = props.title ?? "Equity Curve";
   const hasData = equityData.length > 0;
+  const formatter = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  });
 
-  useEffect(() => {
-    if (!chartContainerRef.current || !hasData) return;
-
-    const chart = createChart(chartContainerRef.current, {
-      layout: {
-        background: { type: ColorType.Solid, color: "transparent" },
-      },
-      grid: {
-        vertLines: {
-          color: "rgba(0,0,0,0)", // transparent vertical grid lines
-        },
-        horzLines: {
-          color: "rgba(0,0,0,0)", // transparent horizontal grid lines
-        },
-      },
-    });
-
-    const areaSeries = chart.addSeries(AreaSeries, {
-      lineColor: "#22c55e",
-      bottomColor: "rgba(34, 197, 94, 0.0)",
-    });
-
-    const chartData = equityData
-      .map(([timestamp, value]) => ({
-        time: (new Date(timestamp).getTime() / 1000) as Time,
-        value: typeof value === "string" ? parseFloat(value) : value,
-      }))
-      .sort((a, b) => (a.time as number) - (b.time as number));
-
-    areaSeries.setData(chartData);
-
-    chart.timeScale().fitContent();
-
-    chartRef.current = chart;
-
-    const handleResize = () => {
-      if (chartContainerRef.current && chartRef.current) {
-        chartRef.current.applyOptions({
-          width: chartContainerRef.current.clientWidth,
-        });
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      if (chartRef.current) {
-        chartRef.current.remove();
-        chartRef.current = null;
-      }
-    };
-  }, [equityData, hasData]);
+  // Transform data for Recharts
+  const chartData = equityData
+    .map(([timestamp, value]) => ({
+      date: new Date(timestamp).getTime(),
+      value: typeof value === "string" ? parseFloat(value) : value,
+      displayDate: new Date(timestamp).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      }),
+    }))
+    .sort((a, b) => a.date - b.date);
 
   if (!hasData) {
     return (
@@ -101,8 +59,57 @@ const EquityGraph: FC<EquityGraphProps> = (props) => {
       <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
-      <CardContent className="h-full">
-        <div ref={chartContainerRef} className="flex h-full w-full" />
+      <CardContent>
+        <ResponsiveContainer width="90%" height={400}>
+          <AreaChart data={chartData}>
+            <defs>
+              <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#22c55e" stopOpacity={0.1} />
+                <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <XAxis
+              dataKey="displayDate"
+              className="text-xs text-white"
+              tick={{ fill: "white" }}
+            />
+            <YAxis
+              className="!text-primary text-xs"
+              tick={{ fill: "white" }}
+              tickFormatter={(value: number) => {
+                const roundedValue = Math.round(value);
+                let res: string;
+
+                if (roundedValue >= 1_000_000) {
+                  res = `${Math.floor(roundedValue / 1_000_000)}M`;
+                } else if (roundedValue >= 1000 && roundedValue < 1_000_000) {
+                  res = `${Math.floor(roundedValue / 1000)}k`;
+                } else {
+                  res = roundedValue.toString();
+                }
+
+                return res;
+              }}
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "var(--background)",
+                border: "1px solid hsl(var(--border))",
+                borderRadius: "6px",
+              }}
+              labelStyle={{ color: "hsl(var(--foreground))" }}
+              formatter={(value: number) => [formatter.format(value), "Equity"]}
+            />
+            <Area
+              type="monotone"
+              dataKey="value"
+              stroke="#22c55e"
+              strokeWidth={2}
+              fillOpacity={1}
+              fill="url(#colorValue)"
+            />
+          </AreaChart>
+        </ResponsiveContainer>
       </CardContent>
     </Card>
   );

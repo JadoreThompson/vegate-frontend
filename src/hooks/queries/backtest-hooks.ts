@@ -20,10 +20,9 @@ import type {
   deleteBacktestEndpointBacktestsBacktestIdDeleteResponse,
   getBacktestEndpointBacktestsBacktestIdGetResponse,
   GetBacktestOrdersEndpointBacktestsBacktestIdOrdersGetParams,
-  getBacktestOrdersEndpointBacktestsBacktestIdOrdersGetResponse,
   ListBacktestsEndpointBacktestsGetParams,
   listBacktestsEndpointBacktestsGetResponse,
-  updateBacktestEndpointBacktestsBacktestIdPatchResponse,
+  updateBacktestEndpointBacktestsBacktestIdPatchResponse
 } from "@/openapi";
 
 /**
@@ -43,7 +42,7 @@ export function useBacktestsQuery(
  * Query hook to fetch a single backtest with full details including metrics
  */
 export function useBacktestQuery(backtestId: string) {
-  return useQuery<getBacktestEndpointBacktestsBacktestIdGetResponse, ApiError>({
+  return useQuery({
     queryKey: queryKeys.backtests.detail(backtestId),
     queryFn: async () =>
       handleApi(await getBacktestEndpointBacktestsBacktestIdGet(backtestId)),
@@ -54,14 +53,11 @@ export function useBacktestQuery(backtestId: string) {
 /**
  * Query hook to fetch orders/trades for a specific backtest with pagination
  */
-export function useBacktestOrders(
+export function useBacktestOrdersQuery(
   backtestId: string,
   params?: GetBacktestOrdersEndpointBacktestsBacktestIdOrdersGetParams,
 ) {
-  return useQuery<
-    getBacktestOrdersEndpointBacktestsBacktestIdOrdersGetResponse,
-    ApiError
-  >({
+  return useQuery({
     queryKey: queryKeys.backtests.orders(backtestId, params),
     queryFn: async () =>
       handleApi(

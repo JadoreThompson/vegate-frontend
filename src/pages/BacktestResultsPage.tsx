@@ -1,5 +1,5 @@
-import { Calendar, CirclePlay, Loader2 } from "lucide-react";
-import { memo, useMemo, useState, type FC } from "react";
+import { Calendar, ChevronLeft, ChevronRight, CirclePlay, Loader2 } from "lucide-react";
+import { memo, useEffect, useMemo, useState, type FC } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 
 import EquityGraph from "@/components/equity-graph";
@@ -17,7 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  useBacktestOrders,
+  useBacktestOrdersQuery,
   useBacktestQuery,
 } from "@/hooks/queries/backtest-hooks";
 import type { OrderResponseOutput } from "@/openapi";
@@ -50,7 +50,7 @@ const BacktestResultsHeader: FC<BacktestResultsHeaderProps> = memo(
           <h2 className="text-3xl font-bold tracking-tight">
             Backtest Results
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Starting Balance: ${startingBalance}
           </p>
         </div>
@@ -162,21 +162,32 @@ interface BacktestTradesTableProps {
 const BacktestTradesTable: FC<BacktestTradesTableProps> = memo(
   ({ backtestId }) => {
     const [page, setPage] = useState(1);
-    const itemsPerPage = 20;
+    const [orders, setOrders] = useState<OrderResponseOutput[]>([]);
 
-    const { data: ordersResponse, isLoading: isLoadingOrders } =
-      useBacktestOrders(backtestId, {
-        skip: (page - 1) * itemsPerPage,
-        limit: itemsPerPage,
-      });
+    const backtestOrdersQuery = useBacktestOrdersQuery(backtestId, {
+      skip: (page - 1) * 90,
+      limit: 91,
+    });
 
-    const orders = ordersResponse?.data || [];
+    const itemsPerPage = 10;
+
+    useEffect(() => {
+      if (backtestOrdersQuery.data?.length) {
+        setOrders((prev) => {
+          const ids = new Set(prev.map((o) => o.order_id));
+          const newOnes = backtestOrdersQuery.data.filter(
+            (o) => !ids.has(o.order_id),
+          );
+          return [...prev, ...newOnes];
+        });
+      }
+    }, [backtestOrdersQuery.data]);
 
     const handlePageChange = (newPage: number) => {
       setPage(newPage);
     };
 
-    if (orders.length === 0 && !isLoadingOrders) {
+    if (orders.length === 0 && !backtestOrdersQuery.isLoading) {
       return (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
@@ -190,7 +201,7 @@ const BacktestTradesTable: FC<BacktestTradesTableProps> = memo(
     }
 
     return (
-      <Card>
+      <Card className="bg-transparent border-0">
         <CardHeader>
           <CardTitle>Trade History</CardTitle>
         </CardHeader>
@@ -198,75 +209,83 @@ const BacktestTradesTable: FC<BacktestTradesTableProps> = memo(
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Symbol</TableHead>
-                <TableHead>Side</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Quantity</TableHead>
-                <TableHead>Filled</TableHead>
-                <TableHead>Avg Price</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Submitted</TableHead>
+                <TableHead className="text-gray-500">Symbol</TableHead>
+                <TableHead className="text-gray-500">Side</TableHead>
+                <TableHead className="text-gray-500">Type</TableHead>
+                <TableHead className="text-gray-500">Quantity</TableHead>
+                <TableHead className="text-gray-500">Filled</TableHead>
+                <TableHead className="text-gray-500">Avg Price</TableHead>
+                <TableHead className="text-gray-500">Status</TableHead>
+                <TableHead className="text-gray-500">Submitted</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {orders.map((order: OrderResponseOutput) => (
-                <TableRow key={order.order_id}>
-                  <TableCell className="font-semibold">
-                    {order.symbol}
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className={`rounded px-2 py-0.5 text-xs font-medium ${
-                        order.side.toLowerCase() === "buy"
-                          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                          : "bg-red-500/10 text-red-600 dark:text-red-400"
-                      }`}
-                    >
-                      {order.side}
-                    </span>
-                  </TableCell>
-                  <TableCell>{order.order_type}</TableCell>
-                  <TableCell>{order.quantity}</TableCell>
-                  <TableCell>{order.filled_quantity}</TableCell>
-                  <TableCell>
-                    {order.average_fill_price
-                      ? `$${order.average_fill_price}`
-                      : "-"}
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-xs">{order.status}</span>
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {new Date(order.submitted_at).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {orders
+                .slice((page - 1) * 10, page * 10)
+                .map((order: OrderResponseOutput) => (
+                  <TableRow key={order.order_id}>
+                    <TableCell className="font-semibold">
+                      {order.symbol}
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={`rounded px-2 py-0.5 text-xs font-medium ${
+                          order.side.toLowerCase() === "buy"
+                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                            : "bg-red-500/10 text-red-600 dark:text-red-400"
+                        }`}
+                      >
+                        {order.side}
+                      </span>
+                    </TableCell>
+                    <TableCell>{order.order_type}</TableCell>
+                    <TableCell>{order.quantity}</TableCell>
+                    <TableCell>{order.filled_quantity}</TableCell>
+                    <TableCell>
+                      {order.average_fill_price
+                        ? `$${order.average_fill_price}`
+                        : "-"}
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-xs">{order.status}</span>
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {new Date(order.submitted_at).toLocaleDateString(
+                        "en-US",
+                        {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        },
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
-          <div className="mt-4 flex justify-center">
+          <div className="mt-4 flex justify-end">
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
+              className="hover:!bg-transparent"
               onClick={() => handlePageChange(page - 1)}
               disabled={page === 1}
             >
-              Previous
+              {/* Previous */}
+              <ChevronLeft />
             </Button>
-            <span className="text-muted-foreground mx-4 flex items-center text-sm">
+            <span className="w-15  text-muted-foreground flex items-center justify-center text-sm">
               Page {page}
             </span>
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
+              className="hover:!bg-transparent"
               onClick={() => handlePageChange(page + 1)}
-              disabled={orders.length < itemsPerPage}
+              disabled={orders.length <= page * itemsPerPage}
             >
-              Next
+              <ChevronRight />
             </Button>
           </div>
         </CardContent>
@@ -283,14 +302,16 @@ const BacktestResultsPage: FC = () => {
   const { id } = useParams<{ id: string }>();
 
   // Fetch backtest details with metrics
-  const {
-    data: backtestResponse,
-    isLoading: isLoadingBacktest,
-    error: backtestError,
-  } = useBacktestQuery(id || "");
+  // const {
+  //   data: backtestResponse,
+  //   isLoading: isLoadingBacktest,
+  //   error: backtestError,
+  // } = useBacktestQuery(id || "");
+  const backtestQuery = useBacktestQuery(id || "");
 
-  const backtest = backtestResponse?.data;
+  const backtest = backtestQuery?.data;
   const metrics = backtest?.metrics;
+  console.log(metrics);
 
   // Mock monthly returns (this would come from the API in a real implementation)
   // Memoize to prevent recreation on every render
@@ -307,12 +328,12 @@ const BacktestResultsPage: FC = () => {
       { month: "Sep", return: 8.1 },
       { month: "Oct", return: 5.6 },
       { month: "Nov", return: 4.3 },
-      { month: "Dec", return: 3.6 },
+      { month: "Dec", return: 3.9 },
     ],
     [],
   );
 
-  if (isLoadingBacktest) {
+  if (backtestQuery.isLoading) {
     return (
       <DashboardLayout>
         <div className="space-y-6">
@@ -334,7 +355,7 @@ const BacktestResultsPage: FC = () => {
     );
   }
 
-  if (backtestError || !backtest) {
+  if (backtestQuery.error || !backtest) {
     return (
       <DashboardLayout>
         <div className="space-y-6">
@@ -351,7 +372,7 @@ const BacktestResultsPage: FC = () => {
                 Error loading backtest
               </h3>
               <p className="text-muted-foreground text-sm">
-                {backtestError?.message || "Backtest not found"}
+                {backtestQuery.error?.message || "Backtest not found"}
               </p>
             </CardContent>
           </Card>
@@ -417,7 +438,7 @@ const BacktestResultsPage: FC = () => {
         <BacktestResultsHeader
           backtestId={id || ""}
           symbol={backtest.symbol}
-          startingBalance={backtest.starting_balance}
+          startingBalance={Number.parseFloat(backtest.starting_balance)}
         />
 
         {/* Equity Curve with Statistics */}
@@ -427,11 +448,12 @@ const BacktestResultsPage: FC = () => {
           totalTrades={metrics.total_trades}
           sharpeRatio={metrics.sharpe_ratio}
           maxDrawdown={metrics.max_drawdown}
-          equityCurve={(metrics as any).equity_curve}
+          // equityCurve={(metrics as any).equity_curve}
+          equityCurve={metrics.equity_curve}
         />
 
         {/* Monthly Returns */}
-        <BacktestMonthlyReturns monthlyReturns={monthlyReturns} />
+        {/* <BacktestMonthlyReturns monthlyReturns={monthlyReturns} /> */}
 
         {/* Trades Table with its own pagination */}
         <BacktestTradesTable backtestId={id || ""} />

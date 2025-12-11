@@ -301,36 +301,31 @@ const StrategiesPage: FC = () => {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between">
-                <div className="text-muted-foreground text-sm">
-                  Showing {startIndex + 1} to{" "}
-                  {Math.min(endIndex, filteredStrategies.length)} of{" "}
-                  {filteredStrategies.length} strategies
-                </div>
+              <div className="flex items-center justify-end">
                 <div className="flex items-center gap-2">
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
+                    className="hover:!bg-transparent"
                     onClick={() =>
                       setCurrentPage((prev) => Math.max(1, prev - 1))
                     }
                     disabled={currentPage === 1}
                   >
                     <ChevronLeft className="h-4 w-4" />
-                    Previous
                   </Button>
-                  <div className="text-sm">
-                    Page {currentPage} of {totalPages}
+                  <div className="flex w-15 items-center justify-center text-sm">
+                    Page {currentPage}
                   </div>
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
+                    className="hover:!bg-transparent"
                     onClick={() =>
                       setCurrentPage((prev) => Math.min(totalPages, prev + 1))
                     }
                     disabled={currentPage === totalPages}
                   >
-                    Next
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>

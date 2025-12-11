@@ -21,7 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  useBacktestOrders,
+  useBacktestOrdersQuery,
   useBacktestsQuery,
 } from "@/hooks/queries/backtest-hooks";
 import type { BacktestResponse, OrderResponseOutput } from "@/openapi";
@@ -36,7 +36,7 @@ const TradeHistoryPage: FC = () => {
     });
 
   // Fetch orders for selected backtest
-  const { data: ordersData, isLoading: ordersLoading } = useBacktestOrders(
+  const { data: ordersData, isLoading: ordersLoading } = useBacktestOrdersQuery(
     selectedBacktestId,
     { limit: 100 },
   );

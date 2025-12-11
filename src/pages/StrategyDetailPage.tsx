@@ -2,10 +2,11 @@ import {
   ArrowLeft,
   Bot,
   Building2,
+  ChevronLeft,
+  ChevronRight,
   Filter,
   Loader2,
-  MoreVertical,
-  NotepadText,
+  NotepadTextIcon,
   Plus,
   Trash2,
 } from "lucide-react";
@@ -32,6 +33,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -60,6 +62,7 @@ import {
 } from "@/hooks/queries/deployment-hooks";
 import {
   useDeleteStrategy,
+  useStrategy,
   useStrategySummary,
 } from "@/hooks/queries/strategy-hooks";
 import {
@@ -68,71 +71,46 @@ import {
   StrategyDeploymentStatus,
   Timeframe,
   type BacktestResponse,
+  type BrokerConnectionResponse,
   type DeploymentResponse,
   type StrategyResponse,
+  type StrategySummaryResponse,
 } from "@/openapi";
 
 // Internal Components
 const StrategyHeader: FC<{
   strategy: Omit<StrategyResponse, "strategy_id">;
   onDeleteClick: () => void;
+  onViewPromptClick: () => void;
 }> = (props) => {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
-  };
-
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-      <div className="flex items-start gap-4">
-        <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-emerald-500/10">
-          <Bot className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
-        </div>
-        <div>
-          <div className="flex items-center gap-3">
-            <h2 className="text-3xl font-bold tracking-tight">
-              {props.strategy.name}
-            </h2>
-          </div>
-          <p className="text-muted-foreground mt-2 max-w-2xl">
-            {props.strategy.description || "No description"}
-          </p>
-          <div className="text-muted-foreground mt-2 flex gap-4 text-sm">
-            <span>Created {formatDate(props.strategy.created_at)}</span>
-            <span>•</span>
-            <span>Last updated {formatDate(props.strategy.updated_at)}</span>
-          </div>
-        </div>
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h2 className="text-3xl font-bold tracking-tight">
+          {props.strategy.name}
+        </h2>
+        <p className="text-muted-foreground">
+          {props.strategy.description || "No description"}
+        </p>
       </div>
-
-      <div className="flex gap-2">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="icon">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent align="end" className="w-48">
-            <div className="space-y-1">
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                size="sm"
-              >
-                <NotepadText className="mr-2 h-4 w-4" />
-                System Prompt
-              </Button>
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-red-600 hover:bg-red-500/10 hover:text-red-600 dark:text-red-400"
-                size="sm"
-                onClick={props.onDeleteClick}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </Button>
-            </div>
-          </PopoverContent>
-        </Popover>
+      <div className="flex flex-row gap-2">
+        <Button
+          variant="outline"
+          size="icon"
+          className="w-auto p-2 flex items-center justify-start hover:!bg-transparent"
+          onClick={props.onViewPromptClick}
+        >
+          <NotepadTextIcon className="h-6 w-6" />
+          <span>View Prompt</span>
+        </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="text-red-600 hover:!bg-transparent hover:text-red-700"
+        onClick={props.onDeleteClick}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
       </div>
     </div>
   );
@@ -256,111 +234,104 @@ const DeploymentsTable: FC<{
   const paginatedDeployments = props.deployments.slice(startIndex, endIndex);
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Live Deployments</CardTitle>
-          <Button
-            size="sm"
-            onClick={props.onCreateClick}
-            className="bg-emerald-600 hover:bg-emerald-700"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Create Deployment
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-xl font-semibold">Live Deployments</h3>
+        <Button
+          size="sm"
+          onClick={props.onCreateClick}
+          className="bg-emerald-600 hover:bg-emerald-700"
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Create Deployment
+        </Button>
+      </div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="text-gray-500">ID</TableHead>
+            <TableHead className="text-gray-500">Symbol</TableHead>
+            <TableHead className="text-gray-500">Timeframe</TableHead>
+            <TableHead className="text-gray-500">Started</TableHead>
+            <TableHead className="text-gray-500">Starting Balance</TableHead>
+            <TableHead className="text-gray-500">Status</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {props.deployments.length === 0 ? (
             <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Symbol</TableHead>
-              <TableHead>Timeframe</TableHead>
-              <TableHead>Started</TableHead>
-              <TableHead>Starting Balance</TableHead>
-              <TableHead>Status</TableHead>
+              <TableCell
+                colSpan={6}
+                className="text-muted-foreground text-center"
+              >
+                No live deployments
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {props.deployments.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={6}
-                  className="text-muted-foreground text-center"
-                >
-                  No live deployments
+          ) : (
+            paginatedDeployments.map((deployment) => (
+              <TableRow
+                key={deployment.deployment_id}
+                className="cursor-pointer"
+                onClick={() => handleRowClick(deployment.deployment_id)}
+              >
+                <TableCell className="font-mono text-xs">
+                  {deployment.deployment_id.substring(0, 8)}...
+                </TableCell>
+                <TableCell className="font-medium">
+                  {deployment.symbol}
+                </TableCell>
+                <TableCell>{deployment.timeframe}</TableCell>
+                <TableCell>
+                  {new Date(deployment.created_at).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </TableCell>
+                <TableCell>${deployment.starting_balance}</TableCell>
+                <TableCell>
+                  <Badge className={getStatusColor(deployment.status)}>
+                    {deployment.status}
+                  </Badge>
                 </TableCell>
               </TableRow>
-            ) : (
-              paginatedDeployments.map((deployment) => (
-                <TableRow
-                  key={deployment.deployment_id}
-                  className="hover:bg-muted/50 cursor-pointer"
-                  onClick={() => handleRowClick(deployment.deployment_id)}
-                >
-                  <TableCell className="font-mono text-xs">
-                    {deployment.deployment_id.substring(0, 8)}...
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    {deployment.symbol}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {deployment.timeframe}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {new Date(deployment.created_at).toLocaleDateString(
-                      "en-US",
-                      {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      },
-                    )}
-                  </TableCell>
-                  <TableCell>${deployment.starting_balance}</TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(deployment.status)}>
-                      {deployment.status}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-        {props.deployments.length > itemsPerPage && (
-          <div className="mt-4 flex items-center justify-between">
-            <div className="text-muted-foreground text-sm">
-              Showing {startIndex + 1} to{" "}
-              {Math.min(endIndex, props.deployments.length)} of{" "}
-              {props.deployments.length} deployments
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(page - 1)}
-                disabled={page === 1}
-              >
-                Previous
-              </Button>
-              <span className="text-muted-foreground text-sm">
-                Page {page} of {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(page + 1)}
-                disabled={page === totalPages}
-              >
-                Next
-              </Button>
-            </div>
+            ))
+          )}
+        </TableBody>
+      </Table>
+      {props.deployments.length > itemsPerPage && (
+        <div className="flex items-center justify-between">
+          <div className="text-muted-foreground text-sm">
+            Showing {startIndex + 1} to{" "}
+            {Math.min(endIndex, props.deployments.length)} of{" "}
+            {props.deployments.length} deployments
           </div>
-        )}
-      </CardContent>
-    </Card>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </Button>
+            <div className="text-sm">
+              Page {page} of {totalPages}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(page + 1)}
+              disabled={page === totalPages}
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -415,20 +386,10 @@ const BacktestsTable: FC<{
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Backtests</CardTitle>
-          <Button
-            size="sm"
-            onClick={props.onCreateClick}
-            className="bg-emerald-600 hover:bg-emerald-700"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Create Backtest
-          </Button>
-        </div>
-        <div className="mt-3">
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-xl font-semibold">Backtests</h3>
+        <div className="flex items-center gap-2">
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" size="sm">
@@ -475,91 +436,114 @@ const BacktestsTable: FC<{
               </div>
             </PopoverContent>
           </Popover>
+          <Button
+            size="sm"
+            onClick={props.onCreateClick}
+            className="bg-emerald-600 hover:bg-emerald-700"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Create Backtest
+          </Button>
         </div>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
+      </div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="text-gray-500">Symbol</TableHead>
+            <TableHead className="text-gray-500">Starting Balance</TableHead>
+            <TableHead className="text-gray-500">Status</TableHead>
+            <TableHead className="text-gray-500">Created</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filteredBacktests.length === 0 ? (
             <TableRow>
-              <TableHead>Symbol</TableHead>
-              <TableHead>Starting Balance</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Created</TableHead>
+              <TableCell
+                colSpan={4}
+                className="text-muted-foreground text-center"
+              >
+                No backtests found. Create one to get started!
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredBacktests.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className="text-muted-foreground text-center"
-                >
-                  No backtests found. Create one to get started!
+          ) : (
+            paginatedBacktests.map((backtest) => (
+              <TableRow
+                key={backtest.backtest_id}
+                className="cursor-pointer"
+                onClick={() => handleRowClick(backtest.backtest_id)}
+              >
+                <TableCell className="font-medium">{backtest.symbol}</TableCell>
+                <TableCell>${backtest.starting_balance}</TableCell>
+                <TableCell>
+                  <Badge className={getStatusColor(backtest.status)}>
+                    {backtest.status.replace("_", " ")}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  {new Date(backtest.created_at).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
                 </TableCell>
               </TableRow>
-            ) : (
-              paginatedBacktests.map((backtest) => (
-                <TableRow
-                  key={backtest.backtest_id}
-                  className="hover:bg-muted/50 cursor-pointer"
-                  onClick={() => handleRowClick(backtest.backtest_id)}
-                >
-                  <TableCell className="font-medium">
-                    {backtest.symbol}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    ${backtest.starting_balance}
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(backtest.status)}>
-                      {backtest.status.replace("_", " ")}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {new Date(backtest.created_at).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-        {filteredBacktests.length > itemsPerPage && (
-          <div className="mt-4 flex items-center justify-between">
-            <div className="text-muted-foreground text-sm">
-              Showing {startIndex + 1} to{" "}
-              {Math.min(endIndex, filteredBacktests.length)} of{" "}
-              {filteredBacktests.length} backtests
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(page - 1)}
-                disabled={page === 1}
-              >
-                Previous
-              </Button>
-              <span className="text-muted-foreground text-sm">
-                Page {page} of {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(page + 1)}
-                disabled={page === totalPages}
-              >
-                Next
-              </Button>
-            </div>
+            ))
+          )}
+        </TableBody>
+      </Table>
+      {filteredBacktests.length > itemsPerPage && (
+        <div className="flex items-center justify-between">
+          <div className="text-muted-foreground text-sm">
+            Showing {startIndex + 1} to{" "}
+            {Math.min(endIndex, filteredBacktests.length)} of{" "}
+            {filteredBacktests.length} backtests
           </div>
-        )}
-      </CardContent>
-    </Card>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </Button>
+            <div className="text-sm">
+              Page {page} of {totalPages}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(page + 1)}
+              disabled={page === totalPages}
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
   );
+};
+
+// Custom hook for managing prompt modal
+const useViewPrompt = () => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleViewPrompt = () => {
+    setIsOpen(true);
+  };
+
+  const handleClose = () => {
+    setIsOpen(false);
+  };
+
+  return {
+    isOpen,
+    handleViewPrompt,
+    handleClose,
+  };
 };
 
 // Main Page Component
@@ -569,6 +553,11 @@ const StrategyDetailPage: FC = () => {
 
   const [selectedTickers, setSelectedTickers] = useState<string[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const {
+    isOpen: isPromptModalOpen,
+    handleViewPrompt,
+    handleClose: handleClosePromptModal,
+  } = useViewPrompt();
   const [createBacktestDialogOpen, setCreateBacktestDialogOpen] =
     useState(false);
   const [newBacktestTicker, setNewBacktestTicker] = useState("");
@@ -593,6 +582,7 @@ const StrategyDetailPage: FC = () => {
 
   // Fetch strategy summary with metrics
   const strategySummaryQuery = useStrategySummary(id || "");
+  const strategyDetailsQuery = useStrategy(id || "");
   const deleteStrategyMutation = useDeleteStrategy();
 
   // Fetch backtests for this strategy
@@ -607,10 +597,13 @@ const StrategyDetailPage: FC = () => {
   console.log(brokerConnectionsQuery);
   const deployStrategyMutation = useDeployStrategy();
 
-  const strategy = strategySummaryQuery.data;
+  const strategy = strategySummaryQuery.data as
+    | StrategySummaryResponse
+    | undefined;
 
   // Filter backtests by strategy_id
-  const allBacktests = backtestsQuery.data || [];
+  const allBacktests =
+    (backtestsQuery.data as BacktestResponse[] | undefined) || [];
   const strategyBacktests = allBacktests.filter(
     (b: BacktestResponse) => b.strategy_id === id,
   );
@@ -627,7 +620,8 @@ const StrategyDetailPage: FC = () => {
   }
 
   // Get deployments from API
-  const deployments = deploymentsQuery.data || [];
+  const deployments =
+    (deploymentsQuery.data as DeploymentResponse[] | undefined) || [];
 
   const handleTickerToggle = (ticker: string) => {
     if (selectedTickers.includes(ticker)) {
@@ -772,7 +766,7 @@ const StrategyDetailPage: FC = () => {
                 Error loading strategy
               </h3>
               <p className="text-muted-foreground text-sm">
-                {strategySummaryQuery.error?.message || "Strategy not found"}
+                Strategy not found
               </p>
             </CardContent>
           </Card>
@@ -791,9 +785,13 @@ const StrategyDetailPage: FC = () => {
           </Button>
         </Link>
 
-        <StrategyHeader strategy={strategy} onDeleteClick={handleDeleteClick} />
+        <StrategyHeader
+          strategy={strategy}
+          onDeleteClick={handleDeleteClick}
+          onViewPromptClick={handleViewPrompt}
+        />
 
-        <div className="flex flex-col gap-4 lg:flex-row">
+        <div className="flex flex-col gap-6 lg:flex-row">
           <PerformanceMetrics metrics={strategy.metrics} />
           <EquityGraph />
         </div>
@@ -994,6 +992,7 @@ const StrategyDetailPage: FC = () => {
                   {brokerConnectionsQuery.isLoading ? (
                     <Skeleton className="h-10 w-full" />
                   ) : brokerConnectionsQuery.data &&
+                    Array.isArray(brokerConnectionsQuery.data) &&
                     brokerConnectionsQuery.data.length > 0 ? (
                     <Select
                       value={newDeploymentBrokerConnectionId}
@@ -1004,7 +1003,9 @@ const StrategyDetailPage: FC = () => {
                         <SelectValue placeholder="Select broker connection" />
                       </SelectTrigger>
                       <SelectContent>
-                        {brokerConnectionsQuery.data.map((connection) => (
+                        {(
+                          brokerConnectionsQuery.data as BrokerConnectionResponse[]
+                        ).map((connection) => (
                           <SelectItem
                             key={connection.connection_id}
                             value={connection.connection_id}
@@ -1134,6 +1135,7 @@ const StrategyDetailPage: FC = () => {
                   disabled={
                     deployStrategyMutation.isPending ||
                     !brokerConnectionsQuery.data ||
+                    !Array.isArray(brokerConnectionsQuery.data) ||
                     brokerConnectionsQuery.data.length === 0
                   }
                 >
@@ -1148,6 +1150,39 @@ const StrategyDetailPage: FC = () => {
                 </Button>
               </DialogFooter>
             </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* View Prompt Dialog */}
+        <Dialog open={isPromptModalOpen} onOpenChange={handleClosePromptModal}>
+          <DialogContent className="max-h-[80vh] max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Strategy Code</DialogTitle>
+              <DialogDescription>
+                The generated trading strategy code
+              </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="h-[60vh] w-full rounded-md border p-4">
+              {strategyDetailsQuery.isLoading ? (
+                <div className="flex h-full items-center justify-center">
+                  <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+                </div>
+              ) : strategyDetailsQuery.data ? (
+                <pre className="font-mono text-sm whitespace-pre-wrap">
+                  {(strategyDetailsQuery.data as any).data?.code ||
+                    "No code available"}
+                </pre>
+              ) : (
+                <p className="text-muted-foreground text-center">
+                  No code available
+                </p>
+              )}
+            </ScrollArea>
+            <DialogFooter>
+              <Button variant="outline" onClick={handleClosePromptModal}>
+                Close
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
