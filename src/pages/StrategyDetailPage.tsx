@@ -1,13 +1,12 @@
 import {
   ArrowLeft,
   Bot,
+  Building2,
   Filter,
   Loader2,
   MoreVertical,
   NotepadText,
-  OctagonXIcon,
   Plus,
-  RadioTowerIcon,
   Trash2,
 } from "lucide-react";
 import { useState, type FC } from "react";
@@ -54,25 +53,28 @@ import {
   useBacktestsQuery,
   useCreateBacktestMutation,
 } from "@/hooks/queries/backtest-hooks";
-import { useStrategyDeployments } from "@/hooks/queries/deployment-hooks";
+import { useBrokerConnectionsQuery } from "@/hooks/queries/broker-hooks";
+import {
+  useDeployStrategy,
+  useStrategyDeployments,
+} from "@/hooks/queries/deployment-hooks";
 import {
   useDeleteStrategy,
   useStrategySummary,
 } from "@/hooks/queries/strategy-hooks";
 import {
   BacktestStatus,
+  MarketType,
   StrategyDeploymentStatus,
   Timeframe,
   type BacktestResponse,
   type DeploymentResponse,
-  type StrategyMetrics,
   type StrategyResponse,
 } from "@/openapi";
 
 // Internal Components
 const StrategyHeader: FC<{
   strategy: Omit<StrategyResponse, "strategy_id">;
-  onManageClick: () => void;
   onDeleteClick: () => void;
 }> = (props) => {
   const formatDate = (dateString: string) => {
@@ -121,23 +123,6 @@ const StrategyHeader: FC<{
               </Button>
               <Button
                 variant="ghost"
-                className="w-full justify-start"
-                size="sm"
-                onClick={props.onManageClick}
-              >
-                <RadioTowerIcon className="mr-2 h-4 w-4" />
-                Manage
-              </Button>
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                size="sm"
-              >
-                <OctagonXIcon className="mr-2 h-4 w-4" />
-                Stop
-              </Button>
-              <Button
-                variant="ghost"
                 className="w-full justify-start text-red-600 hover:bg-red-500/10 hover:text-red-600 dark:text-red-400"
                 size="sm"
                 onClick={props.onDeleteClick}
@@ -154,7 +139,7 @@ const StrategyHeader: FC<{
 };
 
 const PerformanceMetrics: FC<{
-  metrics: Omit<StrategyMetrics, "equity_curve">;
+  metrics: any;
 }> = (props) => {
   const formatPnL = (pnl: number) => {
     const formatted = `$${Math.abs(pnl).toFixed(2)}`;
@@ -235,11 +220,18 @@ const PerformanceMetrics: FC<{
 
 const DeploymentsTable: FC<{
   deployments: DeploymentResponse[];
+  onCreateClick: () => void;
 }> = (props) => {
   const navigate = useNavigate();
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 20;
 
   const handleRowClick = (deploymentId: string) => {
     navigate(`/deployments/${deploymentId}`);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
   };
 
   const getStatusColor = (status: StrategyDeploymentStatus) => {
@@ -257,17 +249,33 @@ const DeploymentsTable: FC<{
     }
   };
 
+  // Calculate pagination
+  const totalPages = Math.ceil(props.deployments.length / itemsPerPage);
+  const startIndex = (page - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedDeployments = props.deployments.slice(startIndex, endIndex);
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Live Deployments</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>Live Deployments</CardTitle>
+          <Button
+            size="sm"
+            onClick={props.onCreateClick}
+            className="bg-emerald-600 hover:bg-emerald-700"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Create Deployment
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>ID</TableHead>
-              <TableHead>Ticker</TableHead>
+              <TableHead>Symbol</TableHead>
               <TableHead>Timeframe</TableHead>
               <TableHead>Started</TableHead>
               <TableHead>Starting Balance</TableHead>
@@ -285,7 +293,7 @@ const DeploymentsTable: FC<{
                 </TableCell>
               </TableRow>
             ) : (
-              props.deployments.map((deployment) => (
+              paginatedDeployments.map((deployment) => (
                 <TableRow
                   key={deployment.deployment_id}
                   className="hover:bg-muted/50 cursor-pointer"
@@ -295,7 +303,7 @@ const DeploymentsTable: FC<{
                     {deployment.deployment_id.substring(0, 8)}...
                   </TableCell>
                   <TableCell className="font-medium">
-                    {deployment.ticker}
+                    {deployment.symbol}
                   </TableCell>
                   <TableCell className="text-sm">
                     {deployment.timeframe}
@@ -321,6 +329,36 @@ const DeploymentsTable: FC<{
             )}
           </TableBody>
         </Table>
+        {props.deployments.length > itemsPerPage && (
+          <div className="mt-4 flex items-center justify-between">
+            <div className="text-muted-foreground text-sm">
+              Showing {startIndex + 1} to{" "}
+              {Math.min(endIndex, props.deployments.length)} of{" "}
+              {props.deployments.length} deployments
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(page - 1)}
+                disabled={page === 1}
+              >
+                Previous
+              </Button>
+              <span className="text-muted-foreground text-sm">
+                Page {page} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(page + 1)}
+                disabled={page === totalPages}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -541,6 +579,18 @@ const StrategyDetailPage: FC = () => {
   const [newBacktestStartDate, setNewBacktestStartDate] = useState("");
   const [newBacktestEndDate, setNewBacktestEndDate] = useState("");
 
+  // Create Deployment Dialog State
+  const [createDeploymentDialogOpen, setCreateDeploymentDialogOpen] =
+    useState(false);
+  const [newDeploymentBrokerConnectionId, setNewDeploymentBrokerConnectionId] =
+    useState("");
+  const [newDeploymentSymbol, setNewDeploymentTicker] = useState("");
+  const [newDeploymentTimeframe, setNewDeploymentTimeframe] =
+    useState<Timeframe>(Timeframe["1d"]);
+  const [newDeploymentMarketType, setNewDeploymentMarketType] =
+    useState<MarketType>(MarketType.stocks);
+  const [newDeploymentBalance, setNewDeploymentBalance] = useState("10000");
+
   // Fetch strategy summary with metrics
   const strategySummaryQuery = useStrategySummary(id || "");
   const deleteStrategyMutation = useDeleteStrategy();
@@ -552,10 +602,15 @@ const StrategyDetailPage: FC = () => {
   // Fetch deployments for this strategy
   const deploymentsQuery = useStrategyDeployments(id || "");
 
-  const strategy = strategySummaryQuery.data?.data;
+  // Fetch broker connections
+  const brokerConnectionsQuery = useBrokerConnectionsQuery();
+  console.log(brokerConnectionsQuery);
+  const deployStrategyMutation = useDeployStrategy();
+
+  const strategy = strategySummaryQuery.data;
 
   // Filter backtests by strategy_id
-  const allBacktests = backtestsQuery.data?.data || [];
+  const allBacktests = backtestsQuery.data || [];
   const strategyBacktests = allBacktests.filter(
     (b: BacktestResponse) => b.strategy_id === id,
   );
@@ -572,7 +627,7 @@ const StrategyDetailPage: FC = () => {
   }
 
   // Get deployments from API
-  const deployments = deploymentsQuery.data?.data || [];
+  const deployments = deploymentsQuery.data || [];
 
   const handleTickerToggle = (ticker: string) => {
     if (selectedTickers.includes(ticker)) {
@@ -582,10 +637,6 @@ const StrategyDetailPage: FC = () => {
     } else {
       setSelectedTickers([...selectedTickers, ticker]);
     }
-  };
-
-  const handleManageClick = () => {
-    navigate(`/strategies/${id}/live`);
   };
 
   const handleDeleteClick = () => {
@@ -602,6 +653,42 @@ const StrategyDetailPage: FC = () => {
 
   const handleCreateBacktestClick = () => {
     setCreateBacktestDialogOpen(true);
+  };
+
+  const handleCreateDeploymentClick = () => {
+    setCreateDeploymentDialogOpen(true);
+  };
+
+  const handleCreateDeployment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (
+      !id ||
+      !newDeploymentBrokerConnectionId ||
+      !newDeploymentSymbol ||
+      !newDeploymentBalance
+    )
+      return;
+
+    try {
+      await deployStrategyMutation.mutateAsync({
+        strategyId: id,
+        payload: {
+          broker_connection_id: newDeploymentBrokerConnectionId,
+          market_type: newDeploymentMarketType,
+          symbol: newDeploymentSymbol.toUpperCase(),
+          timeframe: newDeploymentTimeframe,
+        },
+      });
+      setCreateDeploymentDialogOpen(false);
+      setNewDeploymentBrokerConnectionId("");
+      setNewDeploymentTicker("");
+      setNewDeploymentTimeframe(Timeframe["1d"]);
+      setNewDeploymentMarketType(MarketType.stocks);
+      setNewDeploymentBalance("10000");
+    } catch (error) {
+      // Error handling is done by the mutation
+      console.error("Failed to create deployment:", error);
+    }
   };
 
   const handleCreateBacktest = async (e: React.FormEvent) => {
@@ -665,6 +752,8 @@ const StrategyDetailPage: FC = () => {
     );
   }
 
+  console.log(brokerConnectionsQuery.data);
+
   if (strategySummaryQuery.error || !strategy) {
     return (
       <DashboardLayout>
@@ -702,11 +791,7 @@ const StrategyDetailPage: FC = () => {
           </Button>
         </Link>
 
-        <StrategyHeader
-          strategy={strategy}
-          onManageClick={handleManageClick}
-          onDeleteClick={handleDeleteClick}
-        />
+        <StrategyHeader strategy={strategy} onDeleteClick={handleDeleteClick} />
 
         <div className="flex flex-col gap-4 lg:flex-row">
           <PerformanceMetrics metrics={strategy.metrics} />
@@ -722,7 +807,10 @@ const StrategyDetailPage: FC = () => {
           onCreateClick={handleCreateBacktestClick}
         />
 
-        <DeploymentsTable deployments={deployments} />
+        <DeploymentsTable
+          deployments={deployments}
+          onCreateClick={handleCreateDeploymentClick}
+        />
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -880,6 +968,182 @@ const StrategyDetailPage: FC = () => {
                     </>
                   ) : (
                     "Create Backtest"
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Create Deployment Dialog */}
+        <Dialog
+          open={createDeploymentDialogOpen}
+          onOpenChange={setCreateDeploymentDialogOpen}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Create New Deployment</DialogTitle>
+              <DialogDescription>
+                Deploy this strategy to a live broker connection
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleCreateDeployment}>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="broker-connection">Broker Connection</Label>
+                  {brokerConnectionsQuery.isLoading ? (
+                    <Skeleton className="h-10 w-full" />
+                  ) : brokerConnectionsQuery.data &&
+                    brokerConnectionsQuery.data.length > 0 ? (
+                    <Select
+                      value={newDeploymentBrokerConnectionId}
+                      onValueChange={setNewDeploymentBrokerConnectionId}
+                      required
+                    >
+                      <SelectTrigger id="broker-connection">
+                        <SelectValue placeholder="Select broker connection" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {brokerConnectionsQuery.data.map((connection) => (
+                          <SelectItem
+                            key={connection.connection_id}
+                            value={connection.connection_id}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Building2 className="text-muted-foreground h-4 w-4" />
+                              <span className="font-medium">
+                                {connection.broker}
+                              </span>
+                              <span className="text-muted-foreground">
+                                • {connection.broker_account_id}
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="rounded-md border border-dashed p-4 text-center">
+                      <p className="text-muted-foreground text-sm">
+                        No broker connections available. Please connect a broker
+                        first.
+                      </p>
+                    </div>
+                  )}
+                  <p className="text-muted-foreground text-xs">
+                    Select the broker account to deploy to
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="deployment-market-type">Market Type</Label>
+                  <Select
+                    value={newDeploymentMarketType}
+                    onValueChange={(value) =>
+                      setNewDeploymentMarketType(value as MarketType)
+                    }
+                  >
+                    <SelectTrigger id="deployment-market-type">
+                      <SelectValue placeholder="Select market type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={MarketType.stocks}>Stocks</SelectItem>
+                      <SelectItem value={MarketType.crypto}>Crypto</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-muted-foreground text-xs">
+                    Select the market type for this deployment
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="deployment-ticker">Ticker Symbol</Label>
+                  <Input
+                    id="deployment-ticker"
+                    placeholder="AAPL"
+                    value={newDeploymentSymbol}
+                    onChange={(e) => setNewDeploymentTicker(e.target.value)}
+                    required
+                    maxLength={10}
+                  />
+                  <p className="text-muted-foreground text-xs">
+                    Enter the stock symbol to trade (e.g., AAPL, TSLA, GOOGL)
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="deployment-timeframe">Timeframe</Label>
+                  <Select
+                    value={newDeploymentTimeframe}
+                    onValueChange={(value) =>
+                      setNewDeploymentTimeframe(value as Timeframe)
+                    }
+                  >
+                    <SelectTrigger id="deployment-timeframe">
+                      <SelectValue placeholder="Select timeframe" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={Timeframe["1m"]}>1 minute</SelectItem>
+                      <SelectItem value={Timeframe["5m"]}>5 minutes</SelectItem>
+                      <SelectItem value={Timeframe["15m"]}>
+                        15 minutes
+                      </SelectItem>
+                      <SelectItem value={Timeframe["30m"]}>
+                        30 minutes
+                      </SelectItem>
+                      <SelectItem value={Timeframe["1h"]}>1 hour</SelectItem>
+                      <SelectItem value={Timeframe["1d"]}>1 day</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-muted-foreground text-xs">
+                    The time interval for trading decisions
+                  </p>
+                </div>
+
+                {/* <div className="space-y-2">
+                  <Label htmlFor="deployment-balance">
+                    Starting Balance ($)
+                  </Label>
+                  <Input
+                    id="deployment-balance"
+                    type="number"
+                    placeholder="10000"
+                    value={newDeploymentBalance}
+                    onChange={(e) => setNewDeploymentBalance(e.target.value)}
+                    required
+                    min="100"
+                    step="0.01"
+                  />
+                  <p className="text-muted-foreground text-xs">
+                    The initial capital for this deployment
+                  </p>
+                </div> */}
+              </div>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCreateDeploymentDialogOpen(false)}
+                  disabled={deployStrategyMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="bg-emerald-600 hover:bg-emerald-700"
+                  disabled={
+                    deployStrategyMutation.isPending ||
+                    !brokerConnectionsQuery.data ||
+                    brokerConnectionsQuery.data.length === 0
+                  }
+                >
+                  {deployStrategyMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    "Create Deployment"
                   )}
                 </Button>
               </DialogFooter>

@@ -1,10 +1,11 @@
 import type { ApiError } from "@/lib/types/apiError";
+import { handleApi } from "@/lib/utils/base";
 import { useMutation } from "@tanstack/react-query";
 
 import {
-    contactUsPublicContactPost,
-    type ContactForm,
-    type contactUsPublicContactPostResponse,
+  contactUsPublicContactPost,
+  type ContactForm,
+  type contactUsPublicContactPostResponse,
 } from "@/openapi";
 
 /**
@@ -13,7 +14,8 @@ import {
 export function useContactForm() {
   return useMutation<contactUsPublicContactPostResponse, ApiError, ContactForm>(
     {
-      mutationFn: (payload: ContactForm) => contactUsPublicContactPost(payload),
+      mutationFn: async (payload: ContactForm) =>
+        handleApi(await contactUsPublicContactPost(payload)),
     },
   );
 }

@@ -1,14 +1,39 @@
-import { Calendar, CirclePlay } from "lucide-react";
-import { type FC, useState } from "react";
+import {
+  Calendar,
+  Loader2,
+  MoreVertical,
+  PlayCircle,
+  StopCircle,
+} from "lucide-react";
+import { type FC, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 
 import EquityGraph from "@/components/EquityGraph";
 import LiveLogs, { type LogEntry } from "@/components/LiveLogs";
 import PerformanceMetrics from "@/components/PerformanceMetrics";
-import TradesTable from "@/components/TradesTable";
+import TradesTable, { type Trade } from "@/components/TradesTable";
 import DashboardLayout from "@/components/layouts/dashboard-layout";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { useBrokerConnectionQuery } from "@/hooks/queries/broker-hooks";
+import {
+  useDeployment,
+  useStopDeployment,
+} from "@/hooks/queries/deployment-hooks";
+import { queryKeys } from "@/lib/query/query-keys";
+import { handleApi } from "@/lib/utils/base";
+import {
+  getDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGet,
+  type OrderResponseOutput,
+  StrategyDeploymentStatus,
+} from "@/openapi";
+import { useQuery } from "@tanstack/react-query";
 
 // Internal Components
 interface SummaryMetricCardProps {
@@ -207,10 +232,130 @@ const MonthlyReturnsGrid: FC<MonthlyReturnsGridProps> = (props) => {
 
 const LiveDeploymentPage: FC = () => {
   const navigate = useNavigate();
-  const { id: strategyId } = useParams<{ id: string }>();
+  const { deploymentId } = useParams<{ deploymentId: string }>();
 
-  // Mock backtest ID for replay functionality
-  const backtestId = "1";
+  // Fetch deployment data
+  const {
+    data: deploymentResponse,
+    isLoading: isLoadingDeployment,
+    error: deploymentError,
+  } = useDeployment(deploymentId || "");
+  const stopDeploymentMutation = useStopDeployment();
+
+  const deployment = (deploymentResponse as any)?.data;
+
+  // Fetch broker connection details
+  const { data: brokerConnection, isLoading: isLoadingBroker } =
+    useBrokerConnectionQuery(deployment?.broker_connection_id || "");
+
+  // Fetch orders for this deployment
+  const { data: ordersData, isLoading: isLoadingOrders } = useQuery({
+    queryKey: queryKeys.deployments.orders(deploymentId || ""),
+    queryFn: async () =>
+      handleApi(
+        await getDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGet(
+          deploymentId || "",
+        ),
+      ),
+    enabled: !!deploymentId,
+  });
+
+  const orders = ((ordersData as any)?.data || []) as OrderResponseOutput[];
+
+  // Transform orders to trades format
+  const trades: Trade[] = useMemo(() => {
+    return orders.map((order: OrderResponseOutput, index: number) => {
+      const isLong = order.side.toUpperCase() === "BUY";
+      const filledQty = parseFloat(order.filled_quantity);
+      const avgPrice = order.average_fill_price
+        ? parseFloat(order.average_fill_price)
+        : 0;
+
+      // Calculate P&L (simplified - would need matching orders in real scenario)
+      const pnl = 0; // Placeholder
+      const pnlPercent = 0; // Placeholder
+
+      return {
+        id: index + 1,
+        date: new Date(order.submitted_at).toLocaleDateString(),
+        symbol: order.symbol,
+        side: isLong ? "LONG" : "SHORT",
+        entry: `$${avgPrice.toFixed(2)}`,
+        exit: order.filled_at ? `$${avgPrice.toFixed(2)}` : "-",
+        pnl: pnl >= 0 ? `+$${pnl.toFixed(2)}` : `-$${Math.abs(pnl).toFixed(2)}`,
+        pnlPercent:
+          pnlPercent >= 0
+            ? `+${pnlPercent.toFixed(2)}%`
+            : `${pnlPercent.toFixed(2)}%`,
+        duration: order.filled_at
+          ? `${(
+              Math.abs(
+                new Date(order.filled_at).getTime() -
+                  new Date(order.submitted_at).getTime(),
+              ) /
+              (1000 * 60 * 60 * 24)
+            ).toFixed(1)} days`
+          : "Open",
+      };
+    });
+  }, [orders]);
+
+  const getStatusBadgeVariant = (status: StrategyDeploymentStatus) => {
+    switch (status) {
+      case "running":
+        return "default";
+      case "stopped":
+        return "secondary";
+      case "error":
+        return "destructive";
+      case "pending":
+        return "outline";
+      default:
+        return "secondary";
+    }
+  };
+
+  const handleStopDeployment = async () => {
+    if (!deploymentId) return;
+
+    try {
+      await stopDeploymentMutation.mutateAsync(deploymentId);
+    } catch (err) {
+      console.error("Failed to stop deployment:", err);
+    }
+  };
+
+  const handleReplayClick = (tradeId: number) => {
+    // Navigate to replay session for this deployment
+    navigate(`/replay/deployment/${deploymentId}`);
+  };
+
+  if (isLoadingDeployment) {
+    return (
+      <DashboardLayout>
+        <div className="flex h-96 items-center justify-center">
+          <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (deploymentError || !deployment) {
+    return (
+      <DashboardLayout>
+        <div className="flex h-96 flex-col items-center justify-center gap-4">
+          <p className="text-muted-foreground">
+            {deploymentError
+              ? "Failed to load deployment"
+              : "Deployment not found"}
+          </p>
+          <Button onClick={() => navigate("/strategies")}>
+            Back to Strategies
+          </Button>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   const metrics = {
     totalReturn: 45.6,
@@ -218,7 +363,7 @@ const LiveDeploymentPage: FC = () => {
     maxDrawdown: -12.3,
     winRate: 64.2,
     profitFactor: 2.34,
-    totalTrades: 127,
+    totalTrades: trades.length || 127,
     avgWin: 2.8,
     avgLoss: -1.9,
     largestWin: 8.4,
@@ -240,64 +385,6 @@ const LiveDeploymentPage: FC = () => {
     { month: "Oct", return: 5.6 },
     { month: "Nov", return: 4.3 },
     { month: "Dec", return: 3.6 },
-  ];
-
-  const recentTrades = [
-    {
-      id: 1,
-      date: "2024-01-26",
-      symbol: "AAPL",
-      side: "LONG",
-      entry: "$175.23",
-      exit: "$178.45",
-      pnl: "+$322.00",
-      pnlPercent: "+1.84%",
-      duration: "2.5 days",
-    },
-    {
-      id: 2,
-      date: "2024-01-24",
-      symbol: "TSLA",
-      side: "SHORT",
-      entry: "$242.50",
-      exit: "$238.20",
-      pnl: "+$430.00",
-      pnlPercent: "+1.77%",
-      duration: "1.2 days",
-    },
-    {
-      id: 3,
-      date: "2024-01-22",
-      symbol: "SPY",
-      side: "LONG",
-      entry: "$445.67",
-      exit: "$443.12",
-      pnl: "-$255.00",
-      pnlPercent: "-0.57%",
-      duration: "3.1 days",
-    },
-    {
-      id: 4,
-      date: "2024-01-20",
-      symbol: "NVDA",
-      side: "LONG",
-      entry: "$520.30",
-      exit: "$532.45",
-      pnl: "+$1,215.00",
-      pnlPercent: "+2.34%",
-      duration: "4.3 days",
-    },
-    {
-      id: 5,
-      date: "2024-01-18",
-      symbol: "MSFT",
-      side: "LONG",
-      entry: "$402.15",
-      exit: "$398.90",
-      pnl: "-$325.00",
-      pnlPercent: "-0.81%",
-      duration: "2.8 days",
-    },
   ];
 
   // Mock log data
@@ -352,68 +439,82 @@ const LiveDeploymentPage: FC = () => {
                 Strategies
               </Link>
               <span className="text-muted-foreground">/</span>
-              <span className="text-sm">RSI Mean Reversion</span>
+              <Link
+                to={`/strategies/${deployment.strategy_id}`}
+                className="text-muted-foreground hover:text-foreground text-sm"
+              >
+                Strategy Details
+              </Link>
+              <span className="text-muted-foreground">/</span>
+              <span className="text-sm">Live Deployment</span>
             </div>
-            <h2 className="text-3xl font-bold tracking-tight">
-              Live Deployment
-            </h2>
-            <p className="text-muted-foreground">
-              Strategy ID: {strategyId} • Running since Dec 1, 2024
+            <div className="flex items-center gap-3">
+              <h2 className="text-3xl font-bold tracking-tight">
+                Live Deployment
+              </h2>
+              <Badge variant={getStatusBadgeVariant(deployment.status)}>
+                {deployment.status.toUpperCase()}
+              </Badge>
+              {/* Broker Connection Badge */}
+              {brokerConnection && (
+                <Badge variant="outline" className="gap-1">
+                  {(brokerConnection as any).broker?.toUpperCase() || "BROKER"}
+                  {(brokerConnection as any).broker_account_id && (
+                    <span className="text-muted-foreground">
+                      •{" "}
+                      {(brokerConnection as any).broker_account_id.slice(0, 8)}
+                    </span>
+                  )}
+                </Badge>
+              )}
+            </div>
+            <p className="text-muted-foreground mt-1">
+              {deployment.symbol} • {deployment.timeframe} • Started{" "}
+              {new Date(deployment.created_at).toLocaleDateString()}
             </p>
+            {deployment.error_message && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                Error: {deployment.error_message}
+              </p>
+            )}
           </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => navigate(`/replay/backtest/${backtestId}`)}
-            >
-              <CirclePlay className="mr-2 h-4 w-4" />
-              Replay
-            </Button>
-          </div>
+          {/* Popover Menu */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="icon">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-48">
+              <div className="space-y-2">
+                {(deployment.status === "running" ||
+                  deployment.status === "pending") && (
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start"
+                    onClick={handleStopDeployment}
+                    disabled={stopDeploymentMutation.isPending}
+                  >
+                    {stopDeploymentMutation.isPending ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <StopCircle className="mr-2 h-4 w-4" />
+                    )}
+                    Stop Deployment
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={() => navigate(`/replay/deployment/${deploymentId}`)}
+                >
+                  <PlayCircle className="mr-2 h-4 w-4" />
+                  Replay Mode
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
-
-        {/* Key Metrics */}
-        {/* <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <SummaryMetricCard
-            title="Total Return"
-            value={`+${metrics.totalReturn}%`}
-            subtitle={
-              <>
-                <ArrowUp className="mr-1 h-3 w-3 text-emerald-500" />$
-                {(10000 * (metrics.totalReturn / 100)).toFixed(0)} on $10k
-              </>
-            }
-            icon={<TrendingUp className="text-muted-foreground h-4 w-4" />}
-            valueColor="text-emerald-600 dark:text-emerald-400"
-          />
-
-          <SummaryMetricCard
-            title="Sharpe Ratio"
-            value={metrics.sharpeRatio}
-            subtitle="Risk-adjusted return"
-            icon={<BarChart3 className="text-muted-foreground h-4 w-4" />}
-          />
-
-          <SummaryMetricCard
-            title="Max Drawdown"
-            value={`${metrics.maxDrawdown}%`}
-            subtitle={
-              <>
-                <ArrowDown className="mr-1 h-3 w-3 text-red-500" />
-                Largest peak-to-trough
-              </>
-            }
-            icon={<TrendingDown className="text-muted-foreground h-4 w-4" />}
-            valueColor="text-red-600 dark:text-red-400"
-          />
-
-          <SummaryMetricCard
-            title="Win Rate"
-            value={`${metrics.winRate}%`}
-            subtitle={`${Math.round((metrics.totalTrades * metrics.winRate) / 100)} of ${metrics.totalTrades} trades`}
-            icon={<Percent className="text-muted-foreground h-4 w-4" />}
-          />
-        </div> */}
 
         {/* Equity Curve with Statistics */}
         <div className="flex flex-col gap-4 lg:flex-row">
@@ -422,42 +523,32 @@ const LiveDeploymentPage: FC = () => {
             totalPnl={10000 * (metrics.totalReturn / 100)}
             returnPercentage={metrics.totalReturn}
             totalTrades={metrics.totalTrades}
-            winRate={metrics.winRate}
-            avgWin={metrics.avgWin}
-            avgLoss={metrics.avgLoss}
             sharpeRatio={metrics.sharpeRatio}
             maxDrawdown={metrics.maxDrawdown}
           />
 
           {/* Equity Graph */}
-          <EquityGraph
-            equityData={undefined}
-            drawdownData={undefined}
-            title="Equity Curve"
-          />
+          <EquityGraph equityData={undefined} title="Equity Curve" />
         </div>
 
         {/* Detailed Metrics */}
         <DetailedMetricsCard metrics={metrics} />
 
-        {/* Monthly Returns & Trade List */}
-        {/* <Tabs defaultValue="monthly" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="monthly">Monthly Returns</TabsTrigger>
-            <TabsTrigger value="trades">Trade List</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="monthly">
-            <MonthlyReturnsGrid monthlyReturns={monthlyReturns} />
-          </TabsContent>
-
-          <TabsContent value="trades">
-            <TradesTable trades={recentTrades} />
-          </TabsContent>
-        </Tabs> */}
-
+        {/* Monthly Returns */}
         <MonthlyReturnsGrid monthlyReturns={monthlyReturns} />
-        <TradesTable trades={recentTrades} />
+
+        {/* Trades Table */}
+        {isLoadingOrders ? (
+          <Card>
+            <CardContent className="flex h-48 items-center justify-center">
+              <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+            </CardContent>
+          </Card>
+        ) : (
+          <TradesTable trades={trades} onReplayClick={handleReplayClick} />
+        )}
+
+        {/* Live Logs */}
         <LiveLogs logs={logs} onClearLogs={handleClearLogs} />
       </div>
     </DashboardLayout>

@@ -1,25 +1,26 @@
 import { queryClient } from "@/lib/query/query-client";
 import { queryKeys } from "@/lib/query/query-keys";
 import type { ApiError } from "@/lib/types/apiError";
+import { handleApi } from "@/lib/utils/base";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import {
-    deployStrategyEndpointDeploymentsStrategiesStrategyIdDeployPost,
-    getDeploymentEndpointDeploymentsDeploymentIdGet,
-    listAllDeploymentsEndpointDeploymentsGet,
-    listStrategyDeploymentsEndpointDeploymentsStrategiesStrategyIdDeploymentsGet,
-    stopDeploymentEndpointDeploymentsDeploymentIdStopPost,
+  deployStrategyEndpointDeploymentsStrategiesStrategyIdDeployPost,
+  getDeploymentEndpointDeploymentsDeploymentIdGet,
+  listAllDeploymentsEndpointDeploymentsGet,
+  listStrategyDeploymentsEndpointDeploymentsStrategiesStrategyIdDeploymentsGet,
+  stopDeploymentEndpointDeploymentsDeploymentIdStopPost,
 } from "@/openapi";
 
 import type {
-    deployStrategyEndpointDeploymentsStrategiesStrategyIdDeployPostResponse,
-    DeployStrategyRequest,
-    getDeploymentEndpointDeploymentsDeploymentIdGetResponse,
-    ListAllDeploymentsEndpointDeploymentsGetParams,
-    listAllDeploymentsEndpointDeploymentsGetResponse,
-    ListStrategyDeploymentsEndpointDeploymentsStrategiesStrategyIdDeploymentsGetParams,
-    listStrategyDeploymentsEndpointDeploymentsStrategiesStrategyIdDeploymentsGetResponse,
-    stopDeploymentEndpointDeploymentsDeploymentIdStopPostResponse,
+  deployStrategyEndpointDeploymentsStrategiesStrategyIdDeployPostResponse,
+  DeployStrategyRequest,
+  getDeploymentEndpointDeploymentsDeploymentIdGetResponse,
+  ListAllDeploymentsEndpointDeploymentsGetParams,
+  listAllDeploymentsEndpointDeploymentsGetResponse,
+  ListStrategyDeploymentsEndpointDeploymentsStrategiesStrategyIdDeploymentsGetParams,
+  listStrategyDeploymentsEndpointDeploymentsStrategiesStrategyIdDeploymentsGetResponse,
+  stopDeploymentEndpointDeploymentsDeploymentIdStopPostResponse,
 } from "@/openapi";
 
 /**
@@ -30,7 +31,8 @@ export function useDeployments(
 ) {
   return useQuery<listAllDeploymentsEndpointDeploymentsGetResponse, ApiError>({
     queryKey: queryKeys.deployments.list(params),
-    queryFn: () => listAllDeploymentsEndpointDeploymentsGet(params),
+    queryFn: async () =>
+      handleApi(await listAllDeploymentsEndpointDeploymentsGet(params)),
   });
 }
 
@@ -46,10 +48,12 @@ export function useStrategyDeployments(
     ApiError
   >({
     queryKey: queryKeys.deployments.strategy(strategyId, params),
-    queryFn: () =>
-      listStrategyDeploymentsEndpointDeploymentsStrategiesStrategyIdDeploymentsGet(
-        strategyId,
-        params,
+    queryFn: async () =>
+      handleApi(
+        await listStrategyDeploymentsEndpointDeploymentsStrategiesStrategyIdDeploymentsGet(
+          strategyId,
+          params,
+        ),
       ),
     enabled: !!strategyId,
   });
@@ -64,8 +68,10 @@ export function useDeployment(deploymentId: string) {
     ApiError
   >({
     queryKey: queryKeys.deployments.detail(deploymentId),
-    queryFn: () =>
-      getDeploymentEndpointDeploymentsDeploymentIdGet(deploymentId),
+    queryFn: async () =>
+      handleApi(
+        await getDeploymentEndpointDeploymentsDeploymentIdGet(deploymentId),
+      ),
     enabled: !!deploymentId,
   });
 }
@@ -79,13 +85,15 @@ export function useDeployStrategy() {
     ApiError,
     { strategyId: string; payload: DeployStrategyRequest }
   >({
-    mutationFn: (variables: {
+    mutationFn: async (variables: {
       strategyId: string;
       payload: DeployStrategyRequest;
     }) =>
-      deployStrategyEndpointDeploymentsStrategiesStrategyIdDeployPost(
-        variables.strategyId,
-        variables.payload,
+      handleApi(
+        await deployStrategyEndpointDeploymentsStrategiesStrategyIdDeployPost(
+          variables.strategyId,
+          variables.payload,
+        ),
       ),
     onSuccess: (
       _data: deployStrategyEndpointDeploymentsStrategiesStrategyIdDeployPostResponse,
@@ -108,7 +116,12 @@ export function useStopDeployment() {
     ApiError,
     string
   >({
-    mutationFn: stopDeploymentEndpointDeploymentsDeploymentIdStopPost,
+    mutationFn: async (deploymentId: string) =>
+      handleApi(
+        await stopDeploymentEndpointDeploymentsDeploymentIdStopPost(
+          deploymentId,
+        ),
+      ),
     onSuccess: (
       _data: stopDeploymentEndpointDeploymentsDeploymentIdStopPostResponse,
       deploymentId: string,

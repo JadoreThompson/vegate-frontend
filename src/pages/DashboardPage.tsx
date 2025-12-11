@@ -15,13 +15,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBacktestsQuery } from "@/hooks/queries/backtest-hooks";
-import { useStrategySummaries } from "@/hooks/queries/strategy-hooks";
+import { useStrategySummariesQuery } from "@/hooks/queries/strategy-hooks";
 import type { BacktestResponse } from "@/openapi";
 
 const DashboardPage: FC = () => {
   // Fetch strategy summaries with metrics
   const { data: strategiesData, isLoading: strategiesLoading } =
-    useStrategySummaries({ limit: 100 });
+    useStrategySummariesQuery({ limit: 100 });
 
   // Fetch recent backtests to show as proxy for trades
   const { data: backtestsData, isLoading: backtestsLoading } =

@@ -1,10 +1,11 @@
 import type {
-    GetBacktestOrdersEndpointBacktestsBacktestIdOrdersGetParams,
-    ListAllDeploymentsEndpointDeploymentsGetParams,
-    ListBacktestsEndpointBacktestsGetParams,
-    ListStrategiesEndpointStrategiesGetParams,
-    ListStrategyDeploymentsEndpointDeploymentsStrategiesStrategyIdDeploymentsGetParams,
-    ListStrategySummariesEndpointStrategiesSummariesGetParams,
+  GetBacktestOrdersEndpointBacktestsBacktestIdOrdersGetParams,
+  GetDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGetParams,
+  ListAllDeploymentsEndpointDeploymentsGetParams,
+  ListBacktestsEndpointBacktestsGetParams,
+  ListStrategiesEndpointStrategiesGetParams,
+  ListStrategyDeploymentsEndpointDeploymentsStrategiesStrategyIdDeploymentsGetParams,
+  ListStrategySummariesEndpointStrategiesSummariesGetParams,
 } from "@/openapi";
 
 export const queryKeys = {
@@ -45,6 +46,9 @@ export const queryKeys = {
   brokers: {
     all: () => ["brokers"] as const,
     alpacaOAuth: () => [...queryKeys.brokers.all(), "alpaca", "oauth"] as const,
+    connections: () => [...queryKeys.brokers.all(), "connections"] as const,
+    connection: (connectionId: string) =>
+      [...queryKeys.brokers.all(), "connection", connectionId] as const,
   },
   deployments: {
     all: () => ["deployments"] as const,
@@ -57,5 +61,10 @@ export const queryKeys = {
       params?: ListStrategyDeploymentsEndpointDeploymentsStrategiesStrategyIdDeploymentsGetParams,
     ) =>
       [...queryKeys.deployments.all(), "strategy", strategyId, params] as const,
+    orders: (
+      deploymentId: string,
+      params?: GetDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGetParams,
+    ) =>
+      [...queryKeys.deployments.all(), "orders", deploymentId, params] as const,
   },
 };

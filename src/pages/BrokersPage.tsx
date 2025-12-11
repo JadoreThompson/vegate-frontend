@@ -1,5 +1,5 @@
-import { AlertCircle, CheckCircle2, ExternalLink, Loader2 } from "lucide-react";
-import { useState, type FC } from "react";
+import { AlertCircle, ExternalLink, Loader2 } from "lucide-react";
+import { useEffect, useState, type FC } from "react";
 
 import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAlpacaOAuthUrl } from "@/hooks/queries/broker-hooks";
+import { useAlpacaOAuthUrlQuery } from "@/hooks/queries/broker-hooks";
 
 type Broker = {
   id: string;
@@ -21,7 +21,7 @@ type Broker = {
   description: string;
   authType: "oauth" | "api_key";
   oauthUrl?: string;
-  status: "available" | "connected" | "coming_soon";
+  status: "available" | "coming_soon";
   connectedAccount?: {
     accountId: string;
     balance: number;
@@ -33,12 +33,7 @@ const BrokersPage: FC = () => {
   const [selectedBroker, setSelectedBroker] = useState<Broker | null>(null);
   const [connectDialogOpen, setConnectDialogOpen] = useState(false);
 
-  // Fetch Alpaca OAuth URL
-  const {
-    data: oauthData,
-    isLoading: isLoadingOAuth,
-    error: oauthError,
-  } = useAlpacaOAuthUrl();
+  const alpacaOAuthUrlQuery = useAlpacaOAuthUrlQuery();
 
   const brokers: Broker[] = [
     {
@@ -47,7 +42,7 @@ const BrokersPage: FC = () => {
       logo: "🦙",
       description: "Commission-free trading API",
       authType: "oauth",
-      oauthUrl: oauthData?.oauth_url,
+      oauthUrl: alpacaOAuthUrlQuery.data?.url,
       status: "available",
     },
     {
@@ -56,7 +51,7 @@ const BrokersPage: FC = () => {
       logo: "🏦",
       description: "Global multi-asset broker",
       authType: "api_key",
-      status: "available",
+      status: "coming_soon",
     },
     {
       id: "interactive",
@@ -108,17 +103,22 @@ const BrokersPage: FC = () => {
     },
   ];
 
+  useEffect(() => {
+    console.log("entered");
+    console.log(alpacaOAuthUrlQuery.data);
+    if (alpacaOAuthUrlQuery.data?.url) {
+      brokers[0].oauthUrl = alpacaOAuthUrlQuery.data.url;
+    }
+  }, [alpacaOAuthUrlQuery.data]);
+
   const handleBrokerClick = (broker: Broker) => {
     setSelectedBroker(broker);
     setConnectDialogOpen(true);
   };
 
   const handleOAuthConnect = () => {
-    if (selectedBroker?.id === "alpaca" && oauthData?.oauth_url) {
-      window.open(oauthData.oauth_url, "_blank");
-      setConnectDialogOpen(false);
-    } else if (selectedBroker?.oauthUrl) {
-      window.open(selectedBroker.oauthUrl, "_blank");
+    if (selectedBroker?.id === "alpaca" && alpacaOAuthUrlQuery.data?.url) {
+      window.open(alpacaOAuthUrlQuery.data.url, "_blank");
       setConnectDialogOpen(false);
     }
   };
@@ -150,20 +150,11 @@ const BrokersPage: FC = () => {
                 onClick={() => handleBrokerClick(broker)}
                 disabled={broker.status === "coming_soon"}
                 className={`group relative flex aspect-square h-36 w-36 flex-col items-center justify-center gap-3 rounded-2xl border-2 p-6 transition-all ${
-                  broker.status === "connected"
-                    ? "border-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/10"
-                    : broker.status === "coming_soon"
-                      ? "border-border bg-muted/20 cursor-not-allowed opacity-50"
-                      : "border-border bg-card hover:bg-accent hover:border-emerald-500/50"
+                  broker.status === "coming_soon"
+                    ? "border-border bg-muted/20 cursor-not-allowed opacity-50"
+                    : "border-border bg-card hover:bg-accent hover:border-emerald-500/50"
                 }`}
               >
-                {/* Connected Badge */}
-                {broker.status === "connected" && (
-                  <div className="absolute top-2 right-2">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                  </div>
-                )}
-
                 {/* Coming Soon Badge */}
                 {broker.status === "coming_soon" && (
                   <div className="absolute top-2 right-2">
@@ -206,68 +197,25 @@ const BrokersPage: FC = () => {
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            {/* Already Connected */}
-            {selectedBroker?.status === "connected" && (
-              <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-4">
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-emerald-600 dark:text-emerald-400" />
-                  <div className="flex-1 space-y-2">
-                    <p className="font-semibold text-emerald-600 dark:text-emerald-400">
-                      Already Connected
-                    </p>
-                    {selectedBroker.connectedAccount && (
-                      <div className="space-y-1 text-sm">
-                        <p className="text-muted-foreground">
-                          Account: {selectedBroker.connectedAccount.accountId}
-                        </p>
-                        <p className="text-muted-foreground">
-                          Balance: $
-                          {selectedBroker.connectedAccount.balance.toLocaleString()}
-                        </p>
-                        <p className="text-muted-foreground">
-                          Last sync: {selectedBroker.connectedAccount.lastSync}
-                        </p>
-                      </div>
-                    )}
-                    <div className="flex gap-2 pt-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-emerald-500/50"
-                      >
-                        Manage Connection
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-red-500/50 text-red-600 hover:bg-red-500/10 dark:text-red-400"
-                      >
-                        Disconnect
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* OAuth Connection */}
             {selectedBroker?.status === "available" &&
               selectedBroker?.authType === "oauth" && (
                 <div className="space-y-4">
                   {/* Show error if OAuth URL fetch failed */}
-                  {selectedBroker.id === "alpaca" && oauthError && (
-                    <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4">
-                      <div className="flex items-start gap-2">
-                        <AlertCircle className="h-4 w-4 flex-shrink-0 text-red-600 dark:text-red-400" />
-                        <div className="text-sm text-red-600 dark:text-red-400">
-                          <p className="font-medium">Connection Error</p>
-                          <p className="mt-1">
-                            Failed to load OAuth URL. Please try again later.
-                          </p>
+                  {selectedBroker.id === "alpaca" &&
+                    alpacaOAuthUrlQuery.error && (
+                      <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4">
+                        <div className="flex items-start gap-2">
+                          <AlertCircle className="h-4 w-4 flex-shrink-0 text-red-600 dark:text-red-400" />
+                          <div className="text-sm text-red-600 dark:text-red-400">
+                            <p className="font-medium">Connection Error</p>
+                            <p className="mt-1">
+                              Failed to load OAuth URL. Please try again later.
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
                   <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-4">
                     <div className="flex items-start gap-2">
@@ -288,12 +236,14 @@ const BrokersPage: FC = () => {
                     onClick={handleOAuthConnect}
                     disabled={
                       (selectedBroker.id === "alpaca" &&
-                        (isLoadingOAuth || !oauthData?.oauth_url)) ||
+                        (alpacaOAuthUrlQuery.isLoading ||
+                          !alpacaOAuthUrlQuery.data?.url)) ||
                       (!selectedBroker.oauthUrl &&
                         selectedBroker.id !== "alpaca")
                     }
                   >
-                    {selectedBroker.id === "alpaca" && isLoadingOAuth ? (
+                    {selectedBroker.id === "alpaca" &&
+                    alpacaOAuthUrlQuery.isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Loading...

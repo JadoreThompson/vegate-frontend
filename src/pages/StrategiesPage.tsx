@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   useDeleteStrategy,
-  useStrategySummaries,
+  useStrategySummariesQuery,
 } from "@/hooks/queries/strategy-hooks";
 
 const StrategiesPage: FC = () => {
@@ -26,10 +26,11 @@ const StrategiesPage: FC = () => {
   const [strategyToDelete, setStrategyToDelete] = useState<string | null>(null);
 
   // Fetch strategies with metrics
-  const { data: response, isLoading, error } = useStrategySummaries();
+  // const { data: response, isLoading, error } = useStrategySummariesQuery();
+  const strategySummariesQuery = useStrategySummariesQuery();
   const deleteStrategyMutation = useDeleteStrategy();
 
-  const strategies = response?.data || [];
+  const strategies = strategySummariesQuery?.data || [];
 
   type Strategy = (typeof strategies)[number];
 
@@ -174,7 +175,7 @@ const StrategiesPage: FC = () => {
         </div>
 
         {/* Strategy Grid - 3 per row */}
-        {isLoading ? (
+        {strategySummariesQuery.isLoading ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
               <Card key={i} className="h-[200px]">
@@ -200,7 +201,7 @@ const StrategiesPage: FC = () => {
               </Card>
             ))}
           </div>
-        ) : error ? (
+        ) : strategySummariesQuery.error ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-16">
               <Bot className="text-muted-foreground mb-4 h-12 w-12" />
@@ -208,7 +209,7 @@ const StrategiesPage: FC = () => {
                 Error loading strategies
               </h3>
               <p className="text-muted-foreground text-sm">
-                {error.message || "Failed to load strategies"}
+                {strategySummariesQuery.error.message || "Failed to load strategies"}
               </p>
             </CardContent>
           </Card>

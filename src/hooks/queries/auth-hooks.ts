@@ -1,6 +1,7 @@
 import { queryClient } from "@/lib/query/query-client";
 import { queryKeys } from "@/lib/query/query-keys";
 import type { ApiError } from "@/lib/types/apiError";
+import { handleApi } from "@/lib/utils/base";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import {
@@ -35,7 +36,8 @@ import {
 
 export function useLoginMutation() {
   return useMutation<loginAuthLoginPostResponse, ApiError, UserLogin, unknown>({
-    mutationFn: (payload: UserLogin) => loginAuthLoginPost(payload),
+    mutationFn: async (payload: UserLogin) =>
+      handleApi(await loginAuthLoginPost(payload)),
   });
 }
 
@@ -46,7 +48,8 @@ export function useRegisterMutation() {
     UserCreate,
     unknown
   >({
-    mutationFn: (payload: UserCreate) => registerAuthRegisterPost(payload),
+    mutationFn: async (payload: UserCreate) =>
+      handleApi(await registerAuthRegisterPost(payload)),
   });
 }
 
@@ -57,8 +60,10 @@ export function useRequestEmailVerificationMutation() {
     void,
     unknown
   >({
-    mutationFn: () =>
-      requestEmailVerificationAuthRequestEmailVerificationPost(),
+    mutationFn: async () =>
+      handleApi(
+        await requestEmailVerificationAuthRequestEmailVerificationPost(),
+      ),
   });
 }
 
@@ -69,21 +74,21 @@ export function useVerifyEmailMutation() {
     VerifyCode,
     unknown
   >({
-    mutationFn: (payload: VerifyCode) =>
-      verifyEmailAuthVerifyEmailPost(payload),
+    mutationFn: async (payload: VerifyCode) =>
+      handleApi(await verifyEmailAuthVerifyEmailPost(payload)),
   });
 }
 
 export function useLogoutMutation() {
   return useMutation<logoutAuthLogoutPostResponse, ApiError, void, unknown>({
-    mutationFn: () => logoutAuthLogoutPost(),
+    mutationFn: async () => handleApi(await logoutAuthLogoutPost()),
   });
 }
 
 export function useMeQuery() {
   return useQuery<getMeAuthMeGetResponse, ApiError>({
     queryKey: queryKeys.auth.me(),
-    queryFn: () => getMeAuthMeGet(),
+    queryFn: async () => handleApi(await getMeAuthMeGet()),
   });
 }
 
@@ -94,8 +99,8 @@ export function useChangeUsernameMutation() {
     UpdateUsername,
     unknown
   >({
-    mutationFn: (payload: UpdateUsername) =>
-      changeUsernameAuthChangeUsernamePost(payload),
+    mutationFn: async (payload: UpdateUsername) =>
+      handleApi(await changeUsernameAuthChangeUsernamePost(payload)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
     },
@@ -109,8 +114,8 @@ export function useChangePasswordMutation() {
     UpdatePassword,
     unknown
   >({
-    mutationFn: (payload: UpdatePassword) =>
-      changePasswordAuthChangePasswordPost(payload),
+    mutationFn: async (payload: UpdatePassword) =>
+      handleApi(await changePasswordAuthChangePasswordPost(payload)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
     },
@@ -124,8 +129,8 @@ export function useChangeEmailMutation() {
     UpdateEmail,
     unknown
   >({
-    mutationFn: (payload: UpdateEmail) =>
-      changeEmailAuthChangeEmailPost(payload),
+    mutationFn: async (payload: UpdateEmail) =>
+      handleApi(await changeEmailAuthChangeEmailPost(payload)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
     },
@@ -139,8 +144,8 @@ export function useVerifyActionMutation() {
     VerifyAction,
     unknown
   >({
-    mutationFn: (payload: VerifyAction) =>
-      verifyActionAuthVerifyActionPost(payload),
+    mutationFn: async (payload: VerifyAction) =>
+      handleApi(await verifyActionAuthVerifyActionPost(payload)),
   });
 }
 

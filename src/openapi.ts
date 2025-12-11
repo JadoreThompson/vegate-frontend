@@ -20,7 +20,7 @@ export interface BacktestCreate {
   end_date: string;
 }
 
-export type BacktestDetailResponseMetrics = BacktestMetrics | null;
+export type BacktestDetailResponseMetrics = BacktestMetricsOutput | null;
 
 export interface BacktestDetailResponse {
   backtest_id: string;
@@ -33,13 +33,26 @@ export interface BacktestDetailResponse {
   metrics: BacktestDetailResponseMetrics;
 }
 
-export interface BacktestMetrics {
+export type BacktestMetricsInputEquityCurveItemItem1 = number | string;
+
+export interface BacktestMetricsInput {
   realised_pnl: number;
   unrealised_pnl: number;
-  total_return: number;
+  total_return_pct: number;
   sharpe_ratio: number;
   max_drawdown: number;
   total_trades: number;
+  equity_curve: [string, BacktestMetricsInputEquityCurveItemItem1][];
+}
+
+export interface BacktestMetricsOutput {
+  realised_pnl: number;
+  unrealised_pnl: number;
+  total_return_pct: number;
+  sharpe_ratio: number;
+  max_drawdown: number;
+  total_trades: number;
+  equity_curve: [string, string][];
 }
 
 export interface BacktestResponse {
@@ -74,41 +87,50 @@ export interface BacktestUpdate {
   metrics?: BacktestUpdateMetrics;
 }
 
+/**
+ * Response model for broker connection details.
+ */
+export interface BrokerConnectionResponse {
+  connection_id: string;
+  broker: BrokerType;
+  broker_account_id: string;
+}
+
+/**
+ * Supported broker platforms.
+ */
+export type BrokerType = (typeof BrokerType)[keyof typeof BrokerType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const BrokerType = {
+  alpaca: "alpaca",
+} as const;
+
 export interface ContactForm {
   name: string;
   email: string;
   message: string;
 }
 
-export type DeployStrategyRequestStartingBalance = number | string;
-
-export type DeployStrategyRequestConfigAnyOf = { [key: string]: unknown };
-
-export type DeployStrategyRequestConfig =
-  DeployStrategyRequestConfigAnyOf | null;
-
 /**
  * Request model for deploying a strategy.
  */
 export interface DeployStrategyRequest {
   broker_connection_id: string;
+  market_type: MarketType;
   /**
    * @minLength 1
    * @maxLength 10
    */
-  ticker: string;
+  symbol: string;
   /**
    * @minLength 1
    * @maxLength 10
    */
   timeframe: string;
-  starting_balance: DeployStrategyRequestStartingBalance;
-  config?: DeployStrategyRequestConfig;
 }
 
-export type DeploymentResponseConfigAnyOf = { [key: string]: unknown };
-
-export type DeploymentResponseConfig = DeploymentResponseConfigAnyOf | null;
+export type DeploymentResponseStartingBalance = string | null;
 
 export type DeploymentResponseErrorMessage = string | null;
 
@@ -121,12 +143,11 @@ export interface DeploymentResponse {
   deployment_id: string;
   strategy_id: string;
   broker_connection_id: string;
-  ticker: string;
+  market_type: MarketType;
+  symbol: string;
   timeframe: string;
-  /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
-  starting_balance: string;
+  starting_balance?: DeploymentResponseStartingBalance;
   status: StrategyDeploymentStatus;
-  config: DeploymentResponseConfig;
   error_message: DeploymentResponseErrorMessage;
   created_at: string;
   updated_at: string;
@@ -140,6 +161,14 @@ export interface GetOauthUrlResponse {
 export interface HTTPValidationError {
   detail?: ValidationError[];
 }
+
+export type MarketType = (typeof MarketType)[keyof typeof MarketType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MarketType = {
+  stocks: "stocks",
+  crypto: "crypto",
+} as const;
 
 export type OrderResponseInputQuantity = number | string;
 
@@ -251,15 +280,24 @@ export interface StrategyDetailResponse {
   code: string;
 }
 
-export type StrategyMetricsEquityCurveItemItem1 = number | string;
+export type StrategyMetricsInputEquityCurveItemItem1 = number | string;
 
-export interface StrategyMetrics {
+export interface StrategyMetricsInput {
   realised_pnl: number;
   unrealised_pnl: number;
   total_return: number;
   sharpe_ratio: number;
   max_drawdown: number;
-  equity_curve: [string, StrategyMetricsEquityCurveItemItem1][];
+  equity_curve: [string, StrategyMetricsInputEquityCurveItemItem1][];
+}
+
+export interface StrategyMetricsOutput {
+  realised_pnl: number;
+  unrealised_pnl: number;
+  total_return: number;
+  sharpe_ratio: number;
+  max_drawdown: number;
+  equity_curve: [string, string][];
 }
 
 export type StrategyResponseDescription = string | null;
@@ -280,7 +318,7 @@ export interface StrategySummaryResponse {
   description: StrategySummaryResponseDescription;
   created_at: string;
   updated_at: string;
-  metrics: StrategyMetrics;
+  metrics: StrategyMetricsOutput;
 }
 
 export type StrategyUpdateName = string | null;
@@ -422,6 +460,19 @@ export type ListAllDeploymentsEndpointDeploymentsGetParams = {
   limit?: number;
   status?: StrategyDeploymentStatus | null;
 };
+
+export type GetDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGetParams =
+  {
+    /**
+     * @minimum 0
+     */
+    skip?: number;
+    /**
+     * @minimum 1
+     * @maximum 100
+     */
+    limit?: number;
+  };
 
 export type ListStrategiesEndpointStrategiesGetParams = {
   /**
@@ -1156,6 +1207,148 @@ export const getBacktestOrdersEndpointBacktestsBacktestIdOrdersGet = async (
 };
 
 /**
+ * List all broker connections for the authenticated user.
+
+Returns a list of all broker connections the user has set up,
+including connection IDs, broker types, and account IDs.
+ * @summary List Broker Connections Endpoint
+ */
+export type listBrokerConnectionsEndpointBrokersConnectionsGetResponse200 = {
+  data: BrokerConnectionResponse[];
+  status: 200;
+};
+
+export type listBrokerConnectionsEndpointBrokersConnectionsGetResponseSuccess =
+  listBrokerConnectionsEndpointBrokersConnectionsGetResponse200 & {
+    headers: Headers;
+  };
+export type listBrokerConnectionsEndpointBrokersConnectionsGetResponse =
+  listBrokerConnectionsEndpointBrokersConnectionsGetResponseSuccess;
+
+export const getListBrokerConnectionsEndpointBrokersConnectionsGetUrl = () => {
+  return `/brokers/connections`;
+};
+
+export const listBrokerConnectionsEndpointBrokersConnectionsGet = async (
+  options?: RequestInit,
+): Promise<listBrokerConnectionsEndpointBrokersConnectionsGetResponse> => {
+  return customFetch<listBrokerConnectionsEndpointBrokersConnectionsGetResponse>(
+    getListBrokerConnectionsEndpointBrokersConnectionsGetUrl(),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+/**
+ * Get details of a specific broker connection.
+
+Returns the connection details if it exists and belongs to the user.
+ * @summary Get Broker Connection Endpoint
+ */
+export type getBrokerConnectionEndpointBrokersConnectionsConnectionIdGetResponse200 =
+  {
+    data: BrokerConnectionResponse;
+    status: 200;
+  };
+
+export type getBrokerConnectionEndpointBrokersConnectionsConnectionIdGetResponse422 =
+  {
+    data: HTTPValidationError;
+    status: 422;
+  };
+
+export type getBrokerConnectionEndpointBrokersConnectionsConnectionIdGetResponseSuccess =
+  getBrokerConnectionEndpointBrokersConnectionsConnectionIdGetResponse200 & {
+    headers: Headers;
+  };
+export type getBrokerConnectionEndpointBrokersConnectionsConnectionIdGetResponseError =
+  getBrokerConnectionEndpointBrokersConnectionsConnectionIdGetResponse422 & {
+    headers: Headers;
+  };
+
+export type getBrokerConnectionEndpointBrokersConnectionsConnectionIdGetResponse =
+
+    | getBrokerConnectionEndpointBrokersConnectionsConnectionIdGetResponseSuccess
+    | getBrokerConnectionEndpointBrokersConnectionsConnectionIdGetResponseError;
+
+export const getGetBrokerConnectionEndpointBrokersConnectionsConnectionIdGetUrl =
+  (connectionId: string) => {
+    return `/brokers/connections/${connectionId}`;
+  };
+
+export const getBrokerConnectionEndpointBrokersConnectionsConnectionIdGet =
+  async (
+    connectionId: string,
+    options?: RequestInit,
+  ): Promise<getBrokerConnectionEndpointBrokersConnectionsConnectionIdGetResponse> => {
+    return customFetch<getBrokerConnectionEndpointBrokersConnectionsConnectionIdGetResponse>(
+      getGetBrokerConnectionEndpointBrokersConnectionsConnectionIdGetUrl(
+        connectionId,
+      ),
+      {
+        ...options,
+        method: "GET",
+      },
+    );
+  };
+
+/**
+ * Delete a broker connection.
+
+Removes the broker connection if it exists and belongs to the user.
+Cannot delete connections that have active deployments.
+ * @summary Delete Broker Connection Endpoint
+ */
+export type deleteBrokerConnectionEndpointBrokersConnectionsConnectionIdDeleteResponse204 =
+  {
+    data: void;
+    status: 204;
+  };
+
+export type deleteBrokerConnectionEndpointBrokersConnectionsConnectionIdDeleteResponse422 =
+  {
+    data: HTTPValidationError;
+    status: 422;
+  };
+
+export type deleteBrokerConnectionEndpointBrokersConnectionsConnectionIdDeleteResponseSuccess =
+  deleteBrokerConnectionEndpointBrokersConnectionsConnectionIdDeleteResponse204 & {
+    headers: Headers;
+  };
+export type deleteBrokerConnectionEndpointBrokersConnectionsConnectionIdDeleteResponseError =
+  deleteBrokerConnectionEndpointBrokersConnectionsConnectionIdDeleteResponse422 & {
+    headers: Headers;
+  };
+
+export type deleteBrokerConnectionEndpointBrokersConnectionsConnectionIdDeleteResponse =
+
+    | deleteBrokerConnectionEndpointBrokersConnectionsConnectionIdDeleteResponseSuccess
+    | deleteBrokerConnectionEndpointBrokersConnectionsConnectionIdDeleteResponseError;
+
+export const getDeleteBrokerConnectionEndpointBrokersConnectionsConnectionIdDeleteUrl =
+  (connectionId: string) => {
+    return `/brokers/connections/${connectionId}`;
+  };
+
+export const deleteBrokerConnectionEndpointBrokersConnectionsConnectionIdDelete =
+  async (
+    connectionId: string,
+    options?: RequestInit,
+  ): Promise<deleteBrokerConnectionEndpointBrokersConnectionsConnectionIdDeleteResponse> => {
+    return customFetch<deleteBrokerConnectionEndpointBrokersConnectionsConnectionIdDeleteResponse>(
+      getDeleteBrokerConnectionEndpointBrokersConnectionsConnectionIdDeleteUrl(
+        connectionId,
+      ),
+      {
+        ...options,
+        method: "DELETE",
+      },
+    );
+  };
+
+/**
  * @summary Get Oauth Url
  */
 export type getOauthUrlBrokersAlpacaOauthGetResponse200 = {
@@ -1532,6 +1725,79 @@ export const listAllDeploymentsEndpointDeploymentsGet = async (
     },
   );
 };
+
+/**
+ * Get all orders/trades for a deployment with pagination.
+
+Returns orders ordered by submission time (oldest first).
+ * @summary Get Deployment Orders Endpoint
+ */
+export type getDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGetResponse200 =
+  {
+    data: OrderResponseOutput[];
+    status: 200;
+  };
+
+export type getDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGetResponse422 =
+  {
+    data: HTTPValidationError;
+    status: 422;
+  };
+
+export type getDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGetResponseSuccess =
+  getDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGetResponse200 & {
+    headers: Headers;
+  };
+export type getDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGetResponseError =
+  getDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGetResponse422 & {
+    headers: Headers;
+  };
+
+export type getDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGetResponse =
+
+    | getDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGetResponseSuccess
+    | getDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGetResponseError;
+
+export const getGetDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGetUrl =
+  (
+    deploymentId: string,
+    params?: GetDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGetParams,
+  ) => {
+    const normalizedParams = new URLSearchParams();
+
+    Object.entries(params || {}).forEach(([key, value]) => {
+      if (value !== undefined) {
+        normalizedParams.append(
+          key,
+          value === null ? "null" : value.toString(),
+        );
+      }
+    });
+
+    const stringifiedParams = normalizedParams.toString();
+
+    return stringifiedParams.length > 0
+      ? `/deployments/${deploymentId}/orders?${stringifiedParams}`
+      : `/deployments/${deploymentId}/orders`;
+  };
+
+export const getDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGet =
+  async (
+    deploymentId: string,
+    params?: GetDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGetParams,
+    options?: RequestInit,
+  ): Promise<getDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGetResponse> => {
+    return customFetch<getDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGetResponse>(
+      getGetDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGetUrl(
+        deploymentId,
+        params,
+      ),
+      {
+        ...options,
+        method: "GET",
+      },
+    );
+  };
 
 /**
  * @summary Contact Us

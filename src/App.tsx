@@ -43,7 +43,10 @@ function App() {
           <Route path="/strategies" element={<StrategiesPage />} />
           <Route path="/strategies/new" element={<StrategyCreatePage />} />
           <Route path="/strategies/:id" element={<StrategyDetailPage />} />
-          <Route path="/strategies/:id/live" element={<LiveDeploymentPage />} />
+          <Route
+            path="/deployments/:deploymentId"
+            element={<LiveDeploymentPage />}
+          />
 
           {/* Backtest Routes */}
           <Route path="/backtests" element={<BacktestsPage />} />
@@ -54,7 +57,6 @@ function App() {
             path="/replay/:sessionType/:sessionId"
             element={<ReplaySessionPage />}
           />
-
 
           {/* History & Analytics */}
           <Route path="/trade-history" element={<TradeHistoryPage />} />

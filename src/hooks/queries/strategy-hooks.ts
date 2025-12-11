@@ -1,27 +1,28 @@
 import { queryClient } from "@/lib/query/query-client";
 import { queryKeys } from "@/lib/query/query-keys";
 import type { ApiError } from "@/lib/types/apiError";
+import { handleApi } from "@/lib/utils/base";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import {
-    createStrategyEndpointStrategiesPost,
-    deleteStrategyEndpointStrategiesStrategyIdDelete,
-    getStrategyEndpointStrategiesStrategyIdGet,
-    getStrategySummaryEndpointStrategiesStrategyIdSummaryGet,
-    listStrategiesEndpointStrategiesGet,
-    listStrategySummariesEndpointStrategiesSummariesGet,
-    updateStrategyEndpointStrategiesStrategyIdPatch,
-    type createStrategyEndpointStrategiesPostResponse,
-    type deleteStrategyEndpointStrategiesStrategyIdDeleteResponse,
-    type getStrategyEndpointStrategiesStrategyIdGetResponse,
-    type getStrategySummaryEndpointStrategiesStrategyIdSummaryGetResponse,
-    type ListStrategiesEndpointStrategiesGetParams,
-    type listStrategiesEndpointStrategiesGetResponse,
-    type ListStrategySummariesEndpointStrategiesSummariesGetParams,
-    type listStrategySummariesEndpointStrategiesSummariesGetResponse,
-    type StrategyCreate,
-    type StrategyUpdate,
-    type updateStrategyEndpointStrategiesStrategyIdPatchResponse,
+  createStrategyEndpointStrategiesPost,
+  deleteStrategyEndpointStrategiesStrategyIdDelete,
+  getStrategyEndpointStrategiesStrategyIdGet,
+  getStrategySummaryEndpointStrategiesStrategyIdSummaryGet,
+  listStrategiesEndpointStrategiesGet,
+  listStrategySummariesEndpointStrategiesSummariesGet,
+  updateStrategyEndpointStrategiesStrategyIdPatch,
+  type createStrategyEndpointStrategiesPostResponse,
+  type deleteStrategyEndpointStrategiesStrategyIdDeleteResponse,
+  type getStrategyEndpointStrategiesStrategyIdGetResponse,
+  type getStrategySummaryEndpointStrategiesStrategyIdSummaryGetResponse,
+  type ListStrategiesEndpointStrategiesGetParams,
+  type listStrategiesEndpointStrategiesGetResponse,
+  type ListStrategySummariesEndpointStrategiesSummariesGetParams,
+  type listStrategySummariesEndpointStrategiesSummariesGetResponse,
+  type StrategyCreate,
+  type StrategyUpdate,
+  type updateStrategyEndpointStrategiesStrategyIdPatchResponse,
 } from "@/openapi";
 
 /**
@@ -32,7 +33,8 @@ export function useStrategies(
 ) {
   return useQuery<listStrategiesEndpointStrategiesGetResponse, ApiError>({
     queryKey: queryKeys.strategies.list(params),
-    queryFn: () => listStrategiesEndpointStrategiesGet(params),
+    queryFn: async () =>
+      handleApi(await listStrategiesEndpointStrategiesGet(params)),
   });
 }
 
@@ -43,7 +45,8 @@ export function useStrategy(strategyId: string) {
   return useQuery<getStrategyEndpointStrategiesStrategyIdGetResponse, ApiError>(
     {
       queryKey: queryKeys.strategies.detail(strategyId),
-      queryFn: () => getStrategyEndpointStrategiesStrategyIdGet(strategyId),
+      queryFn: async () =>
+        handleApi(await getStrategyEndpointStrategiesStrategyIdGet(strategyId)),
       enabled: !!strategyId,
     },
   );
@@ -58,8 +61,12 @@ export function useStrategySummary(strategyId: string) {
     ApiError
   >({
     queryKey: queryKeys.strategies.summary(strategyId),
-    queryFn: () =>
-      getStrategySummaryEndpointStrategiesStrategyIdSummaryGet(strategyId),
+    queryFn: async () =>
+      handleApi(
+        await getStrategySummaryEndpointStrategiesStrategyIdSummaryGet(
+          strategyId,
+        ),
+      ),
     enabled: !!strategyId,
   });
 }
@@ -67,7 +74,7 @@ export function useStrategySummary(strategyId: string) {
 /**
  * Query hook to fetch a paginated list of strategy summaries with metrics
  */
-export function useStrategySummaries(
+export function useStrategySummariesQuery(
   params?: ListStrategySummariesEndpointStrategiesSummariesGetParams,
 ) {
   return useQuery<
@@ -75,7 +82,10 @@ export function useStrategySummaries(
     ApiError
   >({
     queryKey: queryKeys.strategies.summaries(params),
-    queryFn: () => listStrategySummariesEndpointStrategiesSummariesGet(params),
+    queryFn: async () =>
+      handleApi(
+        await listStrategySummariesEndpointStrategiesSummariesGet(params),
+      ),
   });
 }
 
@@ -88,8 +98,8 @@ export function useCreateStrategy() {
     ApiError,
     StrategyCreate
   >({
-    mutationFn: (payload: StrategyCreate) =>
-      createStrategyEndpointStrategiesPost(payload),
+    mutationFn: async (payload: StrategyCreate) =>
+      handleApi(await createStrategyEndpointStrategiesPost(payload)),
     onSuccess: () => {
       // Invalidate strategies list queries
       queryClient.invalidateQueries({ queryKey: queryKeys.strategies.all() });
@@ -106,9 +116,23 @@ export function useUpdateStrategy() {
     ApiError,
     { strategyId: string; payload: StrategyUpdate }
   >({
-    mutationFn: ({ strategyId, payload }) =>
-      updateStrategyEndpointStrategiesStrategyIdPatch(strategyId, payload),
-    onSuccess: (_, variables) => {
+    mutationFn: async ({
+      strategyId,
+      payload,
+    }: {
+      strategyId: string;
+      payload: StrategyUpdate;
+    }) =>
+      handleApi(
+        await updateStrategyEndpointStrategiesStrategyIdPatch(
+          strategyId,
+          payload,
+        ),
+      ),
+    onSuccess: (
+      _: updateStrategyEndpointStrategiesStrategyIdPatchResponse,
+      variables: { strategyId: string; payload: StrategyUpdate },
+    ) => {
       // Invalidate the specific strategy and related queries
       queryClient.invalidateQueries({
         queryKey: queryKeys.strategies.detail(variables.strategyId),
@@ -130,8 +154,10 @@ export function useDeleteStrategy() {
     ApiError,
     string
   >({
-    mutationFn: (strategyId: string) =>
-      deleteStrategyEndpointStrategiesStrategyIdDelete(strategyId),
+    mutationFn: async (strategyId: string) =>
+      handleApi(
+        await deleteStrategyEndpointStrategiesStrategyIdDelete(strategyId),
+      ),
     onSuccess: () => {
       // Invalidate all strategy queries
       queryClient.invalidateQueries({ queryKey: queryKeys.strategies.all() });
