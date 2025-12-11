@@ -1,10 +1,10 @@
 import { queryClient } from "@/lib/query/query-client";
 import { queryKeys } from "@/lib/query/query-keys";
-import type { ApiError } from "@/lib/types/apiError";
 import { handleApi } from "@/lib/utils/base";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import {
+  type BacktestResponse,
   createBacktestEndpointBacktestsPost,
   deleteBacktestEndpointBacktestsBacktestIdDelete,
   getBacktestEndpointBacktestsBacktestIdGet,
@@ -16,13 +16,8 @@ import {
 import type {
   BacktestCreate,
   BacktestUpdate,
-  createBacktestEndpointBacktestsPostResponse,
-  deleteBacktestEndpointBacktestsBacktestIdDeleteResponse,
-  getBacktestEndpointBacktestsBacktestIdGetResponse,
   GetBacktestOrdersEndpointBacktestsBacktestIdOrdersGetParams,
-  ListBacktestsEndpointBacktestsGetParams,
-  listBacktestsEndpointBacktestsGetResponse,
-  updateBacktestEndpointBacktestsBacktestIdPatchResponse
+  ListBacktestsEndpointBacktestsGetParams
 } from "@/openapi";
 
 /**
@@ -31,7 +26,7 @@ import type {
 export function useBacktestsQuery(
   params?: ListBacktestsEndpointBacktestsGetParams,
 ) {
-  return useQuery<listBacktestsEndpointBacktestsGetResponse, ApiError>({
+  return useQuery({
     queryKey: queryKeys.backtests.list(params),
     queryFn: async () =>
       handleApi(await listBacktestsEndpointBacktestsGet(params)),
@@ -74,11 +69,7 @@ export function useBacktestOrdersQuery(
  * Mutation hook to create a new backtest
  */
 export function useCreateBacktestMutation() {
-  return useMutation<
-    createBacktestEndpointBacktestsPostResponse,
-    ApiError,
-    BacktestCreate
-  >({
+  return useMutation({
     mutationFn: async (payload: BacktestCreate) =>
       handleApi(await createBacktestEndpointBacktestsPost(payload)),
     onSuccess: () => {
@@ -90,12 +81,8 @@ export function useCreateBacktestMutation() {
 /**
  * Mutation hook to update a backtest (status and/or metrics)
  */
-export function useUpdateBacktest() {
-  return useMutation<
-    updateBacktestEndpointBacktestsBacktestIdPatchResponse,
-    ApiError,
-    { backtestId: string; payload: BacktestUpdate }
-  >({
+export function useUpdateBacktestMutation() {
+  return useMutation({
     mutationFn: async (variables: {
       backtestId: string;
       payload: BacktestUpdate;
@@ -107,7 +94,7 @@ export function useUpdateBacktest() {
         ),
       ),
     onSuccess: (
-      _data: updateBacktestEndpointBacktestsBacktestIdPatchResponse,
+      _data: BacktestResponse,
       variables: { backtestId: string; payload: BacktestUpdate },
     ) => {
       queryClient.invalidateQueries({
@@ -121,16 +108,12 @@ export function useUpdateBacktest() {
 /**
  * Mutation hook to delete a backtest
  */
-export function useDeleteBacktest() {
-  return useMutation<
-    deleteBacktestEndpointBacktestsBacktestIdDeleteResponse,
-    ApiError,
-    string
-  >({
+export function useDeleteBacktestMutation() {
+  return useMutation({
     mutationFn: async (backtestId: string) =>
-      handleApi(
-        await deleteBacktestEndpointBacktestsBacktestIdDelete(backtestId),
-      ),
+      
+      deleteBacktestEndpointBacktestsBacktestIdDelete(backtestId)
+      ,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.backtests.all() });
     },

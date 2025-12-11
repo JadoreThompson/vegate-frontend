@@ -8,7 +8,7 @@ import {
   Tally4,
   Trash2,
 } from "lucide-react";
-import { useState, type FC } from "react";
+import { useEffect, useState, type FC } from "react";
 import { Link } from "react-router";
 
 import DashboardLayout from "@/components/layouts/dashboard-layout";
@@ -96,13 +96,33 @@ const StrategiesPage: FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [strategyToDelete, setStrategyToDelete] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [page, setPage] = useState(1);
+  const [strategies, setStrategies] = useState<StrategySummaryResponse[]>([]);
 
-  const strategySummariesQuery = useStrategySummariesQuery();
+  const itemsPerPage = 10;
+
   const deleteStrategyMutation = useDeleteStrategy();
 
-  const strategies = strategySummariesQuery?.data || [];
-  const ITEMS_PER_PAGE = 10;
+  // Fetch strategies with over-fetching (fetch 9 pages worth + 1 extra)
+  const strategySummariesQuery = useStrategySummariesQuery({
+    skip: (page - 1) * 90,
+    limit: 91,
+  });
+
+  const strategiesData = strategySummariesQuery.data;
+
+  // Accumulate strategies as they're fetched
+  useEffect(() => {
+    if (strategiesData?.length) {
+      setStrategies((prev) => {
+        const ids = new Set(prev.map((s) => s.strategy_id));
+        const newOnes = strategiesData.filter(
+          (s: StrategySummaryResponse) => !ids.has(s.strategy_id),
+        );
+        return [...prev, ...newOnes];
+      });
+    }
+  }, [strategiesData]);
 
   const handleDeleteClick = (strategyId: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -126,17 +146,22 @@ const StrategiesPage: FC = () => {
     return matchesSearch;
   });
 
-  // Pagination calculations
-  const totalPages = Math.ceil(filteredStrategies.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedStrategies = filteredStrategies.slice(startIndex, endIndex);
-
-  // Reset to page 1 when search changes
+  // Reset strategies and page when search changes
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
-    setCurrentPage(1);
+    setStrategies([]);
+    setPage(1);
   };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
+
+  // Get current page of strategies
+  const paginatedStrategies = filteredStrategies.slice(
+    (page - 1) * itemsPerPage,
+    page * itemsPerPage,
+  );
 
   return (
     <DashboardLayout>
@@ -209,7 +234,7 @@ const StrategiesPage: FC = () => {
                   ? "Try adjusting your search"
                   : "Get started by creating your first strategy"}
               </p>
-              <Link to="/strategies/new">
+              <Link to="/strategies/create">
                 <Button className="bg-emerald-600 hover:bg-emerald-700">
                   <Plus className="mr-2 h-4 w-4" />
                   Create Strategy
@@ -300,31 +325,27 @@ const StrategiesPage: FC = () => {
             </Table>
 
             {/* Pagination */}
-            {totalPages > 1 && (
+            {filteredStrategies.length > itemsPerPage && (
               <div className="flex items-center justify-end">
                 <div className="flex items-center gap-2">
                   <Button
                     variant="ghost"
                     size="sm"
                     className="hover:!bg-transparent"
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.max(1, prev - 1))
-                    }
-                    disabled={currentPage === 1}
+                    onClick={() => handlePageChange(page - 1)}
+                    disabled={page === 1}
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <div className="flex w-15 items-center justify-center text-sm">
-                    Page {currentPage}
+                    Page {page}
                   </div>
                   <Button
                     variant="ghost"
                     size="sm"
                     className="hover:!bg-transparent"
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                    }
-                    disabled={currentPage === totalPages}
+                    onClick={() => handlePageChange(page + 1)}
+                    disabled={filteredStrategies.length <= page * itemsPerPage}
                   >
                     <ChevronRight className="h-4 w-4" />
                   </Button>

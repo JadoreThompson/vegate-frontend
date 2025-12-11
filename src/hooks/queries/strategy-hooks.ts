@@ -13,12 +13,12 @@ import {
   listStrategySummariesEndpointStrategiesSummariesGet,
   updateStrategyEndpointStrategiesStrategyIdPatch,
   type deleteStrategyEndpointStrategiesStrategyIdDeleteResponse,
-  type getStrategyEndpointStrategiesStrategyIdGetResponse,
   type getStrategySummaryEndpointStrategiesStrategyIdSummaryGetResponse,
   type ListStrategiesEndpointStrategiesGetParams,
   type listStrategiesEndpointStrategiesGetResponse,
   type ListStrategySummariesEndpointStrategiesSummariesGetParams,
   type StrategyCreate,
+  type StrategyResponse,
   type StrategyUpdate,
   type updateStrategyEndpointStrategiesStrategyIdPatchResponse
 } from "@/openapi";
@@ -29,7 +29,7 @@ import {
 export function useStrategies(
   params?: ListStrategiesEndpointStrategiesGetParams,
 ) {
-  return useQuery<listStrategiesEndpointStrategiesGetResponse, ApiError>({
+  return useQuery({
     queryKey: queryKeys.strategies.list(params),
     queryFn: async () =>
       handleApi(await listStrategiesEndpointStrategiesGet(params)),
@@ -39,8 +39,8 @@ export function useStrategies(
 /**
  * Query hook to fetch a single strategy with full details including code
  */
-export function useStrategy(strategyId: string) {
-  return useQuery<getStrategyEndpointStrategiesStrategyIdGetResponse, ApiError>(
+export function useStrategyQuery(strategyId: string) {
+  return useQuery(
     {
       queryKey: queryKeys.strategies.detail(strategyId),
       queryFn: async () =>
@@ -54,10 +54,7 @@ export function useStrategy(strategyId: string) {
  * Query hook to fetch a strategy summary with pre-calculated metrics
  */
 export function useStrategySummary(strategyId: string) {
-  return useQuery<
-    getStrategySummaryEndpointStrategiesStrategyIdSummaryGetResponse,
-    ApiError
-  >({
+  return useQuery({
     queryKey: queryKeys.strategies.summary(strategyId),
     queryFn: async () =>
       handleApi(
@@ -102,11 +99,7 @@ export function useCreateStrategy() {
  * Mutation hook to update a strategy (name and/or description)
  */
 export function useUpdateStrategy() {
-  return useMutation<
-    updateStrategyEndpointStrategiesStrategyIdPatchResponse,
-    ApiError,
-    { strategyId: string; payload: StrategyUpdate }
-  >({
+  return useMutation({
     mutationFn: async ({
       strategyId,
       payload,
@@ -121,7 +114,7 @@ export function useUpdateStrategy() {
         ),
       ),
     onSuccess: (
-      _: updateStrategyEndpointStrategiesStrategyIdPatchResponse,
+      _: StrategyResponse,
       variables: { strategyId: string; payload: StrategyUpdate },
     ) => {
       // Invalidate the specific strategy and related queries
@@ -140,11 +133,7 @@ export function useUpdateStrategy() {
  * Mutation hook to delete a strategy
  */
 export function useDeleteStrategy() {
-  return useMutation<
-    deleteStrategyEndpointStrategiesStrategyIdDeleteResponse,
-    ApiError,
-    string
-  >({
+  return useMutation({
     mutationFn: async (strategyId: string) =>
       handleApi(
         await deleteStrategyEndpointStrategiesStrategyIdDelete(strategyId),

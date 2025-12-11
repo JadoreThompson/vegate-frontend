@@ -1,7 +1,7 @@
 import { Filter, PlayCircle } from "lucide-react";
 import { type FC, useMemo, useState } from "react";
 
-import Pagination from "@/components/pagination";
+import PaginationControls from "@/components/pagination-controls";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { usePagination } from "@/hooks/use-pagination";
+import { usePagination } from "@/hooks/pagination";
 
 export interface Trade {
   id: number;
@@ -211,7 +211,7 @@ const TradesTable: FC<TradesTableProps> = ({
 
         {/* Pagination */}
         {filteredTrades.length > itemsPerPage && (
-          <Pagination
+          <PaginationControls
             currentPage={pagination.currentPage}
             totalPages={pagination.totalPages}
             onPageChange={pagination.goToPage}

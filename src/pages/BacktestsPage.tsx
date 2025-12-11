@@ -1,8 +1,9 @@
-import { BarChart3, Filter, Loader2, Search, Trash2 } from "lucide-react";
-import { useState, type FC } from "react";
-import { Link } from "react-router";
+import { BarChart3, Filter, Loader2, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState, type FC } from "react";
+import { useNavigate } from "react-router";
 
 import DashboardLayout from "@/components/layouts/dashboard-layout";
+import PaginationControls from "@/components/pagination-controls";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,102 +15,163 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   useBacktestsQuery,
-  useDeleteBacktest,
+  useDeleteBacktestMutation,
 } from "@/hooks/queries/backtest-hooks";
-import type { BacktestResponse } from "@/openapi";
+import { BacktestStatus, type BacktestResponse } from "@/openapi";
 
 const BacktestsPage: FC = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([
-    "completed",
-    "in_progress",
-    "pending",
-    "failed",
+  const navigate = useNavigate();
+
+  const [selectedStatuses, setSelectedStatuses] = useState<BacktestStatus[]>([
+    BacktestStatus.completed,
+    BacktestStatus.in_progress,
+    BacktestStatus.pending,
+    BacktestStatus.failed,
   ]);
-  const [selectedTickers, setSelectedTickers] = useState<string[]>([]);
+  const [selectedSymbols, setSelectedSymbols] = useState<string[]>([]);
+  const [page, setPage] = useState(1);
+
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [backtestToDelete, setBacktestToDelete] = useState<string | null>(null);
 
-  // Fetch backtests from API
-  const { data: response, isLoading, error } = useBacktestsQuery();
-  const deleteBacktestMutation = useDeleteBacktest();
+  const [backtests, setBacktests] = useState<BacktestResponse[]>([]);
 
-  const backtests: BacktestResponse[] = response?.data || [];
+  const backtestQueryParams = useMemo(() => {
+    let obj = {} as any;
 
-  // Remove mock data
-  const mockBacktests: never[] = [];
+    obj["skip"] = (page - 1) * 90;
+    obj["limit"] = 91;
 
-  // Get unique values for filters
-  const uniqueTickers = Array.from(
+    if (selectedStatuses.length) {
+      obj["status"] = selectedStatuses;
+    }
+
+    if (selectedSymbols.length) {
+      obj["symbols"] = selectedSymbols;
+    }
+
+    console.log("query params", obj);
+    return obj;
+  }, [page, selectedStatuses, selectedSymbols]);
+
+  const backtestsQuery = useBacktestsQuery(backtestQueryParams);
+  const deleteBacktestMutation = useDeleteBacktestMutation();
+
+  // TODO: useMemo
+  const uniqueSymbols = Array.from(
     new Set(backtests.map((b) => b.symbol)),
   ).sort();
 
-  // Initialize selected tickers with all available tickers
-  if (selectedTickers.length === 0 && uniqueTickers.length > 0) {
-    setSelectedTickers(uniqueTickers);
+  const PAGE_SIZE = 10;
+
+  if (selectedSymbols.length === 0 && uniqueSymbols.length > 0) {
+    setSelectedSymbols(uniqueSymbols);
   }
 
+  useEffect(() => {
+    if (backtestsQuery.data?.length) {
+      setBacktests((prev) => {
+        const ids = new Set(prev.map((b) => b.backtest_id));
+        const newBacktests = backtestsQuery.data.filter(
+          (b) => !ids.has(b.backtest_id),
+        );
+        return [...prev, ...newBacktests];
+      });
+    }
+  }, [backtestsQuery.data]);
+
   const statusOptions = [
-    { value: "completed", label: "Completed" },
-    { value: "in_progress", label: "In Progress" },
-    { value: "pending", label: "Pending" },
-    { value: "failed", label: "Failed" },
+    { value: BacktestStatus.completed, label: "Completed" },
+    { value: BacktestStatus.in_progress, label: "In Progress" },
+    { value: BacktestStatus.pending, label: "Pending" },
+    { value: BacktestStatus.failed, label: "Failed" },
   ];
 
-  const handleStatusToggle = (status: string) => {
+  const handleStatusToggle = (status: BacktestStatus) => {
+    
     if (selectedStatuses.includes(status)) {
-      if (selectedStatuses.length > 1) {
-        setSelectedStatuses(selectedStatuses.filter((s) => s !== status));
-      }
+      if (selectedStatuses.length <= 1) return;
+      setSelectedStatuses(selectedStatuses.filter((s) => s !== status));
     } else {
       setSelectedStatuses([...selectedStatuses, status]);
     }
+
+    setBacktests([]);
+    setPage(1);
   };
 
-  const handleTickerToggle = (ticker: string) => {
-    setSelectedTickers((prev) =>
-      prev.includes(ticker)
-        ? prev.filter((t) => t !== ticker)
-        : [...prev, ticker],
-    );
+  const handleSymbolToggle = (symbol: string) => {
+    if (selectedSymbols.includes(symbol)) {
+      if (selectedSymbols.length <= 1) return;
+      setSelectedSymbols(selectedSymbols.filter((s) => s !== symbol));
+    } else {
+      setSelectedSymbols([...selectedSymbols, symbol]);
+    }
+
+    if (selectedSymbols.length <= 1) return;
+    setSelectedSymbols((prev) => {
+      return prev.includes(symbol)
+        ? prev.filter((s) => s != symbol)
+        : [...prev, symbol];
+    });
+
+    setBacktests([]);
+    setPage(1);
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "completed":
+      case BacktestStatus.completed:
         return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20";
-      case "in_progress":
+      case BacktestStatus.in_progress:
         return "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20";
-      case "pending":
+      case BacktestStatus.pending:
         return "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20";
-      case "failed":
+      case BacktestStatus.failed:
         return "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20";
       default:
         return "bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20";
     }
   };
 
-  const filteredBacktests = backtests.filter((backtest) => {
-    const matchesSearch =
-      backtest.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      backtest.backtest_id.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = selectedStatuses.includes(backtest.status);
-    const matchesTicker =
-      selectedTickers.length === 0 || selectedTickers.includes(backtest.symbol);
-    return matchesSearch && matchesStatus && matchesTicker;
-  });
+  // const filteredBacktests = backtests.filter((backtest) => {
+  //   const matchesSearch =
+  //     backtest.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //     backtest.backtest_id.toLowerCase().includes(searchQuery.toLowerCase());
+  //   const matchesStatus = selectedStatuses.includes(backtest.status);
+  //   const matchesTicker =
+  //     selectedTickers.length === 0 || selectedTickers.includes(backtest.symbol);
+  //   return matchesSearch && matchesStatus && matchesTicker;
+  // });
+
+  // Pagination
+  // const itemsPerPage = 10;
+  // const totalPages = Math.floor()
+  // const pagination = usePagination({
+  //   totalItems: filteredBacktests.length,
+  //   itemsPerPage,
+  // });
+
+  // const paginatedBacktests = pagination.paginateData(filteredBacktests);
 
   const handleDeleteClick = (e: React.MouseEvent, backtestId: string) => {
     e.preventDefault();
+    e.stopPropagation();
     setBacktestToDelete(backtestId);
     setDeleteDialogOpen(true);
   };
@@ -119,110 +181,43 @@ const BacktestsPage: FC = () => {
       await deleteBacktestMutation.mutateAsync(backtestToDelete);
       setDeleteDialogOpen(false);
       setBacktestToDelete(null);
+      setPage(1);
+      setBacktests([]);
     }
   };
 
-  const BacktestCard = ({ backtest }: { backtest: BacktestResponse }) => (
-    <Link to={`/backtests/${backtest.backtest_id}`}>
-      <Card className="group h-[220px] cursor-pointer transition-all hover:border-emerald-500/50 hover:shadow-lg">
-        <CardContent className="flex h-full flex-col p-6">
-          <div className="space-y-4">
-            {/* Header */}
-            <div className="flex items-start gap-3">
-              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-500/10">
-                <BarChart3 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="truncate text-lg font-semibold group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
-                    {backtest.symbol}
-                  </h3>
-                  <Badge
-                    className={`flex-shrink-0 ${getStatusColor(backtest.status)}`}
-                  >
-                    {backtest.status.replace("_", " ")}
-                  </Badge>
-                </div>
-                <p className="text-muted-foreground mt-1 truncate text-sm">
-                  ID: {backtest.backtest_id.substring(0, 8)}...
-                </p>
-                <p className="text-muted-foreground mt-0.5 text-xs">
-                  Created:{" "}
-                  {new Date(backtest.created_at).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </p>
-              </div>
-            </div>
-
-            {/* Info & Actions */}
-            <div className="flex items-center justify-between">
-              <div className="text-muted-foreground flex items-center gap-2 text-sm">
-                <span>Balance: ${backtest.starting_balance}</span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-red-600 hover:bg-red-500/10 hover:text-red-700"
-                onClick={(e) => handleDeleteClick(e, backtest.backtest_id)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
-  );
-
   const activeFilterCount =
-    selectedTickers.length +
+    selectedSymbols.length +
     (selectedStatuses.length < statusOptions.length ? 1 : 0);
 
-  if (isLoading) {
-    return (
-      <DashboardLayout>
-        <div className="space-y-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-3xl font-bold tracking-tight">Backtests</h2>
-              <p className="text-muted-foreground">
-                View and analyze all backtest results across your strategies
-              </p>
-            </div>
-          </div>
+  // if (backtestsQuery.isLoading && !backtests.length) {
+  //   return (
+  //     <DashboardLayout>
+  //       <div className="space-y-6">
+  //         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+  //           <div>
+  //             <h2 className="text-3xl font-bold tracking-tight">Backtests</h2>
+  //             <p className="text-muted-foreground">
+  //               View and analyze all backtest results across your strategies
+  //             </p>
+  //           </div>
+  //         </div>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i} className="h-[220px]">
-                <CardContent className="flex h-full flex-col p-6">
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-3">
-                      <Skeleton className="h-12 w-12 rounded-xl" />
-                      <div className="flex-1 space-y-2">
-                        <Skeleton className="h-6 w-32" />
-                        <Skeleton className="h-4 w-48" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-4 gap-4">
-                      <Skeleton className="h-10 w-full" />
-                      <Skeleton className="h-10 w-full" />
-                      <Skeleton className="h-10 w-full" />
-                      <Skeleton className="h-10 w-full" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
+  //         <Card className="bg-transparent border-none">
+  //           <CardContent className="p-6">
+  //             <div className="space-y-4">
+  //               {Array.from({ length: 5 }).map((_, i) => (
+  //                 <Skeleton key={i} className="h-12 w-full" />
+  //               ))}
+  //             </div>
+  //           </CardContent>
+  //         </Card>
+  //       </div>
+  //     </DashboardLayout>
+  //   );
+  // }
 
-  if (error) {
+  if (backtestsQuery.error) {
     return (
       <DashboardLayout>
         <div className="space-y-6">
@@ -242,7 +237,8 @@ const BacktestsPage: FC = () => {
                 Error loading backtests
               </h3>
               <p className="text-muted-foreground text-sm">
-                {error?.message || "Failed to load backtests"}
+                {(backtestsQuery.error as any)?.error ||
+                  "Failed to load backtests"}
               </p>
             </CardContent>
           </Card>
@@ -267,7 +263,7 @@ const BacktestsPage: FC = () => {
         {/* Search and Filters */}
         <div className="flex flex-wrap items-center gap-3">
           {/* Search Bar */}
-          <div className="relative w-full sm:w-80">
+          {/* <div className="relative w-full sm:w-80">
             <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
             <Input
               placeholder="Search backtests..."
@@ -275,7 +271,7 @@ const BacktestsPage: FC = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-          </div>
+          </div> */}
 
           {/* Status Filter */}
           <Popover>
@@ -330,10 +326,10 @@ const BacktestsPage: FC = () => {
             <PopoverTrigger asChild>
               <Button variant="outline" size="default">
                 <Filter className="mr-2 h-4 w-4" />
-                Ticker
-                {selectedTickers.length > 0 && (
+                Symbol
+                {selectedSymbols.length > 0 && (
                   <span className="ml-2 rounded-full bg-emerald-500 px-1.5 py-0.5 text-xs text-white">
-                    {selectedTickers.length}
+                    {selectedSymbols.length}
                   </span>
                 )}
               </Button>
@@ -341,22 +337,22 @@ const BacktestsPage: FC = () => {
             <PopoverContent align="start" className="w-56">
               <div className="space-y-4">
                 <div>
-                  <h4 className="mb-3 font-semibold">Ticker</h4>
+                  <h4 className="mb-3 font-semibold">Symbols</h4>
                   <div className="space-y-2">
-                    {uniqueTickers.map((ticker) => (
+                    {uniqueSymbols.map((symbol) => (
                       <label
-                        key={ticker}
+                        key={symbol}
                         className="hover:bg-accent flex cursor-pointer items-center gap-2 rounded-md p-2"
                       >
                         <input
                           type="checkbox"
-                          checked={selectedTickers.includes(ticker)}
-                          onChange={() => handleTickerToggle(ticker)}
+                          checked={selectedSymbols.includes(symbol)}
+                          onChange={() => handleSymbolToggle(symbol)}
                           className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
                         />
-                        <span className="text-sm">{ticker}</span>
+                        <span className="text-sm">{symbol}</span>
                         <span className="text-muted-foreground ml-auto text-xs">
-                          {backtests.filter((b) => b.symbol === ticker).length}
+                          {/* {backtests.filter((b) => b.symbol === symbol).length} */}
                         </span>
                       </label>
                     ))}
@@ -367,30 +363,104 @@ const BacktestsPage: FC = () => {
           </Popover>
         </div>
 
-        {/* Backtest Grid */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredBacktests.length === 0 ? (
-            <div className="col-span-full">
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-16">
-                  <BarChart3 className="text-muted-foreground mb-4 h-12 w-12" />
-                  <h3 className="mb-2 text-lg font-semibold">
-                    No backtests found
-                  </h3>
-                  <p className="text-muted-foreground mb-4 text-sm">
-                    {searchQuery || activeFilterCount > 0
-                      ? "Try adjusting your filters"
-                      : "Run your first backtest to see results here"}
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          ) : (
-            filteredBacktests.map((backtest) => (
-              <BacktestCard key={backtest.backtest_id} backtest={backtest} />
-            ))
-          )}
-        </div>
+        {/* Backtests Table */}
+        <Card className="border-none bg-transparent">
+          <CardContent className="p-0">
+            {backtests.length === 10000 ? (
+              <div className="flex flex-col items-center justify-center py-16">
+                <BarChart3 className="text-muted-foreground mb-4 h-12 w-12" />
+                <h3 className="mb-2 text-lg font-semibold">
+                  No backtests found
+                </h3>
+                <p className="text-muted-foreground mb-4 text-sm">
+                  Run your first backtest to see results here
+                </p>
+              </div>
+            ) : (
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-gray-500">Symbol</TableHead>
+                      <TableHead className="text-gray-500">
+                        Backtest ID
+                      </TableHead>
+                      <TableHead className="text-gray-500">Status</TableHead>
+                      <TableHead className="text-gray-500">
+                        Starting Balance
+                      </TableHead>
+                      <TableHead className="text-gray-500">Created</TableHead>
+                      <TableHead className="w-[50px]"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {backtests
+                      .slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+                      .map((b) => (
+                        <TableRow
+                          key={b.backtest_id}
+                          className="cursor-pointer"
+                          onClick={() =>
+                            navigate(`/backtests/${b.backtest_id}`)
+                          }
+                        >
+                          <TableCell className="font-semibold">
+                            {b.symbol}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground font-mono text-xs">
+                            {b.backtest_id.substring(0, 8)}...
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={getStatusColor(b.status)}>
+                              {b.status.replace("_", " ")}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="font-mono">
+                            ${b.starting_balance.toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {new Date(b.created_at).toLocaleDateString(
+                              "en-US",
+                              {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              },
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-red-600 hover:bg-red-500/10 hover:text-red-700"
+                              onClick={(e) =>
+                                handleDeleteClick(e, b.backtest_id)
+                              }
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+
+                {backtests.length ? (
+                  <PaginationControls
+                    page={page}
+                    setPage={setPage}
+                    data={backtests}
+                    pageSize={PAGE_SIZE}
+                  />
+                ) : (
+                  <span className="flex h-20 w-full items-center justify-center text-gray-500">
+                    No backtests
+                  </span>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

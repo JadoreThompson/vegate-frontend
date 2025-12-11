@@ -1,5 +1,4 @@
 import { queryKeys } from "@/lib/query/query-keys";
-import type { ApiError } from "@/lib/types/apiError";
 import { handleApi } from "@/lib/utils/base";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
@@ -8,18 +7,14 @@ import {
   deleteBrokerConnectionEndpointBrokersConnectionsConnectionIdDelete,
   getBrokerConnectionEndpointBrokersConnectionsConnectionIdGet,
   getOauthUrlBrokersAlpacaOauthGet,
-  listBrokerConnectionsEndpointBrokersConnectionsGet,
-  type deleteBrokerConnectionEndpointBrokersConnectionsConnectionIdDeleteResponse,
-  type getBrokerConnectionEndpointBrokersConnectionsConnectionIdGetResponse,
-  type getOauthUrlBrokersAlpacaOauthGetResponse,
-  type listBrokerConnectionsEndpointBrokersConnectionsGetResponse,
+  listBrokerConnectionsEndpointBrokersConnectionsGet
 } from "@/openapi";
 
 /**
  * Query hook to fetch the Alpaca OAuth URL
  */
 export function useAlpacaOAuthUrlQuery() {
-  return useQuery<getOauthUrlBrokersAlpacaOauthGetResponse, ApiError>({
+  return useQuery({
     queryKey: queryKeys.brokers.alpacaOAuth(),
     queryFn: async () => handleApi(await getOauthUrlBrokersAlpacaOauthGet()),
   });
@@ -29,10 +24,7 @@ export function useAlpacaOAuthUrlQuery() {
  * Query hook to fetch all broker connections
  */
 export function useBrokerConnectionsQuery() {
-  return useQuery<
-    listBrokerConnectionsEndpointBrokersConnectionsGetResponse,
-    ApiError
-  >({
+  return useQuery({
     queryKey: queryKeys.brokers.connections(),
     queryFn: async () =>
       handleApi(await listBrokerConnectionsEndpointBrokersConnectionsGet()),
@@ -43,10 +35,7 @@ export function useBrokerConnectionsQuery() {
  * Query hook to fetch a specific broker connection by ID
  */
 export function useBrokerConnectionQuery(connectionId: string) {
-  return useQuery<
-    getBrokerConnectionEndpointBrokersConnectionsConnectionIdGetResponse,
-    ApiError
-  >({
+  return useQuery({
     queryKey: queryKeys.brokers.connection(connectionId),
     queryFn: async () =>
       handleApi(
@@ -54,7 +43,6 @@ export function useBrokerConnectionQuery(connectionId: string) {
           connectionId,
         ),
       ),
-    select: (response) => response.data,
     enabled: !!connectionId,
   });
 }
@@ -63,11 +51,7 @@ export function useBrokerConnectionQuery(connectionId: string) {
  * Mutation hook to delete a broker connection
  */
 export function useDeleteBrokerConnectionQuery() {
-  return useMutation<
-    deleteBrokerConnectionEndpointBrokersConnectionsConnectionIdDeleteResponse,
-    ApiError,
-    string
-  >({
+  return useMutation({
     mutationFn: async (connectionId: string) =>
       handleApi(
         await deleteBrokerConnectionEndpointBrokersConnectionsConnectionIdDelete(

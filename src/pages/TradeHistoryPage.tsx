@@ -1,5 +1,5 @@
-import { Download } from "lucide-react";
-import { useMemo, useState, type FC } from "react";
+import { ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { useEffect, useMemo, useState, type FC } from "react";
 
 import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { Button } from "@/components/ui/button";
@@ -28,21 +28,29 @@ import type { BacktestResponse, OrderResponseOutput } from "@/openapi";
 
 const TradeHistoryPage: FC = () => {
   const [selectedBacktestId, setSelectedBacktestId] = useState<string>("");
+  const [page, setPage] = useState(1);
+  const [orders, setOrders] = useState<OrderResponseOutput[]>([]);
+
+  const itemsPerPage = 10;
 
   // Fetch list of backtests to populate selector
-  const { data: backtestsData, isLoading: backtestsLoading } =
-    useBacktestsQuery({
-      limit: 100,
-    });
+  const backtestsQuery = useBacktestsQuery({
+    limit: 100,
+  });
 
-  // Fetch orders for selected backtest
-  const { data: ordersData, isLoading: ordersLoading } = useBacktestOrdersQuery(
-    selectedBacktestId,
-    { limit: 100 },
-  );
+  // Fetch orders for selected backtest with over-fetching (fetch 9 pages worth + 1 extra)
+  const ordersQuery = useBacktestOrdersQuery(selectedBacktestId, {
+    skip: (page - 1) * 90,
+    limit: 91,
+  });
+
+  const backtestsData = backtestsQuery.data as
+    | { data: BacktestResponse[] }
+    | undefined;
+  const ordersData = ordersQuery.data;
 
   // Set first backtest as selected when data loads
-  useMemo(() => {
+  useEffect(() => {
     if (
       backtestsData?.data &&
       backtestsData.data.length > 0 &&
@@ -52,7 +60,28 @@ const TradeHistoryPage: FC = () => {
     }
   }, [backtestsData, selectedBacktestId]);
 
-  const orders = ordersData?.data || [];
+  // Accumulate orders as they're fetched
+  useEffect(() => {
+    if (ordersData?.length) {
+      setOrders((prev) => {
+        const ids = new Set(prev.map((o) => o.order_id));
+        const newOnes = ordersData.filter(
+          (o: OrderResponseOutput) => !ids.has(o.order_id),
+        );
+        return [...prev, ...newOnes];
+      });
+    }
+  }, [ordersData]);
+
+  // Reset orders when backtest changes
+  useEffect(() => {
+    setOrders([]);
+    setPage(1);
+  }, [selectedBacktestId]);
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
 
   // Calculate summary from orders
   const summary = useMemo(() => {
@@ -114,7 +143,7 @@ const TradeHistoryPage: FC = () => {
             <CardTitle>Select Backtest</CardTitle>
           </CardHeader>
           <CardContent>
-            {backtestsLoading ? (
+            {backtestsQuery.isLoading ? (
               <Skeleton className="h-10 w-full" />
             ) : backtestsData?.data && backtestsData.data.length > 0 ? (
               <Select
@@ -154,7 +183,7 @@ const TradeHistoryPage: FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {ordersLoading ? (
+                {ordersQuery.isLoading ? (
                   <Skeleton className="h-8 w-16" />
                 ) : (
                   <div className="text-2xl font-bold">
@@ -171,7 +200,7 @@ const TradeHistoryPage: FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {ordersLoading ? (
+                {ordersQuery.isLoading ? (
                   <Skeleton className="h-8 w-16" />
                 ) : (
                   <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
@@ -188,7 +217,7 @@ const TradeHistoryPage: FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {ordersLoading ? (
+                {ordersQuery.isLoading ? (
                   <Skeleton className="h-8 w-16" />
                 ) : (
                   <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
@@ -205,11 +234,11 @@ const TradeHistoryPage: FC = () => {
           <Card>
             <CardHeader>
               <CardTitle>
-                Orders ({ordersLoading ? "..." : orders.length})
+                Orders ({ordersQuery.isLoading ? "..." : orders.length})
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {ordersLoading ? (
+              {ordersQuery.isLoading ? (
                 <div className="space-y-4">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Skeleton key={i} className="h-12 w-full" />
@@ -233,59 +262,84 @@ const TradeHistoryPage: FC = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {orders.map((order: OrderResponseOutput) => (
-                        <TableRow
-                          key={order.order_id}
-                          className="hover:bg-accent"
-                        >
-                          <TableCell className="font-mono text-xs">
-                            {new Date(order.submitted_at).toLocaleString()}
-                          </TableCell>
-                          <TableCell className="font-semibold">
-                            {order.symbol}
-                          </TableCell>
-                          <TableCell>
-                            <span
-                              className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${
-                                order.side.toUpperCase() === "BUY"
-                                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                                  : "bg-red-500/10 text-red-600 dark:text-red-400"
-                              }`}
-                            >
-                              {order.side}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {order.order_type}
-                          </TableCell>
-                          <TableCell className="text-right font-mono text-sm">
-                            {order.quantity}
-                          </TableCell>
-                          <TableCell className="text-right font-mono text-sm">
-                            {order.filled_quantity}
-                          </TableCell>
-                          <TableCell className="text-right font-mono text-sm">
-                            {order.average_fill_price
-                              ? `$${order.average_fill_price}`
-                              : "-"}
-                          </TableCell>
-                          <TableCell>
-                            <span
-                              className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${
-                                order.status === "filled"
-                                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                                  : order.status === "pending"
-                                    ? "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400"
-                                    : "bg-gray-500/10 text-gray-600 dark:text-gray-400"
-                              }`}
-                            >
-                              {order.status}
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {orders
+                        .slice((page - 1) * itemsPerPage, page * itemsPerPage)
+                        .map((order: OrderResponseOutput) => (
+                          <TableRow
+                            key={order.order_id}
+                            className="hover:bg-accent"
+                          >
+                            <TableCell className="font-mono text-xs">
+                              {new Date(order.submitted_at).toLocaleString()}
+                            </TableCell>
+                            <TableCell className="font-semibold">
+                              {order.symbol}
+                            </TableCell>
+                            <TableCell>
+                              <span
+                                className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${
+                                  order.side.toUpperCase() === "BUY"
+                                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                    : "bg-red-500/10 text-red-600 dark:text-red-400"
+                                }`}
+                              >
+                                {order.side}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {order.order_type}
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-sm">
+                              {order.quantity}
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-sm">
+                              {order.filled_quantity}
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-sm">
+                              {order.average_fill_price
+                                ? `$${order.average_fill_price}`
+                                : "-"}
+                            </TableCell>
+                            <TableCell>
+                              <span
+                                className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${
+                                  order.status === "filled"
+                                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                    : order.status === "pending"
+                                      ? "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400"
+                                      : "bg-gray-500/10 text-gray-600 dark:text-gray-400"
+                                }`}
+                              >
+                                {order.status}
+                              </span>
+                            </TableCell>
+                          </TableRow>
+                        ))}
                     </TableBody>
                   </Table>
+                  <div className="mt-4 flex justify-end">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="hover:!bg-transparent"
+                      onClick={() => handlePageChange(page - 1)}
+                      disabled={page === 1}
+                    >
+                      <ChevronLeft />
+                    </Button>
+                    <span className="text-muted-foreground flex w-15 items-center justify-center text-sm">
+                      Page {page}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="hover:!bg-transparent"
+                      onClick={() => handlePageChange(page + 1)}
+                      disabled={orders.length <= page * itemsPerPage}
+                    >
+                      <ChevronRight />
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <div className="border-border flex h-32 items-center justify-center rounded-lg border border-dashed">

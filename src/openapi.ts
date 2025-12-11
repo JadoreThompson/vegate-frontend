@@ -278,6 +278,7 @@ export interface StrategyDetailResponse {
   created_at: string;
   updated_at: string;
   code: string;
+  prompt: string;
 }
 
 export type StrategyMetricsInputEquityCurveItemItem1 = number | string;
@@ -415,6 +416,8 @@ export type ListBacktestsEndpointBacktestsGetParams = {
    * @maximum 100
    */
   limit?: number;
+  status?: BacktestStatus[] | null;
+  symbols?: string[] | null;
 };
 
 export type GetBacktestOrdersEndpointBacktestsBacktestIdOrdersGetParams = {

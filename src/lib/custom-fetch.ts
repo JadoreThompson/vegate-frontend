@@ -1,8 +1,10 @@
 
 const getBody = <T>(c: Response | Request): Promise<T> => {
+  
   const contentType = c.headers.get("content-type");
+  const contentLength = c.headers.get('content-length');
 
-  if (contentType && contentType.includes("application/json")) {
+  if (contentType && contentType.includes("application/json") && contentLength) {
     return c.json();
   }
 

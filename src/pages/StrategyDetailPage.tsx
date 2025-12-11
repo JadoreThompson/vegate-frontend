@@ -62,7 +62,7 @@ import {
 } from "@/hooks/queries/deployment-hooks";
 import {
   useDeleteStrategy,
-  useStrategy,
+  useStrategyQuery,
   useStrategySummary,
 } from "@/hooks/queries/strategy-hooks";
 import {
@@ -97,20 +97,20 @@ const StrategyHeader: FC<{
         <Button
           variant="outline"
           size="icon"
-          className="w-auto p-2 flex items-center justify-start hover:!bg-transparent"
+          className="flex w-auto items-center justify-start p-2 hover:!bg-transparent"
           onClick={props.onViewPromptClick}
         >
           <NotepadTextIcon className="h-6 w-6" />
           <span>View Prompt</span>
         </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="text-red-600 hover:!bg-transparent hover:text-red-700"
-        onClick={props.onDeleteClick}
-      >
-        <Trash2 className="h-4 w-4" />
-      </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-red-600 hover:!bg-transparent hover:text-red-700"
+          onClick={props.onDeleteClick}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );
@@ -202,7 +202,7 @@ const DeploymentsTable: FC<{
 }> = (props) => {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
-  const itemsPerPage = 20;
+  const itemsPerPage = 10;
 
   const handleRowClick = (deploymentId: string) => {
     navigate(`/deployments/${deploymentId}`);
@@ -300,32 +300,27 @@ const DeploymentsTable: FC<{
         </TableBody>
       </Table>
       {props.deployments.length > itemsPerPage && (
-        <div className="flex items-center justify-between">
-          <div className="text-muted-foreground text-sm">
-            Showing {startIndex + 1} to{" "}
-            {Math.min(endIndex, props.deployments.length)} of{" "}
-            {props.deployments.length} deployments
-          </div>
+        <div className="flex items-center justify-end">
           <div className="flex items-center gap-2">
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
+              className="hover:!bg-transparent"
               onClick={() => handlePageChange(page - 1)}
               disabled={page === 1}
             >
               <ChevronLeft className="h-4 w-4" />
-              Previous
             </Button>
-            <div className="text-sm">
-              Page {page} of {totalPages}
+            <div className="flex w-15 items-center justify-center text-sm">
+              Page {page}
             </div>
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
+              className="hover:!bg-transparent"
               onClick={() => handlePageChange(page + 1)}
               disabled={page === totalPages}
             >
-              Next
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -345,7 +340,7 @@ const BacktestsTable: FC<{
 }> = (props) => {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
-  const itemsPerPage = 20;
+  const itemsPerPage = 10;
 
   const filteredBacktests = props.backtests.filter((b) =>
     props.selectedTickers.includes(b.symbol),
@@ -492,32 +487,27 @@ const BacktestsTable: FC<{
         </TableBody>
       </Table>
       {filteredBacktests.length > itemsPerPage && (
-        <div className="flex items-center justify-between">
-          <div className="text-muted-foreground text-sm">
-            Showing {startIndex + 1} to{" "}
-            {Math.min(endIndex, filteredBacktests.length)} of{" "}
-            {filteredBacktests.length} backtests
-          </div>
+        <div className="flex items-center justify-end">
           <div className="flex items-center gap-2">
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
+              className="hover:!bg-transparent"
               onClick={() => handlePageChange(page - 1)}
               disabled={page === 1}
             >
               <ChevronLeft className="h-4 w-4" />
-              Previous
             </Button>
-            <div className="text-sm">
-              Page {page} of {totalPages}
+            <div className="flex w-15 items-center justify-center text-sm">
+              Page {page}
             </div>
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
+              className="hover:!bg-transparent"
               onClick={() => handlePageChange(page + 1)}
               disabled={page === totalPages}
             >
-              Next
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -582,7 +572,7 @@ const StrategyDetailPage: FC = () => {
 
   // Fetch strategy summary with metrics
   const strategySummaryQuery = useStrategySummary(id || "");
-  const strategyDetailsQuery = useStrategy(id || "");
+  const strategyDetailsQuery = useStrategyQuery(id || "");
   const deleteStrategyMutation = useDeleteStrategy();
 
   // Fetch backtests for this strategy
@@ -594,7 +584,6 @@ const StrategyDetailPage: FC = () => {
 
   // Fetch broker connections
   const brokerConnectionsQuery = useBrokerConnectionsQuery();
-  console.log(brokerConnectionsQuery);
   const deployStrategyMutation = useDeployStrategy();
 
   const strategy = strategySummaryQuery.data as
@@ -745,8 +734,6 @@ const StrategyDetailPage: FC = () => {
       </DashboardLayout>
     );
   }
-
-  console.log(brokerConnectionsQuery.data);
 
   if (strategySummaryQuery.error || !strategy) {
     return (
@@ -1100,25 +1087,6 @@ const StrategyDetailPage: FC = () => {
                     The time interval for trading decisions
                   </p>
                 </div>
-
-                {/* <div className="space-y-2">
-                  <Label htmlFor="deployment-balance">
-                    Starting Balance ($)
-                  </Label>
-                  <Input
-                    id="deployment-balance"
-                    type="number"
-                    placeholder="10000"
-                    value={newDeploymentBalance}
-                    onChange={(e) => setNewDeploymentBalance(e.target.value)}
-                    required
-                    min="100"
-                    step="0.01"
-                  />
-                  <p className="text-muted-foreground text-xs">
-                    The initial capital for this deployment
-                  </p>
-                </div> */}
               </div>
               <DialogFooter>
                 <Button
@@ -1157,9 +1125,9 @@ const StrategyDetailPage: FC = () => {
         <Dialog open={isPromptModalOpen} onOpenChange={handleClosePromptModal}>
           <DialogContent className="max-h-[80vh] max-w-3xl">
             <DialogHeader>
-              <DialogTitle>Strategy Code</DialogTitle>
+              <DialogTitle>Strategy Prompt</DialogTitle>
               <DialogDescription>
-                The generated trading strategy code
+                The prompt used to generate this strategy
               </DialogDescription>
             </DialogHeader>
             <ScrollArea className="h-[60vh] w-full rounded-md border p-4">
@@ -1169,8 +1137,7 @@ const StrategyDetailPage: FC = () => {
                 </div>
               ) : strategyDetailsQuery.data ? (
                 <pre className="font-mono text-sm whitespace-pre-wrap">
-                  {(strategyDetailsQuery.data as any).data?.code ||
-                    "No code available"}
+                  {strategyDetailsQuery.data.prompt}
                 </pre>
               ) : (
                 <p className="text-muted-foreground text-center">
