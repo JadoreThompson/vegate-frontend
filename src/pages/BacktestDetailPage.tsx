@@ -2,8 +2,8 @@ import { ArrowLeft, Loader2, Trash2, TrendingUp } from "lucide-react";
 import { useState, type FC } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 
-import PerformanceMetrics from "@/components/PerformanceMetrics";
 import DashboardLayout from "@/components/layouts/dashboard-layout";
+import PerformanceMetrics from "@/components/performance-metrics";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

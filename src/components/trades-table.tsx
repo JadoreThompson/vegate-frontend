@@ -1,7 +1,7 @@
 import { Filter, PlayCircle } from "lucide-react";
 import { type FC, useMemo, useState } from "react";
 
-import Pagination from "@/components/Pagination";
+import Pagination from "@/components/pagination";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

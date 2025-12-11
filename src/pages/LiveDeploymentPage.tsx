@@ -8,11 +8,11 @@ import {
 import { type FC, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 
-import EquityGraph from "@/components/EquityGraph";
-import LiveLogs, { type LogEntry } from "@/components/LiveLogs";
-import PerformanceMetrics from "@/components/PerformanceMetrics";
-import TradesTable, { type Trade } from "@/components/TradesTable";
+import EquityGraph from "@/components/equity-graph";
 import DashboardLayout from "@/components/layouts/dashboard-layout";
+import LiveLogs, { type LogEntry } from "@/components/live-logs";
+import PerformanceMetrics from "@/components/performance-metrics";
+import TradesTable, { type Trade } from "@/components/trades-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

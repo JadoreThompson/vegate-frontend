@@ -17,8 +17,6 @@ import {
   verifyEmailAuthVerifyEmailPost,
   type changeEmailAuthChangeEmailPostResponse,
   type changePasswordAuthChangePasswordPostResponse,
-  type changeUsernameAuthChangeUsernamePostResponse,
-  type getMeAuthMeGetResponse,
   type loginAuthLoginPostResponse,
   type logoutAuthLogoutPostResponse,
   type registerAuthRegisterPostResponse,
@@ -31,7 +29,7 @@ import {
   type VerifyAction,
   type verifyActionAuthVerifyActionPostResponse,
   type VerifyCode,
-  type verifyEmailAuthVerifyEmailPostResponse,
+  type verifyEmailAuthVerifyEmailPostResponse
 } from "@/openapi";
 
 export function useLoginMutation() {
@@ -86,19 +84,14 @@ export function useLogoutMutation() {
 }
 
 export function useMeQuery() {
-  return useQuery<getMeAuthMeGetResponse, ApiError>({
+  return useQuery({
     queryKey: queryKeys.auth.me(),
     queryFn: async () => handleApi(await getMeAuthMeGet()),
   });
 }
 
 export function useChangeUsernameMutation() {
-  return useMutation<
-    changeUsernameAuthChangeUsernamePostResponse,
-    ApiError,
-    UpdateUsername,
-    unknown
-  >({
+  return useMutation({
     mutationFn: async (payload: UpdateUsername) =>
       handleApi(await changeUsernameAuthChangeUsernamePost(payload)),
     onSuccess: () => {

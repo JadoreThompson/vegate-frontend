@@ -12,7 +12,7 @@ import {
 import { useState, type FC } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 
-import EquityGraph from "@/components/EquityGraph";
+import EquityGraph from "@/components/equity-graph";
 import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

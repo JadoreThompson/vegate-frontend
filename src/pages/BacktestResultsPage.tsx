@@ -2,9 +2,9 @@ import { Calendar, CirclePlay, Loader2 } from "lucide-react";
 import { memo, useMemo, useState, type FC } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 
-import EquityGraph from "@/components/EquityGraph";
-import PerformanceMetrics from "@/components/PerformanceMetrics";
+import EquityGraph from "@/components/equity-graph";
 import DashboardLayout from "@/components/layouts/dashboard-layout";
+import PerformanceMetrics from "@/components/performance-metrics";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
