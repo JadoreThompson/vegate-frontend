@@ -137,7 +137,7 @@ const DashboardSidebar: FC = () => {
                     isActive("/") ? "!bg-muted" : "",
                   )}
                 >
-                  <Button className="bg-transparent justify-start !p-2 text-white">
+                  <Button onClick={() => logoutMutation.mutateAsync()} className="bg-transparent justify-start !p-2 text-white">
                     <LogOutIcon className="h-4 w-4 m-0" />
                     <span>Logout</span>
                   </Button>
@@ -194,8 +194,8 @@ const DashboardLayout: FC<{
           </header>
 
           {/* Page Content */}
-          <main className="flex-1 overflow-auto">
-            <div className="h-full p-4 lg:p-6">{children}</div>
+          <main className="flex-1 overflow-auto p-4 lg:p-6">
+            {children}
           </main>
         </div>
       </div>

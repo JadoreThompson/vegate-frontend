@@ -41,7 +41,7 @@ function App() {
 
           {/* Strategy Routes */}
           <Route path="/strategies" element={<StrategiesPage />} />
-          <Route path="/strategies/new" element={<StrategyCreatePage />} />
+          <Route path="/strategies/create" element={<StrategyCreatePage />} />
           <Route path="/strategies/:id" element={<StrategyDetailPage />} />
           <Route
             path="/deployments/:deploymentId"

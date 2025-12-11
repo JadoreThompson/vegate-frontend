@@ -1,4 +1,4 @@
-import { Bot, Lightbulb, Loader2, Sparkles, Zap } from "lucide-react";
+import { Lightbulb, Loader2, Sparkles, Zap } from "lucide-react";
 import { useState, type FC } from "react";
 import { Link, useNavigate } from "react-router";
 
@@ -19,24 +19,6 @@ const StrategyCreatePage: FC = () => {
 
   const createStrategyMutation = useCreateStrategy();
 
-  const examples = [
-    {
-      title: "RSI Mean Reversion",
-      description:
-        "Buy when RSI(14) drops below 30, sell when it rises above 70. Use 2% position size with 1% stop loss.",
-    },
-    {
-      title: "Moving Average Crossover",
-      description:
-        "Go long when the 50-day MA crosses above the 200-day MA. Exit when the 50-day crosses back below.",
-    },
-    {
-      title: "Breakout Strategy",
-      description:
-        "Enter long when price breaks above the 20-day high with volume 1.5x average. Exit at 2x ATR or 20-day low.",
-    },
-  ];
-
   const handleGenerate = async () => {
     setError(null);
 
@@ -52,16 +34,10 @@ const StrategyCreatePage: FC = () => {
         prompt: prompt.trim(),
       });
 
-      // Navigate to the strategy detail page
-      navigate(`/strategies/${result.data.strategy_id}`);
+      navigate(`/strategies/${result.strategy_id}`);
     } catch (err: any) {
       setError(err.message || "An error occurred while creating the strategy.");
     }
-  };
-
-  const handleExampleClick = (example: (typeof examples)[0]) => {
-    setName(example.title);
-    setPrompt(example.description);
   };
 
   return (
@@ -79,14 +55,9 @@ const StrategyCreatePage: FC = () => {
         </div>
 
         {/* Main Input Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bot className="h-5 w-5 text-emerald-500" />
-              Describe Your Strategy
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <Card className="bg-transparent border-0">
+
+          <CardContent className="space-y-4 p-0">
             <div className="space-y-2">
               <Label htmlFor="strategy-name">Strategy Name</Label>
               <Input
@@ -208,94 +179,7 @@ const StrategyCreatePage: FC = () => {
           </CardContent>
         </Card>
 
-        {/* Example Strategies */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Example Strategies</h3>
-          <div className="grid gap-4 md:grid-cols-3">
-            {examples.map((example) => (
-              <Card
-                key={example.title}
-                className="cursor-pointer transition-colors hover:border-emerald-500/50"
-                onClick={() => handleExampleClick(example)}
-              >
-                <CardHeader>
-                  <CardTitle className="text-base">{example.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground text-sm">
-                    {example.description}
-                  </p>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="mt-3 text-emerald-600 hover:text-emerald-700"
-                  >
-                    Use This Example
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        {/* How It Works */}
-        <Card>
-          <CardHeader>
-            <CardTitle>How It Works</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex gap-4">
-                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-sm font-bold text-emerald-600">
-                  1
-                </div>
-                <div>
-                  <h4 className="font-semibold">Describe Your Strategy</h4>
-                  <p className="text-muted-foreground text-sm">
-                    Write out your trading logic in plain English, as detailed
-                    as you can.
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-sm font-bold text-emerald-600">
-                  2
-                </div>
-                <div>
-                  <h4 className="font-semibold">AI Converts to Code</h4>
-                  <p className="text-muted-foreground text-sm">
-                    Our AI analyzes your description and generates executable
-                    trading code.
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-sm font-bold text-emerald-600">
-                  3
-                </div>
-                <div>
-                  <h4 className="font-semibold">Review & Refine</h4>
-                  <p className="text-muted-foreground text-sm">
-                    Check the generated strategy, make adjustments, and test
-                    with backtesting.
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-sm font-bold text-emerald-600">
-                  4
-                </div>
-                <div>
-                  <h4 className="font-semibold">Deploy & Trade</h4>
-                  <p className="text-muted-foreground text-sm">
-                    When satisfied, deploy to your broker and let it trade
-                    automatically.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+       
       </div>
     </DashboardLayout>
   );

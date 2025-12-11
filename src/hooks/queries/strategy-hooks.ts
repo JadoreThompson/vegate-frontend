@@ -12,17 +12,15 @@ import {
   listStrategiesEndpointStrategiesGet,
   listStrategySummariesEndpointStrategiesSummariesGet,
   updateStrategyEndpointStrategiesStrategyIdPatch,
-  type createStrategyEndpointStrategiesPostResponse,
   type deleteStrategyEndpointStrategiesStrategyIdDeleteResponse,
   type getStrategyEndpointStrategiesStrategyIdGetResponse,
   type getStrategySummaryEndpointStrategiesStrategyIdSummaryGetResponse,
   type ListStrategiesEndpointStrategiesGetParams,
   type listStrategiesEndpointStrategiesGetResponse,
   type ListStrategySummariesEndpointStrategiesSummariesGetParams,
-  type listStrategySummariesEndpointStrategiesSummariesGetResponse,
   type StrategyCreate,
   type StrategyUpdate,
-  type updateStrategyEndpointStrategiesStrategyIdPatchResponse,
+  type updateStrategyEndpointStrategiesStrategyIdPatchResponse
 } from "@/openapi";
 
 /**
@@ -77,10 +75,7 @@ export function useStrategySummary(strategyId: string) {
 export function useStrategySummariesQuery(
   params?: ListStrategySummariesEndpointStrategiesSummariesGetParams,
 ) {
-  return useQuery<
-    listStrategySummariesEndpointStrategiesSummariesGetResponse,
-    ApiError
-  >({
+  return useQuery({
     queryKey: queryKeys.strategies.summaries(params),
     queryFn: async () =>
       handleApi(
@@ -93,11 +88,7 @@ export function useStrategySummariesQuery(
  * Mutation hook to create a new strategy
  */
 export function useCreateStrategy() {
-  return useMutation<
-    createStrategyEndpointStrategiesPostResponse,
-    ApiError,
-    StrategyCreate
-  >({
+  return useMutation({
     mutationFn: async (payload: StrategyCreate) =>
       handleApi(await createStrategyEndpointStrategiesPost(payload)),
     onSuccess: () => {
