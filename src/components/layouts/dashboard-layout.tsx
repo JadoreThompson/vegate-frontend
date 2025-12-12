@@ -12,10 +12,9 @@ import { useMeQuery } from "@/hooks/queries/auth-hooks";
 import {
   BarChart3,
   Bot,
-  Home,
   LogOutIcon,
   SettingsIcon,
-  Wallet,
+  Wallet
 } from "lucide-react";
 import { Link, useLocation } from "react-router";
 
@@ -40,7 +39,7 @@ const DashboardSidebar: FC = () => {
   const logoutMutation = useLogoutMutation();
 
   const navigation = [
-    { name: "Dashboard", href: "/dashboard", icon: Home },
+    // { name: "Dashboard", href: "/dashboard", icon: Home },
     { name: "Strategies", href: "/strategies", icon: Bot },
     { name: "Backtests", href: "/backtests", icon: BarChart3 },
   ];

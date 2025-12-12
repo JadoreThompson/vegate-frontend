@@ -1,18 +1,19 @@
 import {
   Calendar,
+  ChevronLeft,
+  ChevronRight,
   Loader2,
   MoreVertical,
   PlayCircle,
   StopCircle,
 } from "lucide-react";
-import { type FC, useMemo, useState } from "react";
+import { useEffect, useState, type FC } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 
 import EquityGraph from "@/components/equity-graph";
 import DashboardLayout from "@/components/layouts/dashboard-layout";
-import LiveLogs, { type LogEntry } from "@/components/live-logs";
+import LiveLogs from "@/components/live-logs";
 import PerformanceMetrics from "@/components/performance-metrics";
-import TradesTable, { type Trade } from "@/components/trades-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,46 +22,41 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger
+} from "@/components/ui/tabs";
 import { useBrokerConnectionQuery } from "@/hooks/queries/broker-hooks";
 import {
-  useDeployment,
-  useStopDeployment,
+  useDeploymentOrders,
+  useDeploymentQuery,
+  useStopDeploymentMutation,
 } from "@/hooks/queries/deployment-hooks";
-import { queryKeys } from "@/lib/query/query-keys";
-import { handleApi } from "@/lib/utils/base";
 import {
-  getDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGet,
-  type OrderResponseOutput,
   StrategyDeploymentStatus,
+  type BrokerConnectionResponse,
+  type DeploymentResponse,
+  type OrderResponseOutput
 } from "@/openapi";
-import { useQuery } from "@tanstack/react-query";
 
-// Internal Components
-interface SummaryMetricCardProps {
-  title: string;
-  value: string | number;
-  subtitle: React.ReactNode;
-  icon: React.ReactNode;
-  valueColor?: string;
-}
-
-const SummaryMetricCard: FC<SummaryMetricCardProps> = (props) => {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{props.title}</CardTitle>
-        {props.icon}
-      </CardHeader>
-      <CardContent>
-        <div className={`text-2xl font-bold ${props.valueColor || ""}`}>
-          {props.value}
-        </div>
-        <p className="text-muted-foreground text-xs">{props.subtitle}</p>
-      </CardContent>
-    </Card>
-  );
+type LogEntry = {
+  id: number;
+  timestamp: string;
+  level: "INFO" | "WARNING" | "ERROR";
+  message: string;
 };
 
+// Internal Components
 interface DetailedMetricsCardProps {
   metrics: {
     totalReturn: number;
@@ -230,164 +226,145 @@ const MonthlyReturnsGrid: FC<MonthlyReturnsGridProps> = (props) => {
   );
 };
 
-const LiveDeploymentPage: FC = () => {
-  const navigate = useNavigate();
-  const { deploymentId } = useParams<{ deploymentId: string }>();
+interface DeploymentTradesTableProps {
+  deploymentId: string;
+}
 
-  // Fetch deployment data
-  const {
-    data: deploymentResponse,
-    isLoading: isLoadingDeployment,
-    error: deploymentError,
-  } = useDeployment(deploymentId || "");
-  const stopDeploymentMutation = useStopDeployment();
+const DeploymentTradesTable: FC<DeploymentTradesTableProps> = (props) => {
+  const [page, setPage] = useState(1);
+  const [orders, setOrders] = useState<OrderResponseOutput[]>([]);
 
-  const deployment = (deploymentResponse as any)?.data;
-
-  // Fetch broker connection details
-  const { data: brokerConnection, isLoading: isLoadingBroker } =
-    useBrokerConnectionQuery(deployment?.broker_connection_id || "");
-
-  // Fetch orders for this deployment
-  const { data: ordersData, isLoading: isLoadingOrders } = useQuery({
-    queryKey: queryKeys.deployments.orders(deploymentId || ""),
-    queryFn: async () =>
-      handleApi(
-        await getDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGet(
-          deploymentId || "",
-        ),
-      ),
-    enabled: !!deploymentId,
+  const ordersQuery = useDeploymentOrders(props.deploymentId, {
+    skip: (page - 1) * 90,
+    limit: 91,
   });
 
-  const orders = ((ordersData as any)?.data || []) as OrderResponseOutput[];
+  const itemsPerPage = 10;
 
-  // Transform orders to trades format
-  const trades: Trade[] = useMemo(() => {
-    return orders.map((order: OrderResponseOutput, index: number) => {
-      const isLong = order.side.toUpperCase() === "BUY";
-      const filledQty = parseFloat(order.filled_quantity);
-      const avgPrice = order.average_fill_price
-        ? parseFloat(order.average_fill_price)
-        : 0;
-
-      // Calculate P&L (simplified - would need matching orders in real scenario)
-      const pnl = 0; // Placeholder
-      const pnlPercent = 0; // Placeholder
-
-      return {
-        id: index + 1,
-        date: new Date(order.submitted_at).toLocaleDateString(),
-        symbol: order.symbol,
-        side: isLong ? "LONG" : "SHORT",
-        entry: `$${avgPrice.toFixed(2)}`,
-        exit: order.filled_at ? `$${avgPrice.toFixed(2)}` : "-",
-        pnl: pnl >= 0 ? `+$${pnl.toFixed(2)}` : `-$${Math.abs(pnl).toFixed(2)}`,
-        pnlPercent:
-          pnlPercent >= 0
-            ? `+${pnlPercent.toFixed(2)}%`
-            : `${pnlPercent.toFixed(2)}%`,
-        duration: order.filled_at
-          ? `${(
-              Math.abs(
-                new Date(order.filled_at).getTime() -
-                  new Date(order.submitted_at).getTime(),
-              ) /
-              (1000 * 60 * 60 * 24)
-            ).toFixed(1)} days`
-          : "Open",
-      };
-    });
-  }, [orders]);
-
-  const getStatusBadgeVariant = (status: StrategyDeploymentStatus) => {
-    switch (status) {
-      case "running":
-        return "default";
-      case "stopped":
-        return "secondary";
-      case "error":
-        return "destructive";
-      case "pending":
-        return "outline";
-      default:
-        return "secondary";
+  useEffect(() => {
+    const data = ordersQuery.data as OrderResponseOutput[] | undefined;
+    if (data?.length) {
+      setOrders((prev) => {
+        const ids = new Set(prev.map((o) => o.order_id));
+        const newOnes = data.filter(
+          (o: OrderResponseOutput) => !ids.has(o.order_id),
+        );
+        return [...prev, ...newOnes];
+      });
     }
+  }, [ordersQuery.data]);
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
   };
 
-  const handleStopDeployment = async () => {
-    if (!deploymentId) return;
-
-    try {
-      await stopDeploymentMutation.mutateAsync(deploymentId);
-    } catch (err) {
-      console.error("Failed to stop deployment:", err);
-    }
-  };
-
-  const handleReplayClick = (tradeId: number) => {
-    // Navigate to replay session for this deployment
-    navigate(`/replay/deployment/${deploymentId}`);
-  };
-
-  if (isLoadingDeployment) {
+  if (orders.length === 0 && !ordersQuery.isLoading) {
     return (
-      <DashboardLayout>
-        <div className="flex h-96 items-center justify-center">
-          <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
-        </div>
-      </DashboardLayout>
+      <Card>
+        <CardContent className="flex flex-col items-center justify-center py-16">
+          <h3 className="mb-2 text-lg font-semibold">No Trades Found</h3>
+          <p className="text-muted-foreground text-sm">
+            This deployment has no recorded trades
+          </p>
+        </CardContent>
+      </Card>
     );
   }
 
-  if (deploymentError || !deployment) {
-    return (
-      <DashboardLayout>
-        <div className="flex h-96 flex-col items-center justify-center gap-4">
-          <p className="text-muted-foreground">
-            {deploymentError
-              ? "Failed to load deployment"
-              : "Deployment not found"}
-          </p>
-          <Button onClick={() => navigate("/strategies")}>
-            Back to Strategies
+  return (
+    <Card className="border-0 bg-transparent">
+      <CardHeader>
+        <CardTitle>Trade History</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="text-gray-500">Symbol</TableHead>
+              <TableHead className="text-gray-500">Side</TableHead>
+              <TableHead className="text-gray-500">Type</TableHead>
+              <TableHead className="text-gray-500">Quantity</TableHead>
+              <TableHead className="text-gray-500">Filled</TableHead>
+              <TableHead className="text-gray-500">Avg Price</TableHead>
+              <TableHead className="text-gray-500">Status</TableHead>
+              <TableHead className="text-gray-500">Submitted</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {orders
+              .slice((page - 1) * 10, page * 10)
+              .map((order: OrderResponseOutput) => (
+                <TableRow key={order.order_id}>
+                  <TableCell className="font-semibold">
+                    {order.symbol}
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      className={`rounded px-2 py-0.5 text-xs font-medium ${
+                        order.side.toLowerCase() === "buy"
+                          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                          : "bg-red-500/10 text-red-600 dark:text-red-400"
+                      }`}
+                    >
+                      {order.side}
+                    </span>
+                  </TableCell>
+                  <TableCell>{order.order_type}</TableCell>
+                  <TableCell>{order.quantity}</TableCell>
+                  <TableCell>{order.filled_quantity}</TableCell>
+                  <TableCell>
+                    {order.average_fill_price
+                      ? `$${order.average_fill_price}`
+                      : "-"}
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-xs">{order.status}</span>
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {new Date(order.submitted_at).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </TableCell>
+                </TableRow>
+              ))}
+          </TableBody>
+        </Table>
+        <div className="mt-4 flex justify-end">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="hover:!bg-transparent"
+            onClick={() => handlePageChange(page - 1)}
+            disabled={page === 1}
+          >
+            <ChevronLeft />
+          </Button>
+          <span className="text-muted-foreground flex w-15 items-center justify-center text-sm">
+            Page {page}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="hover:!bg-transparent"
+            onClick={() => handlePageChange(page + 1)}
+            disabled={orders.length <= page * itemsPerPage}
+          >
+            <ChevronRight />
           </Button>
         </div>
-      </DashboardLayout>
-    );
-  }
+      </CardContent>
+    </Card>
+  );
+};
 
-  const metrics = {
-    totalReturn: 45.6,
-    sharpeRatio: 1.87,
-    maxDrawdown: -12.3,
-    winRate: 64.2,
-    profitFactor: 2.34,
-    totalTrades: trades.length || 127,
-    avgWin: 2.8,
-    avgLoss: -1.9,
-    largestWin: 8.4,
-    largestLoss: -5.2,
-    avgTradeDuration: "2.3 days",
-    expectancy: 1.2,
-  };
+const LiveDeploymentPage: FC = () => {
+  const navigate = useNavigate();
+  const params = useParams<{ deploymentId: string }>();
+  const deploymentId = params.deploymentId;
 
-  const monthlyReturns = [
-    { month: "Jan", return: 5.2 },
-    { month: "Feb", return: 3.8 },
-    { month: "Mar", return: -2.1 },
-    { month: "Apr", return: 6.4 },
-    { month: "May", return: 4.1 },
-    { month: "Jun", return: 7.2 },
-    { month: "Jul", return: 2.9 },
-    { month: "Aug", return: -3.5 },
-    { month: "Sep", return: 8.1 },
-    { month: "Oct", return: 5.6 },
-    { month: "Nov", return: 4.3 },
-    { month: "Dec", return: 3.6 },
-  ];
-
-  // Mock log data
   const [logs, setLogs] = useState<LogEntry[]>([
     {
       id: 1,
@@ -420,6 +397,104 @@ const LiveDeploymentPage: FC = () => {
       message: "Order execution failed: Insufficient margin",
     },
   ]);
+
+  // Fetch deployment data
+  const deploymentQuery = useDeploymentQuery(deploymentId || "");
+  const stopDeploymentMutation = useStopDeploymentMutation();
+
+  const deployment = deploymentQuery.data as DeploymentResponse | undefined;
+
+  // Fetch broker connection details
+  const brokerConnectionQuery = useBrokerConnectionQuery(
+    deployment?.broker_connection_id || "",
+  );
+  const brokerConnection = brokerConnectionQuery.data as
+    | BrokerConnectionResponse
+    | undefined;
+
+  const getStatusBadgeVariant = (status: StrategyDeploymentStatus) => {
+    switch (status) {
+      case StrategyDeploymentStatus.running:
+        return "default";
+      case StrategyDeploymentStatus.stopped:
+        return "secondary";
+      case StrategyDeploymentStatus.error:
+        return "destructive";
+      case StrategyDeploymentStatus.pending:
+        return "outline";
+      default:
+        return "secondary";
+    }
+  };
+
+  const handleStopDeployment = async () => {
+    if (!deploymentId) return;
+
+    try {
+      await stopDeploymentMutation.mutateAsync(deploymentId);
+    } catch (err) {
+      console.error("Failed to stop deployment:", err);
+    }
+  };
+
+  if (deploymentQuery.isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex h-96 items-center justify-center">
+          <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (deploymentQuery.error || !deployment) {
+    return (
+      <DashboardLayout>
+        <div className="flex h-96 flex-col items-center justify-center gap-4">
+          <p className="text-muted-foreground">
+            {deploymentQuery.error
+              ? "Failed to load deployment"
+              : "Deployment not found"}
+          </p>
+          <Button onClick={() => navigate("/strategies")}>
+            Back to Strategies
+          </Button>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  const metrics = {
+    totalReturn: 45.6,
+    sharpeRatio: 1.87,
+    maxDrawdown: -12.3,
+    winRate: 64.2,
+    profitFactor: 2.34,
+    totalTrades: 127,
+    avgWin: 2.8,
+    avgLoss: -1.9,
+    largestWin: 8.4,
+    largestLoss: -5.2,
+    avgTradeDuration: "2.3 days",
+    expectancy: 1.2,
+  };
+
+  const monthlyReturns = [
+    { month: "Jan", return: 5.2 },
+    { month: "Feb", return: 3.8 },
+    { month: "Mar", return: -2.1 },
+    { month: "Apr", return: 6.4 },
+    { month: "May", return: 4.1 },
+    { month: "Jun", return: 7.2 },
+    { month: "Jul", return: 2.9 },
+    { month: "Aug", return: -3.5 },
+    { month: "Sep", return: 8.1 },
+    { month: "Oct", return: 5.6 },
+    { month: "Nov", return: 4.3 },
+    { month: "Dec", return: 3.6 },
+  ];
+
+  // Mock log data
 
   const handleClearLogs = () => {
     setLogs([]);
@@ -458,17 +533,14 @@ const LiveDeploymentPage: FC = () => {
               {/* Broker Connection Badge */}
               {brokerConnection && (
                 <Badge variant="outline" className="gap-1">
-                  {(brokerConnection as any).broker?.toUpperCase() || "BROKER"}
-                  {(brokerConnection as any).broker_account_id && (
-                    <span className="text-muted-foreground">
-                      •{" "}
-                      {(brokerConnection as any).broker_account_id.slice(0, 8)}
-                    </span>
-                  )}
+                  {brokerConnection.broker.toUpperCase()}
+                  <span className="text-muted-foreground">
+                    • {brokerConnection.broker_account_id.slice(0, 8)}
+                  </span>
                 </Badge>
               )}
             </div>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-muted-foreground mt-1 text-sm">
               {deployment.symbol} • {deployment.timeframe} • Started{" "}
               {new Date(deployment.created_at).toLocaleDateString()}
             </p>
@@ -518,7 +590,6 @@ const LiveDeploymentPage: FC = () => {
 
         {/* Equity Curve with Statistics */}
         <div className="flex flex-col gap-4 lg:flex-row">
-          {/* Statistics Card */}
           <PerformanceMetrics
             totalPnl={10000 * (metrics.totalReturn / 100)}
             returnPercentage={metrics.totalReturn}
@@ -527,7 +598,6 @@ const LiveDeploymentPage: FC = () => {
             maxDrawdown={metrics.maxDrawdown}
           />
 
-          {/* Equity Graph */}
           <EquityGraph equityData={undefined} title="Equity Curve" />
         </div>
 
@@ -537,19 +607,24 @@ const LiveDeploymentPage: FC = () => {
         {/* Monthly Returns */}
         <MonthlyReturnsGrid monthlyReturns={monthlyReturns} />
 
-        {/* Trades Table */}
-        {isLoadingOrders ? (
-          <Card>
-            <CardContent className="flex h-48 items-center justify-center">
-              <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
-            </CardContent>
-          </Card>
-        ) : (
-          <TradesTable trades={trades} onReplayClick={handleReplayClick} />
-        )}
+        {/* Trades and Logs Tabs */}
+        <Tabs defaultValue="trades" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="trades">Trade History</TabsTrigger>
+            <TabsTrigger value="logs">Live Logs</TabsTrigger>
+          </TabsList>
 
-        {/* Live Logs */}
-        <LiveLogs logs={logs} onClearLogs={handleClearLogs} />
+          <TabsContent
+            value="trades"
+            className="m-0 border-0 bg-transparent p-0"
+          >
+            <DeploymentTradesTable deploymentId={deploymentId || ""} />
+          </TabsContent>
+
+          <TabsContent value="logs" className="m-0 border-0 bg-transparent p-0">
+            <LiveLogs logs={logs} onClearLogs={handleClearLogs} />
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );

@@ -7,20 +7,21 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   deployStrategyEndpointDeploymentsStrategiesStrategyIdDeployPost,
   getDeploymentEndpointDeploymentsDeploymentIdGet,
+  getDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGet,
   listAllDeploymentsEndpointDeploymentsGet,
   listStrategyDeploymentsEndpointDeploymentsStrategiesStrategyIdDeploymentsGet,
   stopDeploymentEndpointDeploymentsDeploymentIdStopPost,
 } from "@/openapi";
 
 import type {
-  deployStrategyEndpointDeploymentsStrategiesStrategyIdDeployPostResponse,
+  DeploymentResponse,
   DeployStrategyRequest,
-  getDeploymentEndpointDeploymentsDeploymentIdGetResponse,
+  GetDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGetParams,
+  getDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGetResponse,
   ListAllDeploymentsEndpointDeploymentsGetParams,
   listAllDeploymentsEndpointDeploymentsGetResponse,
   ListStrategyDeploymentsEndpointDeploymentsStrategiesStrategyIdDeploymentsGetParams,
   listStrategyDeploymentsEndpointDeploymentsStrategiesStrategyIdDeploymentsGetResponse,
-  stopDeploymentEndpointDeploymentsDeploymentIdStopPostResponse,
 } from "@/openapi";
 
 /**
@@ -29,7 +30,7 @@ import type {
 export function useDeployments(
   params?: ListAllDeploymentsEndpointDeploymentsGetParams,
 ) {
-  return useQuery<listAllDeploymentsEndpointDeploymentsGetResponse, ApiError>({
+  return useQuery({
     queryKey: queryKeys.deployments.list(params),
     queryFn: async () =>
       handleApi(await listAllDeploymentsEndpointDeploymentsGet(params)),
@@ -43,10 +44,7 @@ export function useStrategyDeployments(
   strategyId: string,
   params?: ListStrategyDeploymentsEndpointDeploymentsStrategiesStrategyIdDeploymentsGetParams,
 ) {
-  return useQuery<
-    listStrategyDeploymentsEndpointDeploymentsStrategiesStrategyIdDeploymentsGetResponse,
-    ApiError
-  >({
+  return useQuery({
     queryKey: queryKeys.deployments.strategy(strategyId, params),
     queryFn: async () =>
       handleApi(
@@ -62,11 +60,8 @@ export function useStrategyDeployments(
 /**
  * Query hook to fetch a single deployment by ID
  */
-export function useDeployment(deploymentId: string) {
-  return useQuery<
-    getDeploymentEndpointDeploymentsDeploymentIdGetResponse,
-    ApiError
-  >({
+export function useDeploymentQuery(deploymentId: string) {
+  return useQuery({
     queryKey: queryKeys.deployments.detail(deploymentId),
     queryFn: async () =>
       handleApi(
@@ -80,11 +75,7 @@ export function useDeployment(deploymentId: string) {
  * Mutation hook to deploy a strategy
  */
 export function useDeployStrategy() {
-  return useMutation<
-    deployStrategyEndpointDeploymentsStrategiesStrategyIdDeployPostResponse,
-    ApiError,
-    { strategyId: string; payload: DeployStrategyRequest }
-  >({
+  return useMutation({
     mutationFn: async (variables: {
       strategyId: string;
       payload: DeployStrategyRequest;
@@ -96,7 +87,7 @@ export function useDeployStrategy() {
         ),
       ),
     onSuccess: (
-      _data: deployStrategyEndpointDeploymentsStrategiesStrategyIdDeployPostResponse,
+      _data: DeploymentResponse,
       variables: { strategyId: string; payload: DeployStrategyRequest },
     ) => {
       queryClient.invalidateQueries({
@@ -110,26 +101,39 @@ export function useDeployStrategy() {
 /**
  * Mutation hook to stop a deployment
  */
-export function useStopDeployment() {
-  return useMutation<
-    stopDeploymentEndpointDeploymentsDeploymentIdStopPostResponse,
-    ApiError,
-    string
-  >({
+export function useStopDeploymentMutation() {
+  return useMutation({
     mutationFn: async (deploymentId: string) =>
       handleApi(
         await stopDeploymentEndpointDeploymentsDeploymentIdStopPost(
           deploymentId,
         ),
       ),
-    onSuccess: (
-      _data: stopDeploymentEndpointDeploymentsDeploymentIdStopPostResponse,
-      deploymentId: string,
-    ) => {
+    onSuccess: (_data: DeploymentResponse, deploymentId: string) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.deployments.detail(deploymentId),
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.deployments.all() });
     },
+  });
+}
+
+/**
+ * Query hook to fetch orders for a deployment
+ */
+export function useDeploymentOrders(
+  deploymentId: string,
+  params?: GetDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGetParams,
+) {
+  return useQuery({
+    queryKey: queryKeys.deployments.orders(deploymentId, params),
+    queryFn: async () =>
+      handleApi(
+        await getDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGet(
+          deploymentId,
+          params,
+        ),
+      ),
+    enabled: !!deploymentId,
   });
 }

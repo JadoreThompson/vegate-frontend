@@ -3,6 +3,7 @@ import { type FC, useState } from "react";
 
 import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -14,15 +15,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
   useChangeEmailMutation,
   useChangePasswordMutation,
   useChangeUsernameMutation,
@@ -30,12 +22,6 @@ import {
 } from "@/hooks/queries/auth-hooks";
 
 type ModalType = "username" | "email" | "password" | null;
-
-type VerificationModalState = {
-  type: ModalType;
-  showVerification: boolean;
-  actionToken?: string;
-};
 
 type SettingRowProps = {
   icon: React.ComponentType<{ className?: string }>;
@@ -53,7 +39,7 @@ const SettingRow: FC<SettingRowProps> = ({
   onClick,
 }) => {
   return (
-    <div className="hover:bg-accent/50 flex flex-col items-start gap-3 py-4 transition-colors sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+    <div className="hover:bg-accent/50 flex flex-col items-start gap-3 px-6 py-5 transition-colors sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <div className="flex items-start gap-4 sm:items-center">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
           <Icon className="h-5 w-5" />
@@ -82,7 +68,6 @@ const SettingsPage: FC = () => {
 
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [selectedTab, setSelectedTab] = useState("general");
   const [error, setError] = useState<string | null>(null);
 
   // Form values
@@ -116,11 +101,11 @@ const SettingsPage: FC = () => {
     try {
       switch (activeModal) {
         case "username":
-          await changeUsernameMutation.mutateAsync({ new_username: username });
+          await changeUsernameMutation.mutateAsync({ username: username });
           setShowSuccess(true);
           break;
         case "email":
-          await changeEmailMutation.mutateAsync({ new_email: email });
+          await changeEmailMutation.mutateAsync({ email: email });
           setShowSuccess(true);
           break;
         case "password":
@@ -129,8 +114,7 @@ const SettingsPage: FC = () => {
             return;
           }
           await changePasswordMutation.mutateAsync({
-            current_password: currentPassword,
-            new_password: newPassword,
+            password: newPassword,
           });
           setShowSuccess(true);
           break;
@@ -329,59 +313,53 @@ const SettingsPage: FC = () => {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
-          <p className="text-muted-foreground">
-            Manage your account settings and preferences
-          </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
+            <p className="text-muted-foreground">
+              Manage your account settings and preferences
+            </p>
+          </div>
         </div>
 
-        {/* Mobile Select Navigation */}
-        <div className="md:hidden">
-          <Select value={selectedTab} onValueChange={setSelectedTab}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select a tab" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="general">General</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Desktop Tabs Navigation */}
-        <Tabs
-          value={selectedTab}
-          onValueChange={setSelectedTab}
-          className="hidden md:block"
-        >
-          <TabsList>
-            <TabsTrigger value="general">General</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="general" className="space-y-6">
-            {/* Current User Info */}
-            {currentUser && (
-              <div className="rounded-lg bg-emerald-500/10 p-4">
-                <h3 className="mb-2 font-semibold">Current Account</h3>
-                <div className="space-y-1 text-sm">
-                  <p>
-                    <span className="text-muted-foreground">Username:</span>{" "}
-                    {currentUser.username}
-                  </p>
-                  <p>
-                    <span className="text-muted-foreground">Email:</span>{" "}
-                    {currentUser.email}
-                  </p>
-                  <p>
-                    <span className="text-muted-foreground">Verified:</span>{" "}
-                    {currentUser.is_verified ? "Yes" : "No"}
-                  </p>
+        {/* Current User Info Card */}
+        {currentUser && (
+          <Card className="border-emerald-500/20 bg-emerald-500/5">
+            <CardContent className="p-6">
+              <h3 className="mb-3 font-semibold">Current Account</h3>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
+                    <User className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs">Username</p>
+                    <p className="font-medium">{currentUser.username}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
+                    <Lock className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs">Tier</p>
+                    <p className="font-medium capitalize">
+                      {currentUser.pricing_tier}
+                    </p>
+                  </div>
                 </div>
               </div>
-            )}
+            </CardContent>
+          </Card>
+        )}
 
-            {/* Setting Rows */}
-            <div>
+        {/* Account Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Account Settings</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y">
               <SettingRow
                 icon={User}
                 title="Username"
@@ -389,15 +367,13 @@ const SettingsPage: FC = () => {
                 buttonText="Change username"
                 onClick={() => handleOpenModal("username")}
               />
-              <Separator />
               <SettingRow
                 icon={Mail}
                 title="Email"
-                description={`Current: ${currentUser?.email || "Not set"}`}
+                description="Update your email address"
                 buttonText="Change email"
                 onClick={() => handleOpenModal("email")}
               />
-              <Separator />
               <SettingRow
                 icon={Lock}
                 title="Password"
@@ -406,57 +382,8 @@ const SettingsPage: FC = () => {
                 onClick={() => handleOpenModal("password")}
               />
             </div>
-          </TabsContent>
-        </Tabs>
-
-        {/* Mobile Tab Content (when using Select) */}
-        {selectedTab === "general" && (
-          <div className="md:hidden">
-            {currentUser && (
-              <div className="mb-4 rounded-lg bg-emerald-500/10 p-4">
-                <h3 className="mb-2 font-semibold">Current Account</h3>
-                <div className="space-y-1 text-sm">
-                  <p>
-                    <span className="text-muted-foreground">Username:</span>{" "}
-                    {currentUser.username}
-                  </p>
-                  <p>
-                    <span className="text-muted-foreground">Email:</span>{" "}
-                    {currentUser.email}
-                  </p>
-                  <p>
-                    <span className="text-muted-foreground">Verified:</span>{" "}
-                    {currentUser.is_verified ? "Yes" : "No"}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            <SettingRow
-              icon={User}
-              title="Username"
-              description={`Current: ${currentUser?.username || "Not set"}`}
-              buttonText="Change username"
-              onClick={() => handleOpenModal("username")}
-            />
-            <Separator />
-            <SettingRow
-              icon={Mail}
-              title="Email"
-              description={`Current: ${currentUser?.email || "Not set"}`}
-              buttonText="Change email"
-              onClick={() => handleOpenModal("email")}
-            />
-            <Separator />
-            <SettingRow
-              icon={Lock}
-              title="Password"
-              description="Update your password"
-              buttonText="Change password"
-              onClick={() => handleOpenModal("password")}
-            />
-          </div>
-        )}
+          </CardContent>
+        </Card>
 
         {/* Modal Dialog */}
         <Dialog open={activeModal !== null} onOpenChange={handleCloseModal}>

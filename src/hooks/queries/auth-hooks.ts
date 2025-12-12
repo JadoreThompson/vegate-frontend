@@ -17,7 +17,6 @@ import {
   verifyEmailAuthVerifyEmailPost,
   type changeEmailAuthChangeEmailPostResponse,
   type changePasswordAuthChangePasswordPostResponse,
-  type loginAuthLoginPostResponse,
   type logoutAuthLogoutPostResponse,
   type registerAuthRegisterPostResponse,
   type requestEmailVerificationAuthRequestEmailVerificationPostResponse,
@@ -33,7 +32,7 @@ import {
 } from "@/openapi";
 
 export function useLoginMutation() {
-  return useMutation<loginAuthLoginPostResponse, ApiError, UserLogin, unknown>({
+  return useMutation({
     mutationFn: async (payload: UserLogin) =>
       handleApi(await loginAuthLoginPost(payload)),
   });
