@@ -2,14 +2,12 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { FC } from "react";
 import { Button } from "./ui/button";
 
-interface PaginationControlsProps {
+const PaginationControls: FC<{
   page: number;
   setPage: (arg: number) => void;
   data: any[];
   pageSize: number;
-}
-
-const PaginationControls: FC<PaginationControlsProps> = (props) => {
+}> = (props) => {
   const totalPages = Math.floor(props.data.length / props.pageSize);
 
   return (

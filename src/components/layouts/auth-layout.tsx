@@ -1,21 +1,21 @@
-import { ArrowRight, Loader2, TrendingUp } from "lucide-react";
-import React, { useState, type FC } from "react";
+import { ArrowRight, Loader2 } from "lucide-react";
+import React, { type FC } from "react";
 
 import { Button } from "@/components/ui/button";
+import WebsiteLogo from "../website-logo";
 
-type AuthLayoutProps = {
+interface AuthLayoutProps {
   title: string;
   subtitle: string;
-  fields: React.ReactNode; // injected form fields
+  fields: React.ReactNode;
   onSubmit: (e: React.FormEvent) => void;
   submitLabel: string;
   loading?: boolean;
-  footer: React.ReactNode; // injection for login/register footer switch
+  footer: React.ReactNode;
   error?: string | null;
 };
 
 const AuthLayout: FC<AuthLayoutProps> = (props) => {
-  const [showPassword, setShowPassword] = useState(false);
 
   return (
     <div className="h-screen w-full overflow-hidden bg-[#0b0e11] text-zinc-100 lg:grid lg:grid-cols-2">
@@ -46,10 +46,10 @@ const AuthLayout: FC<AuthLayoutProps> = (props) => {
         </div>
 
         <div className="relative z-20 flex items-center p-10 text-lg font-bold tracking-tight">
-          <div className="mr-2 flex h-8 w-8 items-center justify-center rounded-sm bg-emerald-500">
-            <TrendingUp className="h-5 w-5 text-[#0b0e11]" />
+          <div className="mr-2 flex h-8 w-8 items-center justify-center">
+            <WebsiteLogo />
           </div>
-          Brand Name
+          Vegate
         </div>
 
         <div className="relative z-20 mt-auto max-w-lg p-10">
@@ -63,7 +63,8 @@ const AuthLayout: FC<AuthLayoutProps> = (props) => {
               ))}
             </div>
             <p className="text-lg leading-relaxed font-medium text-zinc-300">
-              "brand name's the best exchange we've traded on in a while."
+              "Vegate empowers us to explore and move faster than our competitors
+              in an already competitive landscape"
             </p>
             <footer className="mt-4 text-sm text-zinc-500">
               <span className="font-semibold text-zinc-200">Elena Rostova</span>
@@ -75,7 +76,7 @@ const AuthLayout: FC<AuthLayoutProps> = (props) => {
       </div>
 
       {/* RIGHT SIDE */}
-      <div className="relative flex h-full items-center justify-center bg-[#0b0e11] px-4 py-12 sm:px-6 lg:px-8">
+      <div className="relative flex h-full items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8">
         <div className="mx-auto grid w-full max-w-[350px] gap-6">
           <div className="flex flex-col space-y-2 text-center">
             <h1 className="text-2xl font-semibold tracking-tight text-white">

@@ -9,12 +9,11 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-interface EquityGraphProps {
+
+const EquityGraph: FC<{
   equityData?: [string, number | string][];
   title?: string;
-}
-
-const EquityGraph: FC<EquityGraphProps> = (props) => {
+}> = (props) => {
   const equityData = props.equityData ?? [];
   const title = props.title ?? "Equity Curve";
   const hasData = equityData.length > 0;

@@ -4,19 +4,16 @@ import BacktestResultsPage from "./pages/BacktestResultsPage";
 import BacktestsPage from "./pages/BacktestsPage";
 import BrokersPage from "./pages/BrokersPage";
 import ContactPage from "./pages/ContactPage";
-import DashboardPage from "./pages/DashboardPage";
 import EmailVerificationPage from "./pages/EmailVerifcationPage";
 import LandingPage from "./pages/LandingPage";
 import LiveDeploymentPage from "./pages/LiveDeploymentPage";
 import LoginPage from "./pages/LoginPage";
 import PricingPage from "./pages/PricingPage";
 import RegisterPage from "./pages/RegisterPage";
-import ReplaySessionPage from "./pages/ReplaySessionPage";
 import SettingsPage from "./pages/SettingsPage";
 import StrategiesPage from "./pages/StrategiesPage";
 import StrategyCreatePage from "./pages/StrategyCreatePage";
 import StrategyDetailPage from "./pages/StrategyDetailPage";
-import TradeHistoryPage from "./pages/TradeHistoryPage";
 
 function App() {
   return (
@@ -36,13 +33,10 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/verify-email" element={<EmailVerificationPage />} />
 
-          {/* Dashboard Routes */}
-          <Route path="/dashboard" element={<DashboardPage />} />
-
           {/* Strategy Routes */}
           <Route path="/strategies" element={<StrategiesPage />} />
           <Route path="/strategies/create" element={<StrategyCreatePage />} />
-          <Route path="/strategies/:id" element={<StrategyDetailPage />} />
+          <Route path="/strategies/:strategyId" element={<StrategyDetailPage />} />
           <Route
             path="/deployments/:deploymentId"
             element={<LiveDeploymentPage />}
@@ -51,16 +45,6 @@ function App() {
           {/* Backtest Routes */}
           <Route path="/backtests" element={<BacktestsPage />} />
           <Route path="/backtests/:id" element={<BacktestResultsPage />} />
-
-          {/* Replay Routes */}
-          <Route
-            path="/replay/:sessionType/:sessionId"
-            element={<ReplaySessionPage />}
-          />
-
-          {/* History & Analytics */}
-          <Route path="/trade-history" element={<TradeHistoryPage />} />
-          <Route path="/performance" element={<DashboardPage />} />
 
           {/* Settings */}
           <Route path="/settings" element={<SettingsPage />} />

@@ -19,11 +19,14 @@ const RegisterPage: FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    registerMutation.mutate({
-      username: form.username,
-      email: form.email,
-      password: form.password,
-    }, {onSuccess: () => navigate("/verify-email")});
+    registerMutation.mutate(
+      {
+        username: form.username,
+        email: form.email,
+        password: form.password,
+      },
+      { onSuccess: () => navigate("/verify-email") },
+    );
   };
 
   return (
@@ -32,7 +35,7 @@ const RegisterPage: FC = () => {
       subtitle="Enter your details below to start trading today."
       submitLabel="Create Account"
       loading={registerMutation.isPending}
-      error={registerMutation.error?.error || null}
+      error={(registerMutation.error as any)?.error || null}
       onSubmit={handleSubmit}
       footer={
         <>

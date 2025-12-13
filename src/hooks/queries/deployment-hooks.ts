@@ -1,11 +1,11 @@
 import { queryClient } from "@/lib/query/query-client";
 import { queryKeys } from "@/lib/query/query-keys";
-import type { ApiError } from "@/lib/types/apiError";
 import { handleApi } from "@/lib/utils/base";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import {
   deployStrategyEndpointDeploymentsStrategiesStrategyIdDeployPost,
+  getDeploymentDetailsEndpointDeploymentsDeploymentIdDetailsGet,
   getDeploymentEndpointDeploymentsDeploymentIdGet,
   getDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGet,
   listAllDeploymentsEndpointDeploymentsGet,
@@ -17,11 +17,8 @@ import type {
   DeploymentResponse,
   DeployStrategyRequest,
   GetDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGetParams,
-  getDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGetResponse,
   ListAllDeploymentsEndpointDeploymentsGetParams,
-  listAllDeploymentsEndpointDeploymentsGetResponse,
   ListStrategyDeploymentsEndpointDeploymentsStrategiesStrategyIdDeploymentsGetParams,
-  listStrategyDeploymentsEndpointDeploymentsStrategiesStrategyIdDeploymentsGetResponse,
 } from "@/openapi";
 
 /**
@@ -66,6 +63,22 @@ export function useDeploymentQuery(deploymentId: string) {
     queryFn: async () =>
       handleApi(
         await getDeploymentEndpointDeploymentsDeploymentIdGet(deploymentId),
+      ),
+    enabled: !!deploymentId,
+  });
+}
+
+/**
+ * Query hook to fetch deployment details with metrics and equity curve
+ */
+export function useDeploymentDetailsQuery(deploymentId: string) {
+  return useQuery({
+    queryKey: [...queryKeys.deployments.detail(deploymentId), "details"],
+    queryFn: async () =>
+      handleApi(
+        await getDeploymentDetailsEndpointDeploymentsDeploymentIdDetailsGet(
+          deploymentId,
+        ),
       ),
     enabled: !!deploymentId,
   });

@@ -14,8 +14,8 @@ interface UsePaginationReturn<T> {
   goToPage: (page: number) => void;
   nextPage: () => void;
   prevPage: () => void;
-  canGoNext: boolean;
-  canGoPrev: boolean;
+  hasNext: boolean;
+  hasPrev: boolean;
   paginateData: (data: T[]) => T[];
 }
 
@@ -72,8 +72,8 @@ export function usePagination<T = any>(
     goToPage,
     nextPage,
     prevPage,
-    canGoNext,
-    canGoPrev,
+    hasNext: canGoNext,
+    hasPrev: canGoPrev,
     paginateData,
   };
 }

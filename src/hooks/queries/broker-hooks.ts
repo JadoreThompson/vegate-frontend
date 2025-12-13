@@ -7,7 +7,7 @@ import {
   deleteBrokerConnectionEndpointBrokersConnectionsConnectionIdDelete,
   getBrokerConnectionEndpointBrokersConnectionsConnectionIdGet,
   getOauthUrlBrokersAlpacaOauthGet,
-  listBrokerConnectionsEndpointBrokersConnectionsGet
+  listBrokerConnectionsEndpointBrokersConnectionsGet,
 } from "@/openapi";
 
 /**

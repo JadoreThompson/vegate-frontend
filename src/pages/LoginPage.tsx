@@ -1,7 +1,6 @@
 import AuthLayout from "@/components/layouts/auth-layout";
 import React, { useState, type FC } from "react";
 
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -23,16 +22,14 @@ const LoginPage: FC = () => {
     e.preventDefault();
 
     try {
-      loginMutation.mutate(
-        {
-          username: form.username,
-          email: form.email,
-          password: form.password,
-        },
-      );
-      navigate("/strategies")
-    } catch(error) {
-      console.error(error)
+      loginMutation.mutate({
+        username: form.username,
+        email: form.email,
+        password: form.password,
+      });
+      navigate("/strategies");
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -92,13 +89,6 @@ const LoginPage: FC = () => {
               value={form.password ?? ""}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
             />
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Checkbox id="remember" />
-            <Label htmlFor="remember" className="text-xs text-zinc-400">
-              Remember this device
-            </Label>
           </div>
         </>
       }

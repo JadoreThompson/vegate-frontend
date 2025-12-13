@@ -21,13 +21,19 @@ const PerformanceMetrics: FC<PerformanceMetricsProps> = (props) => {
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground text-sm">Total P&L</span>
             <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
-              +${props.totalPnl.toFixed(0)}
+              {props.totalPnl >= 0
+                ? `+$${props.totalPnl.toFixed(2)}`
+                : `-$${props.totalPnl.toFixed(2).toString().slice(1)}`}
             </span>
           </div>
           <Separator />
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground text-sm">Return</span>
-            <span className="font-semibold">+{props.returnPercentage}%</span>
+            <span className="font-semibold">
+              {props.returnPercentage >= 0
+                ? `+${props.returnPercentage.toFixed(2)}%`
+                : `-${props.returnPercentage.toFixed(2).toString().slice(1)}%`}
+            </span>
           </div>
           <Separator />
           <div className="flex items-center justify-between">

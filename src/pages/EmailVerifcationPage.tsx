@@ -1,4 +1,3 @@
-// src\pages\EmailVerificationPage.tsx
 import AuthLayout from "@/components/layouts/auth-layout";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,11 +26,7 @@ const EmailVerificationPage: FC = () => {
     verifyEmailMutation.mutate(
       { code },
       {
-        onSuccess: () => {
-          // Verification successful, redirect to the main application or dashboard
-          navigate("/trade");
-        },
-        // Error handling is managed by AuthLayout via the `error` prop
+        onSuccess: () => navigate("/strategies"),
       },
     );
   };
@@ -44,8 +39,7 @@ const EmailVerificationPage: FC = () => {
       }
       submitLabel="Verify Email"
       loading={verifyEmailMutation.isPending}
-      // Display error message returned from the API (e.g., token invalid, expired, or max attempts reached)
-      error={verifyEmailMutation.error?.error || null}
+      error={(verifyEmailMutation.error as any)?.error || null}
       onSubmit={handleSubmit}
       footer={
         <>

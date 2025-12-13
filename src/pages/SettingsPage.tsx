@@ -3,7 +3,7 @@ import { type FC, useState } from "react";
 
 import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -31,30 +31,22 @@ type SettingRowProps = {
   onClick: () => void;
 };
 
-const SettingRow: FC<SettingRowProps> = ({
-  icon: Icon,
-  title,
-  description,
-  buttonText,
-  onClick,
-}) => {
+const SettingRow: FC<SettingRowProps> = (props) => {
   return (
-    <div className="hover:bg-accent/50 flex flex-col items-start gap-3 px-6 py-5 transition-colors sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+    <div className="flex flex-col items-start gap-3 px-6 py-5 transition-colors sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <div className="flex items-start gap-4 sm:items-center">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-          <Icon className="h-5 w-5" />
-        </div>
+        
         <div className="flex flex-col">
-          <h3 className="font-medium">{title}</h3>
-          <p className="text-muted-foreground text-sm">{description}</p>
+          <h3 className="font-medium">{props.title}</h3>
+          <p className="text-muted-foreground text-sm">{props.description}</p>
         </div>
       </div>
       <Button
         variant="outline"
-        onClick={onClick}
+        onClick={props.onClick}
         className="w-full shrink-0 sm:w-auto"
       >
-        {buttonText}
+        {props.buttonText}
       </Button>
     </div>
   );
@@ -81,7 +73,6 @@ const SettingsPage: FC = () => {
     setActiveModal(type);
     setShowSuccess(false);
     setError(null);
-    // Reset form values
     setUsername("");
     setEmail("");
     setCurrentPassword("");
@@ -323,7 +314,7 @@ const SettingsPage: FC = () => {
         </div>
 
         {/* Current User Info Card */}
-        {currentUser && (
+        {/* {currentUser && (
           <Card className="border-emerald-500/20 bg-emerald-500/5">
             <CardContent className="p-6">
               <h3 className="mb-3 font-semibold">Current Account</h3>
@@ -351,15 +342,15 @@ const SettingsPage: FC = () => {
               </div>
             </CardContent>
           </Card>
-        )}
+        )} */}
 
         {/* Account Settings */}
-        <Card>
-          <CardHeader>
+        <Card className="bg-transparent border-none">
+          {/* <CardHeader>
             <CardTitle>Account Settings</CardTitle>
-          </CardHeader>
+          </CardHeader> */}
           <CardContent className="p-0">
-            <div className="divide-y">
+            <div className="">
               <SettingRow
                 icon={User}
                 title="Username"

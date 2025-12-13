@@ -17,7 +17,7 @@ import type {
   BacktestCreate,
   BacktestUpdate,
   GetBacktestOrdersEndpointBacktestsBacktestIdOrdersGetParams,
-  ListBacktestsEndpointBacktestsGetParams
+  ListBacktestsEndpointBacktestsGetParams,
 } from "@/openapi";
 
 /**
@@ -111,9 +111,7 @@ export function useUpdateBacktestMutation() {
 export function useDeleteBacktestMutation() {
   return useMutation({
     mutationFn: async (backtestId: string) =>
-      
-      deleteBacktestEndpointBacktestsBacktestIdDelete(backtestId)
-      ,
+      deleteBacktestEndpointBacktestsBacktestIdDelete(backtestId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.backtests.all() });
     },

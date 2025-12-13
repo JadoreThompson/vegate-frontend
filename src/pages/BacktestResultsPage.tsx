@@ -1,5 +1,11 @@
-import { Calendar, ChevronLeft, ChevronRight, CirclePlay, Loader2 } from "lucide-react";
-import { memo, useEffect, useMemo, useState, type FC } from "react";
+import {
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  CirclePlay,
+  Loader2,
+} from "lucide-react";
+import { memo, useEffect, useState, type FC } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 
 import EquityGraph from "@/components/equity-graph";
@@ -20,7 +26,7 @@ import {
   useBacktestOrdersQuery,
   useBacktestQuery,
 } from "@/hooks/queries/backtest-hooks";
-import type { OrderResponseOutput } from "@/openapi";
+import { type OrderResponse } from "@/openapi";
 
 // Internal Components
 
@@ -162,7 +168,7 @@ interface BacktestTradesTableProps {
 const BacktestTradesTable: FC<BacktestTradesTableProps> = memo(
   ({ backtestId }) => {
     const [page, setPage] = useState(1);
-    const [orders, setOrders] = useState<OrderResponseOutput[]>([]);
+    const [orders, setOrders] = useState<OrderResponse[]>([]);
 
     const backtestOrdersQuery = useBacktestOrdersQuery(backtestId, {
       skip: (page - 1) * 90,
@@ -201,7 +207,7 @@ const BacktestTradesTable: FC<BacktestTradesTableProps> = memo(
     }
 
     return (
-      <Card className="bg-transparent border-0">
+      <Card className="border-0 bg-transparent">
         <CardHeader>
           <CardTitle>Trade History</CardTitle>
         </CardHeader>
@@ -222,7 +228,7 @@ const BacktestTradesTable: FC<BacktestTradesTableProps> = memo(
             <TableBody>
               {orders
                 .slice((page - 1) * 10, page * 10)
-                .map((order: OrderResponseOutput) => (
+                .map((order: OrderResponse) => (
                   <TableRow key={order.order_id}>
                     <TableCell className="font-semibold">
                       {order.symbol}
@@ -275,7 +281,7 @@ const BacktestTradesTable: FC<BacktestTradesTableProps> = memo(
               {/* Previous */}
               <ChevronLeft />
             </Button>
-            <span className="w-15  text-muted-foreground flex items-center justify-center text-sm">
+            <span className="text-muted-foreground flex w-15 items-center justify-center text-sm">
               Page {page}
             </span>
             <Button
@@ -301,37 +307,11 @@ BacktestTradesTable.displayName = "BacktestTradesTable";
 const BacktestResultsPage: FC = () => {
   const { id } = useParams<{ id: string }>();
 
-  // Fetch backtest details with metrics
-  // const {
-  //   data: backtestResponse,
-  //   isLoading: isLoadingBacktest,
-  //   error: backtestError,
-  // } = useBacktestQuery(id || "");
   const backtestQuery = useBacktestQuery(id || "");
 
   const backtest = backtestQuery?.data;
   const metrics = backtest?.metrics;
-  console.log(metrics);
 
-  // Mock monthly returns (this would come from the API in a real implementation)
-  // Memoize to prevent recreation on every render
-  const monthlyReturns = useMemo(
-    () => [
-      { month: "Jan", return: 5.2 },
-      { month: "Feb", return: 3.8 },
-      { month: "Mar", return: -2.1 },
-      { month: "Apr", return: 6.4 },
-      { month: "May", return: 4.1 },
-      { month: "Jun", return: 7.2 },
-      { month: "Jul", return: 2.9 },
-      { month: "Aug", return: -3.5 },
-      { month: "Sep", return: 8.1 },
-      { month: "Oct", return: 5.6 },
-      { month: "Nov", return: 4.3 },
-      { month: "Dec", return: 3.9 },
-    ],
-    [],
-  );
 
   if (backtestQuery.isLoading) {
     return (
@@ -381,7 +361,6 @@ const BacktestResultsPage: FC = () => {
     );
   }
 
-  // Check if backtest has metrics
   if (!metrics) {
     return (
       <DashboardLayout>
@@ -438,7 +417,7 @@ const BacktestResultsPage: FC = () => {
         <BacktestResultsHeader
           backtestId={id || ""}
           symbol={backtest.symbol}
-          startingBalance={Number.parseFloat(backtest.starting_balance)}
+          startingBalance={backtest.starting_balance}
         />
 
         {/* Equity Curve with Statistics */}
@@ -448,12 +427,8 @@ const BacktestResultsPage: FC = () => {
           totalTrades={metrics.total_trades}
           sharpeRatio={metrics.sharpe_ratio}
           maxDrawdown={metrics.max_drawdown}
-          // equityCurve={(metrics as any).equity_curve}
           equityCurve={metrics.equity_curve}
         />
-
-        {/* Monthly Returns */}
-        {/* <BacktestMonthlyReturns monthlyReturns={monthlyReturns} /> */}
 
         {/* Trades Table with its own pagination */}
         <BacktestTradesTable backtestId={id || ""} />

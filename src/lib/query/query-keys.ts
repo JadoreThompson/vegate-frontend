@@ -13,6 +13,7 @@ export const queryKeys = {
     all: () => ["auth"] as const,
     me: () => [...queryKeys.auth.all(), "me"] as const,
   },
+  
   orders: {
     all: () => ["orders"] as const,
     list: (params?: any) =>
@@ -20,6 +21,7 @@ export const queryKeys = {
     detail: (orderId: string) =>
       [...queryKeys.orders.all(), "detail", orderId] as const,
   },
+
   strategies: {
     all: () => ["strategies"] as const,
     list: (params?: ListStrategiesEndpointStrategiesGetParams) =>
@@ -32,6 +34,7 @@ export const queryKeys = {
       params?: ListStrategySummariesEndpointStrategiesSummariesGetParams,
     ) => [...queryKeys.strategies.all(), "summaries", params] as const,
   },
+
   backtests: {
     all: () => ["backtests"] as const,
     list: (params?: ListBacktestsEndpointBacktestsGetParams) =>
@@ -43,6 +46,7 @@ export const queryKeys = {
       params?: GetBacktestOrdersEndpointBacktestsBacktestIdOrdersGetParams,
     ) => [...queryKeys.backtests.all(), "orders", backtestId, params] as const,
   },
+
   brokers: {
     all: () => ["brokers"] as const,
     alpacaOAuth: () => [...queryKeys.brokers.all(), "alpaca", "oauth"] as const,
@@ -50,6 +54,7 @@ export const queryKeys = {
     connection: (connectionId: string) =>
       [...queryKeys.brokers.all(), "connection", connectionId] as const,
   },
+
   deployments: {
     all: () => ["deployments"] as const,
     list: (params?: ListAllDeploymentsEndpointDeploymentsGetParams) =>

@@ -73,48 +73,9 @@ import {
   type BacktestResponse,
   type BrokerConnectionResponse,
   type DeploymentResponse,
-  type StrategyResponse,
-  type StrategySummaryResponse,
+  type StrategySummaryResponse
 } from "@/openapi";
 
-// Internal Components
-const StrategyHeader: FC<{
-  strategy: Omit<StrategyResponse, "strategy_id">;
-  onDeleteClick: () => void;
-  onViewPromptClick: () => void;
-}> = (props) => {
-  return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">
-          {props.strategy.name}
-        </h2>
-        <p className="text-muted-foreground">
-          {props.strategy.description || "No description"}
-        </p>
-      </div>
-      <div className="flex flex-row gap-2">
-        <Button
-          variant="outline"
-          size="icon"
-          className="flex w-auto items-center justify-start p-2 hover:!bg-transparent"
-          onClick={props.onViewPromptClick}
-        >
-          <NotepadTextIcon className="h-6 w-6" />
-          <span>View Prompt</span>
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-red-600 hover:!bg-transparent hover:text-red-700"
-          onClick={props.onDeleteClick}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  );
-};
 
 const PerformanceMetrics: FC<{
   metrics: any;
@@ -352,11 +313,6 @@ const BacktestsTable: FC<{
   const endIndex = startIndex + itemsPerPage;
   const paginatedBacktests = filteredBacktests.slice(startIndex, endIndex);
 
-  // Reset to page 1 when filters change
-  const handleTickerChange = () => {
-    setPage(1);
-  };
-
   const handleRowClick = (backtestId: string) => {
     navigate(`/backtests/${backtestId}`);
   };
@@ -397,17 +353,17 @@ const BacktestsTable: FC<{
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-48">
+            <PopoverContent align="end" className="w-48 p-1 bg-card">
               <div className="space-y-4">
                 <div>
-                  <h4 className="mb-3 font-semibold">Ticker</h4>
+                  {/* <h4 className="mb-3 font-semibold">Ticker</h4> */}
                   <div className="space-y-2">
                     {props.symbolOptions.map((ticker) => (
                       <label
                         key={ticker}
-                        className="hover:bg-accent flex cursor-pointer items-center gap-2 rounded-md p-2"
+                        className="hover:bg-input/30 flex cursor-pointer items-center gap-2 rounded-md p-2"
                       >
-                        <input
+                        <Input
                           type="checkbox"
                           checked={props.selectedTickers.includes(ticker)}
                           onChange={() => props.onTickerToggle(ticker)}
@@ -418,12 +374,7 @@ const BacktestsTable: FC<{
                           className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
                         />
                         <span className="text-sm">{ticker}</span>
-                        <span className="text-muted-foreground ml-auto text-xs">
-                          {
-                            props.backtests.filter((b) => b.symbol === ticker)
-                              .length
-                          }
-                        </span>
+                        
                       </label>
                     ))}
                   </div>
@@ -538,7 +489,7 @@ const useViewPrompt = () => {
 
 // Main Page Component
 const StrategyDetailPage: FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { strategyId } = useParams<{ strategyId: string }>();
   const navigate = useNavigate();
 
   const [selectedTickers, setSelectedTickers] = useState<string[]>([]);
@@ -571,8 +522,8 @@ const StrategyDetailPage: FC = () => {
   const [newDeploymentBalance, setNewDeploymentBalance] = useState("10000");
 
   // Fetch strategy summary with metrics
-  const strategySummaryQuery = useStrategySummary(id || "");
-  const strategyDetailsQuery = useStrategyQuery(id || "");
+  const strategySummaryQuery = useStrategySummary(strategyId || "");
+  const strategyDetailsQuery = useStrategyQuery(strategyId || "");
   const deleteStrategyMutation = useDeleteStrategy();
 
   // Fetch backtests for this strategy
@@ -580,7 +531,7 @@ const StrategyDetailPage: FC = () => {
   const createBacktestMutation = useCreateBacktestMutation();
 
   // Fetch deployments for this strategy
-  const deploymentsQuery = useStrategyDeployments(id || "");
+  const deploymentsQuery = useStrategyDeployments(strategyId || "");
 
   // Fetch broker connections
   const brokerConnectionsQuery = useBrokerConnectionsQuery();
@@ -594,7 +545,7 @@ const StrategyDetailPage: FC = () => {
   const allBacktests =
     (backtestsQuery.data as BacktestResponse[] | undefined) || [];
   const strategyBacktests = allBacktests.filter(
-    (b: BacktestResponse) => b.strategy_id === id,
+    (b: BacktestResponse) => b.strategy_id === strategyId,
   );
 
   // Get unique tickers from backtests
@@ -627,8 +578,8 @@ const StrategyDetailPage: FC = () => {
   };
 
   const handleDeleteConfirm = async () => {
-    if (id) {
-      await deleteStrategyMutation.mutateAsync(id);
+    if (strategyId) {
+      await deleteStrategyMutation.mutateAsync(strategyId);
       setDeleteDialogOpen(false);
       navigate("/strategies");
     }
@@ -645,7 +596,7 @@ const StrategyDetailPage: FC = () => {
   const handleCreateDeployment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (
-      !id ||
+      !strategyId ||
       !newDeploymentBrokerConnectionId ||
       !newDeploymentSymbol ||
       !newDeploymentBalance
@@ -654,7 +605,7 @@ const StrategyDetailPage: FC = () => {
 
     try {
       await deployStrategyMutation.mutateAsync({
-        strategyId: id,
+        strategyId: strategyId,
         payload: {
           broker_connection_id: newDeploymentBrokerConnectionId,
           market_type: newDeploymentMarketType,
@@ -676,20 +627,23 @@ const StrategyDetailPage: FC = () => {
 
   const handleCreateBacktest = async (e: React.FormEvent) => {
     e.preventDefault();
+    const parsedBacktestBalance = Number.parseFloat(newBacktestBalance);
+
     if (
-      !id ||
+      !strategyId ||
       !newBacktestTicker ||
       !newBacktestBalance ||
       !newBacktestStartDate ||
-      !newBacktestEndDate
+      !newBacktestEndDate ||
+      Number.isNaN(parsedBacktestBalance)
     )
       return;
 
     try {
       await createBacktestMutation.mutateAsync({
-        strategy_id: id,
+        strategy_id: strategyId,
         symbol: newBacktestTicker.toUpperCase(),
-        starting_balance: newBacktestBalance,
+        starting_balance: parsedBacktestBalance,
         timeframe: newBacktestTimeframe,
         start_date: newBacktestStartDate,
         end_date: newBacktestEndDate,
@@ -701,7 +655,6 @@ const StrategyDetailPage: FC = () => {
       setNewBacktestStartDate("");
       setNewBacktestEndDate("");
     } catch (error) {
-      // Error handling is done by the mutation
       console.error("Failed to create backtest:", error);
     }
   };
@@ -765,18 +718,47 @@ const StrategyDetailPage: FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <Link to="/strategies">
-          <Button variant="ghost" size="sm" className="gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Strategies
-          </Button>
-        </Link>
-
-        <StrategyHeader
-          strategy={strategy}
-          onDeleteClick={handleDeleteClick}
-          onViewPromptClick={handleViewPrompt}
-        />
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <div className="mb-2 flex items-center gap-2">
+              <Link
+                to="/strategies"
+                className="text-muted-foreground hover:text-foreground text-sm"
+              >
+                Strategies
+              </Link>
+              <span className="text-muted-foreground">/</span>
+              <span className="text-sm">Strategy Details</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <h2 className="text-3xl font-bold tracking-tight">
+                {strategy.name}
+              </h2>
+            </div>
+            <p className="text-muted-foreground mt-1 text-sm">
+              {strategy.description || "No description"}
+            </p>
+          </div>
+          <div className="flex flex-row gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              className="flex w-auto items-center justify-start p-2"
+              onClick={handleViewPrompt}
+            >
+              <NotepadTextIcon className="h-6 w-6" />
+              <span>View Prompt</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-red-600 hover:!bg-red-600/10 hover:text-red-700"
+              onClick={handleDeleteClick}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
 
         <div className="flex flex-col gap-6 lg:flex-row">
           <PerformanceMetrics metrics={strategy.metrics} />
@@ -784,7 +766,7 @@ const StrategyDetailPage: FC = () => {
         </div>
 
         <BacktestsTable
-          strategyId={id || ""}
+          strategyId={strategyId || ""}
           backtests={strategyBacktests}
           selectedTickers={selectedTickers}
           symbolOptions={tickerOptions}

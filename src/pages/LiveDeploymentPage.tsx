@@ -1,5 +1,4 @@
 import {
-  Calendar,
   ChevronLeft,
   ChevronRight,
   Loader2,
@@ -22,6 +21,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -30,24 +30,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBrokerConnectionQuery } from "@/hooks/queries/broker-hooks";
 import {
+  useDeploymentDetailsQuery,
   useDeploymentOrders,
   useDeploymentQuery,
   useStopDeploymentMutation,
 } from "@/hooks/queries/deployment-hooks";
-import {
-  StrategyDeploymentStatus,
-  type BrokerConnectionResponse,
-  type DeploymentResponse,
-  type OrderResponseOutput
-} from "@/openapi";
+import { StrategyDeploymentStatus, type OrderResponse } from "@/openapi";
 
 type LogEntry = {
   id: number;
@@ -56,183 +47,12 @@ type LogEntry = {
   message: string;
 };
 
-// Internal Components
-interface DetailedMetricsCardProps {
-  metrics: {
-    totalReturn: number;
-    sharpeRatio: number;
-    maxDrawdown: number;
-    profitFactor: number;
-    expectancy: number;
-    avgWin: number;
-    avgLoss: number;
-    largestWin: number;
-    largestLoss: number;
-    totalTrades: number;
-    winRate: number;
-    avgTradeDuration: string;
-  };
-}
 
-const DetailedMetricsCard: FC<DetailedMetricsCardProps> = (props) => {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Performance Metrics</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <div className="space-y-4">
-            <h4 className="font-semibold">Returns</h4>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground text-sm">
-                  Total Return
-                </span>
-                <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                  +{props.metrics.totalReturn}%
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground text-sm">
-                  Sharpe Ratio
-                </span>
-                <span className="font-medium">{props.metrics.sharpeRatio}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground text-sm">
-                  Profit Factor
-                </span>
-                <span className="font-medium">
-                  {props.metrics.profitFactor}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground text-sm">
-                  Expectancy
-                </span>
-                <span className="font-medium">{props.metrics.expectancy}%</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h4 className="font-semibold">Risk</h4>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground text-sm">
-                  Max Drawdown
-                </span>
-                <span className="font-medium text-red-600 dark:text-red-400">
-                  {props.metrics.maxDrawdown}%
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground text-sm">Avg Win</span>
-                <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                  +{props.metrics.avgWin}%
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground text-sm">Avg Loss</span>
-                <span className="font-medium text-red-600 dark:text-red-400">
-                  {props.metrics.avgLoss}%
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground text-sm">
-                  Largest Win
-                </span>
-                <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                  +{props.metrics.largestWin}%
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h4 className="font-semibold">Trading</h4>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground text-sm">
-                  Total Trades
-                </span>
-                <span className="font-medium">{props.metrics.totalTrades}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground text-sm">Win Rate</span>
-                <span className="font-medium">{props.metrics.winRate}%</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground text-sm">
-                  Avg Duration
-                </span>
-                <span className="font-medium">
-                  {props.metrics.avgTradeDuration}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground text-sm">
-                  Largest Loss
-                </span>
-                <span className="font-medium text-red-600 dark:text-red-400">
-                  {props.metrics.largestLoss}%
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
-interface MonthlyReturnsGridProps {
-  monthlyReturns: Array<{ month: string; return: number }>;
-}
-
-const MonthlyReturnsGrid: FC<MonthlyReturnsGridProps> = (props) => {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Calendar className="h-5 w-5" />
-          Monthly Performance
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6">
-          {props.monthlyReturns.map((item) => (
-            <div
-              key={item.month}
-              className="border-border rounded-lg border p-3 text-center"
-            >
-              <p className="text-muted-foreground mb-1 text-xs">{item.month}</p>
-              <p
-                className={`font-semibold ${
-                  item.return > 0
-                    ? "text-emerald-600 dark:text-emerald-400"
-                    : "text-red-600 dark:text-red-400"
-                }`}
-              >
-                {item.return > 0 ? "+" : ""}
-                {item.return}%
-              </p>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
-interface DeploymentTradesTableProps {
+const DeploymentTradesTable: FC<{
   deploymentId: string;
-}
-
-const DeploymentTradesTable: FC<DeploymentTradesTableProps> = (props) => {
+}> = (props) => {
   const [page, setPage] = useState(1);
-  const [orders, setOrders] = useState<OrderResponseOutput[]>([]);
+  const [orders, setOrders] = useState<OrderResponse[]>([]);
 
   const ordersQuery = useDeploymentOrders(props.deploymentId, {
     skip: (page - 1) * 90,
@@ -242,13 +62,11 @@ const DeploymentTradesTable: FC<DeploymentTradesTableProps> = (props) => {
   const itemsPerPage = 10;
 
   useEffect(() => {
-    const data = ordersQuery.data as OrderResponseOutput[] | undefined;
+    const data = ordersQuery.data as OrderResponse[] | undefined;
     if (data?.length) {
       setOrders((prev) => {
         const ids = new Set(prev.map((o) => o.order_id));
-        const newOnes = data.filter(
-          (o: OrderResponseOutput) => !ids.has(o.order_id),
-        );
+        const newOnes = data.filter((o: OrderResponse) => !ids.has(o.order_id));
         return [...prev, ...newOnes];
       });
     }
@@ -293,7 +111,7 @@ const DeploymentTradesTable: FC<DeploymentTradesTableProps> = (props) => {
           <TableBody>
             {orders
               .slice((page - 1) * 10, page * 10)
-              .map((order: OrderResponseOutput) => (
+              .map((order: OrderResponse) => (
                 <TableRow key={order.order_id}>
                   <TableCell className="font-semibold">
                     {order.symbol}
@@ -363,7 +181,7 @@ const DeploymentTradesTable: FC<DeploymentTradesTableProps> = (props) => {
 const LiveDeploymentPage: FC = () => {
   const navigate = useNavigate();
   const params = useParams<{ deploymentId: string }>();
-  const deploymentId = params.deploymentId;
+  const deploymentId = params.deploymentId!;
 
   const [logs, setLogs] = useState<LogEntry[]>([
     {
@@ -399,18 +217,18 @@ const LiveDeploymentPage: FC = () => {
   ]);
 
   // Fetch deployment data
-  const deploymentQuery = useDeploymentQuery(deploymentId || "");
+  const deploymentQuery = useDeploymentQuery(deploymentId);
+  const deploymentDetailsQuery = useDeploymentDetailsQuery(deploymentId);
   const stopDeploymentMutation = useStopDeploymentMutation();
 
-  const deployment = deploymentQuery.data as DeploymentResponse | undefined;
+  const deployment = deploymentQuery.data;
+  const deploymentDetails = deploymentDetailsQuery.data;
 
   // Fetch broker connection details
   const brokerConnectionQuery = useBrokerConnectionQuery(
     deployment?.broker_connection_id || "",
   );
-  const brokerConnection = brokerConnectionQuery.data as
-    | BrokerConnectionResponse
-    | undefined;
+  const brokerConnection = brokerConnectionQuery.data;
 
   const getStatusBadgeVariant = (status: StrategyDeploymentStatus) => {
     switch (status) {
@@ -437,7 +255,7 @@ const LiveDeploymentPage: FC = () => {
     }
   };
 
-  if (deploymentQuery.isLoading) {
+  if (deploymentQuery.isLoading || deploymentDetailsQuery.isLoading) {
     return (
       <DashboardLayout>
         <div className="flex h-96 items-center justify-center">
@@ -464,37 +282,8 @@ const LiveDeploymentPage: FC = () => {
     );
   }
 
-  const metrics = {
-    totalReturn: 45.6,
-    sharpeRatio: 1.87,
-    maxDrawdown: -12.3,
-    winRate: 64.2,
-    profitFactor: 2.34,
-    totalTrades: 127,
-    avgWin: 2.8,
-    avgLoss: -1.9,
-    largestWin: 8.4,
-    largestLoss: -5.2,
-    avgTradeDuration: "2.3 days",
-    expectancy: 1.2,
-  };
-
-  const monthlyReturns = [
-    { month: "Jan", return: 5.2 },
-    { month: "Feb", return: 3.8 },
-    { month: "Mar", return: -2.1 },
-    { month: "Apr", return: 6.4 },
-    { month: "May", return: 4.1 },
-    { month: "Jun", return: 7.2 },
-    { month: "Jul", return: 2.9 },
-    { month: "Aug", return: -3.5 },
-    { month: "Sep", return: 8.1 },
-    { month: "Oct", return: 5.6 },
-    { month: "Nov", return: 4.3 },
-    { month: "Dec", return: 3.6 },
-  ];
-
-  // Mock log data
+  const metrics = deploymentDetails?.metrics;
+  const equityCurve = deploymentDetails?.equity_curve;
 
   const handleClearLogs = () => {
     setLogs([]);
@@ -557,7 +346,7 @@ const LiveDeploymentPage: FC = () => {
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-48">
+            <PopoverContent align="end" className="bg-card w-48 p-1">
               <div className="space-y-2">
                 {(deployment.status === "running" ||
                   deployment.status === "pending") && (
@@ -577,8 +366,7 @@ const LiveDeploymentPage: FC = () => {
                 )}
                 <Button
                   variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => navigate(`/replay/deployment/${deploymentId}`)}
+                  className="hover:!bg-input/30 w-full justify-start"
                 >
                   <PlayCircle className="mr-2 h-4 w-4" />
                   Replay Mode
@@ -589,27 +377,33 @@ const LiveDeploymentPage: FC = () => {
         </div>
 
         {/* Equity Curve with Statistics */}
-        <div className="flex flex-col gap-4 lg:flex-row">
-          <PerformanceMetrics
-            totalPnl={10000 * (metrics.totalReturn / 100)}
-            returnPercentage={metrics.totalReturn}
-            totalTrades={metrics.totalTrades}
-            sharpeRatio={metrics.sharpeRatio}
-            maxDrawdown={metrics.maxDrawdown}
-          />
+        {metrics?.total_return_pct ? (
+          <div className="flex flex-col gap-4 lg:flex-row">
+            <PerformanceMetrics
+              totalPnl={metrics?.realised_pnl ?? 0}
+              returnPercentage={metrics?.total_return_pct}
+              totalTrades={metrics?.total_trades}
+              sharpeRatio={metrics?.sharpe_ratio}
+              maxDrawdown={metrics?.max_drawdown}
+            />
 
-          <EquityGraph equityData={undefined} title="Equity Curve" />
-        </div>
+            <EquityGraph equityData={equityCurve} title="Equity Curve" />
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4 lg:flex-row">
+            <Skeleton className="bg-card h-100 w-full"></Skeleton>
+          </div>
+        )}
 
         {/* Detailed Metrics */}
-        <DetailedMetricsCard metrics={metrics} />
+        {/* <DetailedMetricsCard metrics={metrics} /> */}
 
         {/* Monthly Returns */}
-        <MonthlyReturnsGrid monthlyReturns={monthlyReturns} />
+        {/* <MonthlyReturnsGrid monthlyReturns={monthlyReturns} /> */}
 
         {/* Trades and Logs Tabs */}
         <Tabs defaultValue="trades" className="space-y-4">
-          <TabsList>
+          <TabsList className="bg-card">
             <TabsTrigger value="trades">Trade History</TabsTrigger>
             <TabsTrigger value="logs">Live Logs</TabsTrigger>
           </TabsList>

@@ -1,6 +1,5 @@
 import { queryClient } from "@/lib/query/query-client";
 import { queryKeys } from "@/lib/query/query-keys";
-import type { ApiError } from "@/lib/types/apiError";
 import { handleApi } from "@/lib/utils/base";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
@@ -15,20 +14,13 @@ import {
   requestEmailVerificationAuthRequestEmailVerificationPost,
   verifyActionAuthVerifyActionPost,
   verifyEmailAuthVerifyEmailPost,
-  type changeEmailAuthChangeEmailPostResponse,
-  type changePasswordAuthChangePasswordPostResponse,
-  type logoutAuthLogoutPostResponse,
-  type registerAuthRegisterPostResponse,
-  type requestEmailVerificationAuthRequestEmailVerificationPostResponse,
   type UpdateEmail,
   type UpdatePassword,
   type UpdateUsername,
   type UserCreate,
   type UserLogin,
   type VerifyAction,
-  type verifyActionAuthVerifyActionPostResponse,
   type VerifyCode,
-  type verifyEmailAuthVerifyEmailPostResponse
 } from "@/openapi";
 
 export function useLoginMutation() {
@@ -39,24 +31,14 @@ export function useLoginMutation() {
 }
 
 export function useRegisterMutation() {
-  return useMutation<
-    registerAuthRegisterPostResponse,
-    ApiError,
-    UserCreate,
-    unknown
-  >({
+  return useMutation({
     mutationFn: async (payload: UserCreate) =>
       handleApi(await registerAuthRegisterPost(payload)),
   });
 }
 
 export function useRequestEmailVerificationMutation() {
-  return useMutation<
-    requestEmailVerificationAuthRequestEmailVerificationPostResponse,
-    ApiError,
-    void,
-    unknown
-  >({
+  return useMutation({
     mutationFn: async () =>
       handleApi(
         await requestEmailVerificationAuthRequestEmailVerificationPost(),
@@ -65,19 +47,14 @@ export function useRequestEmailVerificationMutation() {
 }
 
 export function useVerifyEmailMutation() {
-  return useMutation<
-    verifyEmailAuthVerifyEmailPostResponse,
-    ApiError,
-    VerifyCode,
-    unknown
-  >({
+  return useMutation({
     mutationFn: async (payload: VerifyCode) =>
       handleApi(await verifyEmailAuthVerifyEmailPost(payload)),
   });
 }
 
 export function useLogoutMutation() {
-  return useMutation<logoutAuthLogoutPostResponse, ApiError, void, unknown>({
+  return useMutation({
     mutationFn: async () => handleApi(await logoutAuthLogoutPost()),
   });
 }
@@ -100,12 +77,7 @@ export function useChangeUsernameMutation() {
 }
 
 export function useChangePasswordMutation() {
-  return useMutation<
-    changePasswordAuthChangePasswordPostResponse,
-    ApiError,
-    UpdatePassword,
-    unknown
-  >({
+  return useMutation({
     mutationFn: async (payload: UpdatePassword) =>
       handleApi(await changePasswordAuthChangePasswordPost(payload)),
     onSuccess: () => {
@@ -115,12 +87,7 @@ export function useChangePasswordMutation() {
 }
 
 export function useChangeEmailMutation() {
-  return useMutation<
-    changeEmailAuthChangeEmailPostResponse,
-    ApiError,
-    UpdateEmail,
-    unknown
-  >({
+  return useMutation({
     mutationFn: async (payload: UpdateEmail) =>
       handleApi(await changeEmailAuthChangeEmailPost(payload)),
     onSuccess: () => {
@@ -130,12 +97,7 @@ export function useChangeEmailMutation() {
 }
 
 export function useVerifyActionMutation() {
-  return useMutation<
-    verifyActionAuthVerifyActionPostResponse,
-    ApiError,
-    VerifyAction,
-    unknown
-  >({
+  return useMutation({
     mutationFn: async (payload: VerifyAction) =>
       handleApi(await verifyActionAuthVerifyActionPost(payload)),
   });

@@ -23,7 +23,6 @@ const ContactPage: FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate required fields
     if (!formData.name || !formData.email || !formData.message) {
       return;
     }
@@ -31,13 +30,11 @@ const ContactPage: FC = () => {
     submitContactForm(formData, {
       onSuccess: () => {
         setShowSuccess(true);
-        // Clear form
         setFormData({
           name: "",
           email: "",
           message: "",
         });
-        // Hide success message after 5 seconds
         setTimeout(() => setShowSuccess(false), 5000);
       },
     });

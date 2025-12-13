@@ -1,49 +1,51 @@
-import { Menu, Moon, Sun, TrendingUp, X } from "lucide-react";
+import { Menu, Moon, Sun, X } from "lucide-react";
 import { useState, type FC } from "react";
 import { Link } from "react-router";
 
 import { Button } from "@/components/ui/button";
 import { useThemeStore } from "@/stores/theme-store";
+import WebsiteLogo from "../website-logo";
 
 const MarketingNavbar: FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { theme, toggleTheme } = useThemeStore();
 
   return (
-    <nav className="fixed top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav className="border-border/40 bg-background/95 supports-[backdrop-filter]:bg-background/60 fixed top-0 z-50 w-full border-b backdrop-blur">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500">
-              <TrendingUp className="h-5 w-5 text-white" />
+            <div className="flex h-8 w-8 items-center justify-center">
+              {/* <TrendingUp className="h-5 w-5 text-white" /> */}
+              <WebsiteLogo className="" />
             </div>
-            <span className="text-xl font-bold tracking-tight">vegate</span>
+            <span className="text-xl font-bold tracking-tight">Vegate</span>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden items-center gap-8 md:flex">
             <Link
               to="/features"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"
             >
               Features
             </Link>
             <Link
               to="/pricing"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"
             >
               Pricing
             </Link>
             <Link
               to="/docs"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"
             >
               Docs
             </Link>
             <Link
               to="/blog"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"
             >
               Blog
             </Link>
@@ -93,32 +95,32 @@ const MarketingNavbar: FC = () => {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="border-t border-border/40 md:hidden">
-          <div className="space-y-1 px-4 pb-3 pt-2">
+        <div className="border-border/40 border-t md:hidden">
+          <div className="space-y-1 px-4 pt-2 pb-3">
             <Link
               to="/features"
-              className="block rounded-md px-3 py-2 text-base font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
+              className="text-muted-foreground hover:bg-accent hover:text-foreground block rounded-md px-3 py-2 text-base font-medium"
               onClick={() => setMobileMenuOpen(false)}
             >
               Features
             </Link>
             <Link
               to="/pricing"
-              className="block rounded-md px-3 py-2 text-base font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
+              className="text-muted-foreground hover:bg-accent hover:text-foreground block rounded-md px-3 py-2 text-base font-medium"
               onClick={() => setMobileMenuOpen(false)}
             >
               Pricing
             </Link>
             <Link
               to="/docs"
-              className="block rounded-md px-3 py-2 text-base font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
+              className="text-muted-foreground hover:bg-accent hover:text-foreground block rounded-md px-3 py-2 text-base font-medium"
               onClick={() => setMobileMenuOpen(false)}
             >
               Docs
             </Link>
             <Link
               to="/blog"
-              className="block rounded-md px-3 py-2 text-base font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
+              className="text-muted-foreground hover:bg-accent hover:text-foreground block rounded-md px-3 py-2 text-base font-medium"
               onClick={() => setMobileMenuOpen(false)}
             >
               Blog

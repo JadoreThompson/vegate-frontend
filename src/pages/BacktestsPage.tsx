@@ -103,7 +103,6 @@ const BacktestsPage: FC = () => {
   ];
 
   const handleStatusToggle = (status: BacktestStatus) => {
-    
     if (selectedStatuses.includes(status)) {
       if (selectedStatuses.length <= 1) return;
       setSelectedStatuses(selectedStatuses.filter((s) => s !== status));
@@ -149,26 +148,6 @@ const BacktestsPage: FC = () => {
     }
   };
 
-  // const filteredBacktests = backtests.filter((backtest) => {
-  //   const matchesSearch =
-  //     backtest.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  //     backtest.backtest_id.toLowerCase().includes(searchQuery.toLowerCase());
-  //   const matchesStatus = selectedStatuses.includes(backtest.status);
-  //   const matchesTicker =
-  //     selectedTickers.length === 0 || selectedTickers.includes(backtest.symbol);
-  //   return matchesSearch && matchesStatus && matchesTicker;
-  // });
-
-  // Pagination
-  // const itemsPerPage = 10;
-  // const totalPages = Math.floor()
-  // const pagination = usePagination({
-  //   totalItems: filteredBacktests.length,
-  //   itemsPerPage,
-  // });
-
-  // const paginatedBacktests = pagination.paginateData(filteredBacktests);
-
   const handleDeleteClick = (e: React.MouseEvent, backtestId: string) => {
     e.preventDefault();
     e.stopPropagation();
@@ -185,37 +164,6 @@ const BacktestsPage: FC = () => {
       setBacktests([]);
     }
   };
-
-  const activeFilterCount =
-    selectedSymbols.length +
-    (selectedStatuses.length < statusOptions.length ? 1 : 0);
-
-  // if (backtestsQuery.isLoading && !backtests.length) {
-  //   return (
-  //     <DashboardLayout>
-  //       <div className="space-y-6">
-  //         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-  //           <div>
-  //             <h2 className="text-3xl font-bold tracking-tight">Backtests</h2>
-  //             <p className="text-muted-foreground">
-  //               View and analyze all backtest results across your strategies
-  //             </p>
-  //           </div>
-  //         </div>
-
-  //         <Card className="bg-transparent border-none">
-  //           <CardContent className="p-6">
-  //             <div className="space-y-4">
-  //               {Array.from({ length: 5 }).map((_, i) => (
-  //                 <Skeleton key={i} className="h-12 w-full" />
-  //               ))}
-  //             </div>
-  //           </CardContent>
-  //         </Card>
-  //       </div>
-  //     </DashboardLayout>
-  //   );
-  // }
 
   if (backtestsQuery.error) {
     return (
@@ -286,15 +234,15 @@ const BacktestsPage: FC = () => {
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="start" className="w-56">
+            <PopoverContent align="start" className="bg-card w-56 p-1">
               <div className="space-y-4">
                 <div>
-                  <h4 className="mb-3 font-semibold">Status</h4>
-                  <div className="space-y-2">
+                  {/* <h4 className="mb-3 font-semibold">Status</h4> */}
+                  <div className="space-y-1">
                     {statusOptions.map((option) => (
                       <label
                         key={option.value}
-                        className="hover:bg-accent flex cursor-pointer items-center gap-2 rounded-md p-2"
+                        className="hover:bg-input/30 flex cursor-pointer items-center gap-2 rounded-md p-2"
                       >
                         <input
                           type="checkbox"
@@ -334,15 +282,15 @@ const BacktestsPage: FC = () => {
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="start" className="w-56">
-              <div className="space-y-4">
+            <PopoverContent align="start" className="bg-card w-56 p-1">
+              <div className="space-y-1">
                 <div>
-                  <h4 className="mb-3 font-semibold">Symbols</h4>
+                  {/* <h4 className="mb-3 font-semibold">Symbols</h4> */}
                   <div className="space-y-2">
                     {uniqueSymbols.map((symbol) => (
                       <label
                         key={symbol}
-                        className="hover:bg-accent flex cursor-pointer items-center gap-2 rounded-md p-2"
+                        className="hover:bg-input/30 flex cursor-pointer items-center gap-2 rounded-md p-2"
                       >
                         <input
                           type="checkbox"

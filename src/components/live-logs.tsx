@@ -11,20 +11,13 @@ export interface LogEntry {
   message: string;
 }
 
-interface LiveLogsProps {
+const LiveLogs: FC<{
   logs: LogEntry[];
   onClearLogs?: () => void;
   maxHeight?: string;
-}
-
-const LiveLogs: FC<LiveLogsProps> = ({
-  logs,
-  onClearLogs,
-  maxHeight = "400px",
-}) => {
+}> = (props) => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when new logs arrive
   useEffect(() => {
     if (scrollAreaRef.current) {
       const scrollContainer = scrollAreaRef.current.querySelector(
@@ -34,7 +27,7 @@ const LiveLogs: FC<LiveLogsProps> = ({
         scrollContainer.scrollTop = scrollContainer.scrollHeight;
       }
     }
-  }, [logs]);
+  }, [props.logs]);
 
   const getLevelColor = (level: LogEntry["level"]) => {
     switch (level) {
@@ -74,9 +67,9 @@ const LiveLogs: FC<LiveLogsProps> = ({
         <ScrollArea
           ref={scrollAreaRef}
           className="rounded-md border"
-          style={{ height: maxHeight }}
+          style={{ height: props.maxHeight }}
         >
-          {logs.length === 0 ? (
+          {props.logs.length === 0 ? (
             <div className="flex h-full items-center justify-center p-8">
               <p className="text-muted-foreground text-sm">
                 No logs available. Logs will appear here when the strategy
@@ -85,7 +78,7 @@ const LiveLogs: FC<LiveLogsProps> = ({
             </div>
           ) : (
             <div className="space-y-1 p-4 font-mono text-sm">
-              {logs.map((log) => (
+              {props.logs.map((log) => (
                 <div
                   key={log.id}
                   className="hover:bg-muted/50 flex items-start gap-3 rounded-sm p-2"

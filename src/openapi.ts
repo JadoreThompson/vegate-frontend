@@ -5,8 +5,6 @@
  * OpenAPI spec version: 0.1.0
  */
 import { customFetch } from "./lib/custom-fetch";
-export type BacktestCreateStartingBalance = number | string;
-
 export interface BacktestCreate {
   strategy_id: string;
   /**
@@ -14,53 +12,42 @@ export interface BacktestCreate {
    * @maxLength 10
    */
   symbol: string;
-  starting_balance: BacktestCreateStartingBalance;
+  /**
+   * @maximum 100000
+   */
+  starting_balance: number;
   timeframe: Timeframe;
   start_date: string;
   end_date: string;
 }
 
-export type BacktestDetailResponseMetrics = BacktestMetricsOutput | null;
+export type BacktestDetailResponseMetrics = BacktestMetrics | null;
 
 export interface BacktestDetailResponse {
   backtest_id: string;
   strategy_id: string;
   symbol: string;
-  /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
-  starting_balance: string;
+  starting_balance: number;
   status: BacktestStatus;
   created_at: string;
   metrics: BacktestDetailResponseMetrics;
 }
 
-export type BacktestMetricsInputEquityCurveItemItem1 = number | string;
-
-export interface BacktestMetricsInput {
+export interface BacktestMetrics {
   realised_pnl: number;
   unrealised_pnl: number;
   total_return_pct: number;
   sharpe_ratio: number;
   max_drawdown: number;
   total_trades: number;
-  equity_curve: [string, BacktestMetricsInputEquityCurveItemItem1][];
-}
-
-export interface BacktestMetricsOutput {
-  realised_pnl: number;
-  unrealised_pnl: number;
-  total_return_pct: number;
-  sharpe_ratio: number;
-  max_drawdown: number;
-  total_trades: number;
-  equity_curve: [string, string][];
+  equity_curve: [string, number][];
 }
 
 export interface BacktestResponse {
   backtest_id: string;
   strategy_id: string;
   symbol: string;
-  /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
-  starting_balance: string;
+  starting_balance: number;
   status: BacktestStatus;
   created_at: string;
 }
@@ -130,7 +117,30 @@ export interface DeployStrategyRequest {
   timeframe: string;
 }
 
-export type DeploymentResponseStartingBalance = string | null;
+export type DeploymentDetailResponseStartingBalance = number | null;
+
+export type DeploymentDetailResponseErrorMessage = string | null;
+
+export type DeploymentDetailResponseStoppedAt = string | null;
+
+export interface DeploymentDetailResponse {
+  deployment_id: string;
+  strategy_id: string;
+  broker_connection_id: string;
+  market_type: MarketType;
+  symbol: string;
+  timeframe: string;
+  starting_balance?: DeploymentDetailResponseStartingBalance;
+  status: StrategyDeploymentStatus;
+  error_message: DeploymentDetailResponseErrorMessage;
+  created_at: string;
+  updated_at: string;
+  stopped_at: DeploymentDetailResponseStoppedAt;
+  metrics: PerformanceMetrics;
+  equity_curve: [string, number][];
+}
+
+export type DeploymentResponseStartingBalance = number | null;
 
 export type DeploymentResponseErrorMessage = string | null;
 
@@ -170,70 +180,44 @@ export const MarketType = {
   crypto: "crypto",
 } as const;
 
-export type OrderResponseInputQuantity = number | string;
+export type OrderResponseLimitPrice = number | null;
 
-export type OrderResponseInputFilledQuantity = number | string;
+export type OrderResponseStopPrice = number | null;
 
-export type OrderResponseInputLimitPrice = number | string | null;
+export type OrderResponseAverageFillPrice = number | null;
 
-export type OrderResponseInputStopPrice = number | string | null;
+export type OrderResponseFilledAt = string | null;
 
-export type OrderResponseInputAverageFillPrice = number | string | null;
+export type OrderResponseClientOrderId = string | null;
 
-export type OrderResponseInputFilledAt = string | null;
+export type OrderResponseBrokerOrderId = string | null;
 
-export type OrderResponseInputClientOrderId = string | null;
-
-export type OrderResponseInputBrokerOrderId = string | null;
-
-export interface OrderResponseInput {
+export interface OrderResponse {
   order_id: string;
   symbol: string;
   side: string;
   order_type: string;
-  quantity: OrderResponseInputQuantity;
-  filled_quantity: OrderResponseInputFilledQuantity;
-  limit_price: OrderResponseInputLimitPrice;
-  stop_price: OrderResponseInputStopPrice;
-  average_fill_price: OrderResponseInputAverageFillPrice;
+  quantity: number;
+  filled_quantity: number;
+  limit_price: OrderResponseLimitPrice;
+  stop_price: OrderResponseStopPrice;
+  average_fill_price: OrderResponseAverageFillPrice;
   status: string;
   time_in_force: string;
   submitted_at: string;
-  filled_at: OrderResponseInputFilledAt;
-  client_order_id: OrderResponseInputClientOrderId;
-  broker_order_id: OrderResponseInputBrokerOrderId;
+  filled_at: OrderResponseFilledAt;
+  client_order_id: OrderResponseClientOrderId;
+  broker_order_id: OrderResponseBrokerOrderId;
 }
 
-export type OrderResponseOutputLimitPrice = string | null;
-
-export type OrderResponseOutputStopPrice = string | null;
-
-export type OrderResponseOutputAverageFillPrice = string | null;
-
-export type OrderResponseOutputFilledAt = string | null;
-
-export type OrderResponseOutputClientOrderId = string | null;
-
-export type OrderResponseOutputBrokerOrderId = string | null;
-
-export interface OrderResponseOutput {
-  order_id: string;
-  symbol: string;
-  side: string;
-  order_type: string;
-  /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
-  quantity: string;
-  /** @pattern ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$ */
-  filled_quantity: string;
-  limit_price: OrderResponseOutputLimitPrice;
-  stop_price: OrderResponseOutputStopPrice;
-  average_fill_price: OrderResponseOutputAverageFillPrice;
-  status: string;
-  time_in_force: string;
-  submitted_at: string;
-  filled_at: OrderResponseOutputFilledAt;
-  client_order_id: OrderResponseOutputClientOrderId;
-  broker_order_id: OrderResponseOutputBrokerOrderId;
+export interface PerformanceMetrics {
+  realised_pnl: number;
+  unrealised_pnl: number;
+  total_return_pct: number;
+  sharpe_ratio: number;
+  max_drawdown: number;
+  total_trades: number;
+  equity_curve?: [string, number][];
 }
 
 export type PricingTierType =
@@ -266,6 +250,7 @@ export const StrategyDeploymentStatus = {
   pending: "pending",
   running: "running",
   error: "error",
+  stop_requested: "stop_requested",
   stopped: "stopped",
 } as const;
 
@@ -281,24 +266,13 @@ export interface StrategyDetailResponse {
   prompt: string;
 }
 
-export type StrategyMetricsInputEquityCurveItemItem1 = number | string;
-
-export interface StrategyMetricsInput {
+export interface StrategyMetrics {
   realised_pnl: number;
   unrealised_pnl: number;
   total_return: number;
   sharpe_ratio: number;
   max_drawdown: number;
-  equity_curve: [string, StrategyMetricsInputEquityCurveItemItem1][];
-}
-
-export interface StrategyMetricsOutput {
-  realised_pnl: number;
-  unrealised_pnl: number;
-  total_return: number;
-  sharpe_ratio: number;
-  max_drawdown: number;
-  equity_curve: [string, string][];
+  equity_curve: [string, number][];
 }
 
 export type StrategyResponseDescription = string | null;
@@ -319,7 +293,7 @@ export interface StrategySummaryResponse {
   description: StrategySummaryResponseDescription;
   created_at: string;
   updated_at: string;
-  metrics: StrategyMetricsOutput;
+  metrics: StrategyMetrics;
 }
 
 export type StrategyUpdateName = string | null;
@@ -343,7 +317,11 @@ export const Timeframe = {
   "15m": "15m",
   "30m": "30m",
   "1h": "1h",
+  "4h": "4h",
   "1d": "1d",
+  "1w": "1w",
+  "1M": "1M",
+  "1y": "1y",
 } as const;
 
 export interface UpdateEmail {
@@ -416,8 +394,6 @@ export type ListBacktestsEndpointBacktestsGetParams = {
    * @maximum 100
    */
   limit?: number;
-  status?: BacktestStatus[] | null;
-  symbols?: string[] | null;
 };
 
 export type GetBacktestOrdersEndpointBacktestsBacktestIdOrdersGetParams = {
@@ -1151,7 +1127,7 @@ export const deleteBacktestEndpointBacktestsBacktestIdDelete = async (
  * @summary Get Backtest Orders Endpoint
  */
 export type getBacktestOrdersEndpointBacktestsBacktestIdOrdersGetResponse200 = {
-  data: OrderResponseOutput[];
+  data: OrderResponse[];
   status: 200;
 };
 
@@ -1620,6 +1596,68 @@ export const getDeploymentEndpointDeploymentsDeploymentIdGet = async (
 };
 
 /**
+ * Get detailed deployment information including performance metrics.
+
+This endpoint calculates real-time performance metrics from the deployment's
+order history, including:
+- Realised and unrealised PnL
+- Total return percentage
+- Sharpe ratio
+- Maximum drawdown
+- Trade count
+- Equity curve
+
+Note: Metrics are calculated on-demand from orders for accuracy.
+ * @summary Get Deployment Details Endpoint
+ */
+export type getDeploymentDetailsEndpointDeploymentsDeploymentIdDetailsGetResponse200 =
+  {
+    data: DeploymentDetailResponse;
+    status: 200;
+  };
+
+export type getDeploymentDetailsEndpointDeploymentsDeploymentIdDetailsGetResponse422 =
+  {
+    data: HTTPValidationError;
+    status: 422;
+  };
+
+export type getDeploymentDetailsEndpointDeploymentsDeploymentIdDetailsGetResponseSuccess =
+  getDeploymentDetailsEndpointDeploymentsDeploymentIdDetailsGetResponse200 & {
+    headers: Headers;
+  };
+export type getDeploymentDetailsEndpointDeploymentsDeploymentIdDetailsGetResponseError =
+  getDeploymentDetailsEndpointDeploymentsDeploymentIdDetailsGetResponse422 & {
+    headers: Headers;
+  };
+
+export type getDeploymentDetailsEndpointDeploymentsDeploymentIdDetailsGetResponse =
+
+    | getDeploymentDetailsEndpointDeploymentsDeploymentIdDetailsGetResponseSuccess
+    | getDeploymentDetailsEndpointDeploymentsDeploymentIdDetailsGetResponseError;
+
+export const getGetDeploymentDetailsEndpointDeploymentsDeploymentIdDetailsGetUrl =
+  (deploymentId: string) => {
+    return `/deployments/${deploymentId}/details`;
+  };
+
+export const getDeploymentDetailsEndpointDeploymentsDeploymentIdDetailsGet =
+  async (
+    deploymentId: string,
+    options?: RequestInit,
+  ): Promise<getDeploymentDetailsEndpointDeploymentsDeploymentIdDetailsGetResponse> => {
+    return customFetch<getDeploymentDetailsEndpointDeploymentsDeploymentIdDetailsGetResponse>(
+      getGetDeploymentDetailsEndpointDeploymentsDeploymentIdDetailsGetUrl(
+        deploymentId,
+      ),
+      {
+        ...options,
+        method: "GET",
+      },
+    );
+  };
+
+/**
  * Stop a running deployment.
 
 Updates deployment status and sets stopped_at timestamp.
@@ -1737,7 +1775,7 @@ Returns orders ordered by submission time (oldest first).
  */
 export type getDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGetResponse200 =
   {
-    data: OrderResponseOutput[];
+    data: OrderResponse[];
     status: 200;
   };
 

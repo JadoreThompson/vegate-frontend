@@ -136,6 +136,7 @@ const StrategiesPage: FC = () => {
       await deleteStrategyMutation.mutateAsync(strategyToDelete);
       setDeleteDialogOpen(false);
       setStrategyToDelete(null);
+      setPage(1);
     }
   };
 

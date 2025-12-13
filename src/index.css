@@ -133,7 +133,8 @@ button:focus-visible {
   /* --card: oklch(0.21 0.034 264.665); */
   --card: #141414;
   --card-foreground: oklch(0.985 0.002 247.839);
-  --popover: oklch(0.21 0.034 264.665);
+  /* --popover: oklch(0.21 0.034 264.665); */
+  --popover: #0a0a0a;
   --popover-foreground: oklch(0.985 0.002 247.839);
   --primary: oklch(0.928 0.006 264.531);
   --primary-foreground: oklch(0.21 0.034 264.665);

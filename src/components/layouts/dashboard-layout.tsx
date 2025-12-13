@@ -35,6 +35,7 @@ import WebsiteLogo from "../website-logo";
 
 const DashboardSidebar: FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const logoutMutation = useLogoutMutation();
 
@@ -136,7 +137,10 @@ const DashboardSidebar: FC = () => {
                     isActive("/") ? "!bg-muted" : "",
                   )}
                 >
-                  <Button onClick={() => logoutMutation.mutateAsync()} className="bg-transparent justify-start !p-2 text-white">
+                  <Button onClick={() => {
+                    logoutMutation.mutateAsync();
+                    navigate("/login");
+                    }} className="bg-transparent justify-start !p-2 text-white">
                     <LogOutIcon className="h-4 w-4 m-0" />
                     <span>Logout</span>
                   </Button>
@@ -173,7 +177,6 @@ const DashboardLayout: FC<{
     );
   }
 
-  // Don't render if not authenticated
   if (!meQuery.data) {
     return null;
   }

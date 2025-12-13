@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 
-const useIntersectionObserver = <T extends HTMLElement>(onIntersecting: () => void) => {
+const useIntersectionObserver = <T extends HTMLElement>(
+  onIntersecting: () => void,
+) => {
   const elementRefObj = useRef<T | null>(null);
 
   useEffect(() => {

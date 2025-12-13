@@ -1,6 +1,5 @@
 import { queryClient } from "@/lib/query/query-client";
 import { queryKeys } from "@/lib/query/query-keys";
-import type { ApiError } from "@/lib/types/apiError";
 import { handleApi } from "@/lib/utils/base";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
@@ -12,15 +11,11 @@ import {
   listStrategiesEndpointStrategiesGet,
   listStrategySummariesEndpointStrategiesSummariesGet,
   updateStrategyEndpointStrategiesStrategyIdPatch,
-  type deleteStrategyEndpointStrategiesStrategyIdDeleteResponse,
-  type getStrategySummaryEndpointStrategiesStrategyIdSummaryGetResponse,
   type ListStrategiesEndpointStrategiesGetParams,
-  type listStrategiesEndpointStrategiesGetResponse,
   type ListStrategySummariesEndpointStrategiesSummariesGetParams,
   type StrategyCreate,
   type StrategyResponse,
   type StrategyUpdate,
-  type updateStrategyEndpointStrategiesStrategyIdPatchResponse
 } from "@/openapi";
 
 /**
@@ -40,14 +35,12 @@ export function useStrategies(
  * Query hook to fetch a single strategy with full details including code
  */
 export function useStrategyQuery(strategyId: string) {
-  return useQuery(
-    {
-      queryKey: queryKeys.strategies.detail(strategyId),
-      queryFn: async () =>
-        handleApi(await getStrategyEndpointStrategiesStrategyIdGet(strategyId)),
-      enabled: !!strategyId,
-    },
-  );
+  return useQuery({
+    queryKey: queryKeys.strategies.detail(strategyId),
+    queryFn: async () =>
+      handleApi(await getStrategyEndpointStrategiesStrategyIdGet(strategyId)),
+    enabled: !!strategyId,
+  });
 }
 
 /**
