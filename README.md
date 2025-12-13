@@ -94,61 +94,10 @@ Secure connection management for multiple broker accounts:
 
 - **TanStack Query (React Query)** - Server state management
 - **Zustand** - Client state management
-- **React Hook Form** - Form handling with validation
-- **Zod** - Schema validation
 
 ### Charting & Visualization
 
-- **Lightweight Charts** - High-performance candlestick charts
 - **Recharts** - Responsive chart library for analytics
-
----
-
-## 📁 Project Structure
-
-```
-vegate-frontend/
-├── src/
-│   ├── assets/              # Images, logos, static assets
-│   ├── components/
-│   │   ├── layouts/         # Layout components (dashboard, auth, marketing)
-│   │   ├── ui/              # Reusable UI components (shadcn/ui)
-│   │   ├── equity-graph.tsx
-│   │   ├── live-logs.tsx
-│   │   ├── performance-metrics.tsx
-│   │   └── ...
-│   ├── hooks/
-│   │   ├── queries/         # React Query hooks (auth, strategies, backtests)
-│   │   └── ...              # Custom hooks (pagination, mobile detection)
-│   ├── lib/
-│   │   ├── query/           # Query client configuration
-│   │   ├── utils/           # Utility functions
-│   │   └── custom-fetch.ts  # API fetch wrapper
-│   ├── pages/               # Route pages
-│   │   ├── LandingPage.tsx
-│   │   ├── StrategiesPage.tsx
-│   │   ├── StrategyCreatePage.tsx
-│   │   ├── StrategyDetailPage.tsx
-│   │   ├── BacktestsPage.tsx
-│   │   ├── BacktestResultsPage.tsx
-│   │   ├── LiveDeploymentPage.tsx
-│   │   ├── BrokersPage.tsx
-│   │   └── ...
-│   ├── stores/              # Zustand stores
-│   ├── App.tsx              # Main app component with routing
-│   ├── main.tsx             # Application entry point
-│   ├── openapi.ts           # Generated API types and hooks
-│   └── index.css            # Global styles
-├── public/                  # Static public assets
-├── docs/                    # Documentation and images
-│   └── images/              # Screenshots for README
-├── .env.example             # Environment variables template
-├── package.json             # Dependencies and scripts
-├── tsconfig.json            # TypeScript configuration
-├── vite.config.ts           # Vite configuration
-├── orval.config.ts          # API code generation config
-└── tailwind.config.ts       # Tailwind configuration
-```
 
 ---
 
@@ -164,7 +113,7 @@ vegate-frontend/
 1. **Clone the repository**
 
 ```bash
-git clone https://github.com/your-org/vegate-frontend.git
+git clone https://github.com/JadoreThompson/vegate-frontend.git
 cd vegate-frontend
 ```
 
@@ -255,66 +204,13 @@ deployMutation.mutate({ strategy_id: "...", broker_connection_id: "..." });
 3. Configure parameters (symbol, date range, starting balance)
 4. Review backtest results with detailed metrics
 5. Analyze performance using equity curves and trade history
-6. Use **Replay Mode** to visualize trades on charts
 
 ### 3. Live Deployment
 
 1. Connect a broker account in **Broker Connections**
 2. Select a strategy and click **Deploy Live**
 3. Choose broker connection and configure parameters
-4. Monitor real-time performance and logs
-5. Stop deployment anytime with one click
-
----
-
-## 🎨 Design System
-
-The application uses a consistent design system built on Tailwind CSS:
-
-- **Color Palette**: Emerald (primary), Teal, Cyan accents
-- **Typography**: System fonts with clear hierarchy
-- **Components**: Radix UI primitives with custom styling
-- **Dark Mode**: Full dark mode support via theme provider
-- **Responsive**: Mobile-first responsive design
-
----
-
-## 🧪 Development Scripts
-
-```bash
-# Start development server (port 5900)
-npm run dev
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
-
-# Lint code
-npm run lint
-
-# Generate API client from OpenAPI spec
-npm run orval:openapi
-```
-
----
-
-## 🔐 Security Features
-
-- **OAuth 2.0 Authentication**: Secure broker connections
-- **Encrypted Credentials**: API keys encrypted at rest
-- **No Withdrawal Access**: Trading-only permissions
-- **HTTPS Only**: All API communication over HTTPS
-- **Token Management**: Automatic token refresh and expiration handling
-
----
-
-## 🌐 Supported Browsers
-
-- Chrome/Edge (latest 2 versions)
-- Firefox (latest 2 versions)
-- Safari (latest 2 versions)
+4. Stop deployment anytime with one click
 
 ---
 
@@ -328,22 +224,15 @@ This project is proprietary software. All rights reserved.
 
 For issues, feature requests, or questions:
 
-- **Email**: support@vegate.com
-- **Documentation**: https://docs.vegate.com
-- **Discord**: https://discord.gg/vegate
+- **Email**: jadorethompson6@gmail.com
 
 ---
 
 ## 🚧 Roadmap
 
-- [ ] Interactive Brokers integration
-- [ ] TD Ameritrade support
+- [ ] Broker integrations
+- [ ] Websockets
 - [ ] Portfolio optimization tools
 - [ ] Multi-strategy management
 - [ ] Advanced risk analytics
 - [ ] Social trading features
-- [ ] Mobile app (iOS/Android)
-
----
-
-**Built with ❤️ by the Vegate Team**
