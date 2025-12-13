@@ -30,23 +30,10 @@ The AI automatically converts this into production-ready trading code with prope
 Test your strategies against years of historical market data with realistic modeling:
 
 - Tick-level historical data accuracy
-- Realistic slippage and commission modeling
-- Comprehensive performance metrics (Sharpe ratio, max drawdown, win rate, profit factor)
 - Multi-asset strategy support
 - Custom date range selection
 
 ![Backtest Results](docs/images/backtest-results.png)
-
-### 🎬 Replay Mode
-
-Visualize your strategy's historical performance on interactive candlestick charts:
-
-- Step through trades frame-by-frame
-- See exact entry and exit points
-- Analyze decision-making in real market conditions
-- Understand strategy behavior across different market phases
-
-![Replay Mode](docs/images/replay-mode.png)
 
 ### 🚀 Live Deployment
 
