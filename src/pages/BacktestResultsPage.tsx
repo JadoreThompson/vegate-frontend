@@ -6,7 +6,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { memo, useEffect, useState, type FC } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useParams } from "react-router";
 
 import EquityGraph from "@/components/equity-graph";
 import DashboardLayout from "@/components/layouts/dashboard-layout";
@@ -37,8 +37,7 @@ interface BacktestResultsHeaderProps {
 }
 
 const BacktestResultsHeader: FC<BacktestResultsHeaderProps> = memo(
-  ({ backtestId, symbol, startingBalance }) => {
-    const navigate = useNavigate();
+  ({ symbol, startingBalance }) => {
 
     return (
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -61,9 +60,7 @@ const BacktestResultsHeader: FC<BacktestResultsHeaderProps> = memo(
           </p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-          >
+          <Button variant="outline">
             <CirclePlay className="mr-2 h-4 w-4" />
             Replay
           </Button>
@@ -310,7 +307,6 @@ const BacktestResultsPage: FC = () => {
 
   const backtest = backtestQuery?.data;
   const metrics = backtest?.metrics;
-
 
   if (backtestQuery.isLoading) {
     return (
