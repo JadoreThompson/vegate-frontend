@@ -38,7 +38,7 @@ import {
   useDeploymentQuery,
   useStopDeploymentMutation,
 } from "@/hooks/queries/deployment-hooks";
-import { StrategyDeploymentStatus, type OrderResponse } from "@/openapi";
+import { DeploymentStatus, type OrderResponse } from "@/openapi";
 
 type LogEntry = {
   id: number;
@@ -46,7 +46,6 @@ type LogEntry = {
   level: "INFO" | "WARNING" | "ERROR";
   message: string;
 };
-
 
 const DeploymentTradesTable: FC<{
   deploymentId: string;
@@ -230,15 +229,15 @@ const LiveDeploymentPage: FC = () => {
   );
   const brokerConnection = brokerConnectionQuery.data;
 
-  const getStatusBadgeVariant = (status: StrategyDeploymentStatus) => {
+  const getStatusBadgeVariant = (status: DeploymentStatus) => {
     switch (status) {
-      case StrategyDeploymentStatus.running:
+      case DeploymentStatus.running:
         return "default";
-      case StrategyDeploymentStatus.stopped:
+      case DeploymentStatus.stopped:
         return "secondary";
-      case StrategyDeploymentStatus.error:
+      case DeploymentStatus.error:
         return "destructive";
-      case StrategyDeploymentStatus.pending:
+      case DeploymentStatus.pending:
         return "outline";
       default:
         return "secondary";
@@ -283,11 +282,13 @@ const LiveDeploymentPage: FC = () => {
   }
 
   const metrics = deploymentDetails?.metrics;
-  const equityCurve = deploymentDetails?.equity_curve;
+  const equityCurve = metrics?.equity_curve || [];
 
   const handleClearLogs = () => {
     setLogs([]);
   };
+
+  console.log("Metrics:", metrics);
 
   return (
     <DashboardLayout>
@@ -377,7 +378,7 @@ const LiveDeploymentPage: FC = () => {
         </div>
 
         {/* Equity Curve with Statistics */}
-        {metrics?.total_return_pct ? (
+        {typeof metrics?.total_return_pct === "number" ? (
           <div className="flex flex-col gap-4 lg:flex-row">
             <PerformanceMetrics
               totalPnl={metrics?.realised_pnl ?? 0}

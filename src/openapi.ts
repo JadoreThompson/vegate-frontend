@@ -5,23 +5,12 @@
  * OpenAPI spec version: 0.1.0
  */
 import { customFetch } from "./lib/custom-fetch";
-export interface BacktestCreate {
-  strategy_id: string;
-  /**
-   * @minLength 1
-   * @maxLength 10
-   */
-  symbol: string;
-  /**
-   * @maximum 100000
-   */
-  starting_balance: number;
-  timeframe: Timeframe;
-  start_date: string;
-  end_date: string;
+export interface AlpacaConnectRequest {
+  api_key: string;
+  secret_key: string;
 }
 
-export type BacktestDetailResponseMetrics = BacktestMetrics | null;
+export type BacktestDetailResponseMetrics = BacktestMetricsResponse | null;
 
 export interface BacktestDetailResponse {
   backtest_id: string;
@@ -33,34 +22,30 @@ export interface BacktestDetailResponse {
   metrics: BacktestDetailResponseMetrics;
 }
 
-export interface BacktestMetrics {
+export interface BacktestMetricsResponse {
   realised_pnl: number;
   unrealised_pnl: number;
   total_return_pct: number;
   sharpe_ratio: number;
   max_drawdown: number;
-  total_trades: number;
-  equity_curve: [string, number][];
+  total_orders: number;
+  equity_curve: EquityCurvePoint[];
 }
 
-export interface BacktestResponse {
-  backtest_id: string;
-  strategy_id: string;
-  symbol: string;
-  starting_balance: number;
-  status: BacktestStatus;
-  created_at: string;
-}
-
+/**
+ * Status of backtest execution.
+ */
 export type BacktestStatus =
   (typeof BacktestStatus)[keyof typeof BacktestStatus];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const BacktestStatus = {
   pending: "pending",
+  running: "running",
   in_progress: "in_progress",
   completed: "completed",
   failed: "failed",
+  cancelled: "cancelled",
 } as const;
 
 export type BacktestUpdateStatus = BacktestStatus | null;
@@ -104,17 +89,12 @@ export interface ContactForm {
  */
 export interface DeployStrategyRequest {
   broker_connection_id: string;
-  market_type: MarketType;
   /**
    * @minLength 1
    * @maxLength 10
    */
   symbol: string;
-  /**
-   * @minLength 1
-   * @maxLength 10
-   */
-  timeframe: string;
+  timeframe: Timeframe;
 }
 
 export type DeploymentDetailResponseStartingBalance = number | null;
@@ -127,17 +107,15 @@ export interface DeploymentDetailResponse {
   deployment_id: string;
   strategy_id: string;
   broker_connection_id: string;
-  market_type: MarketType;
   symbol: string;
-  timeframe: string;
+  timeframe: Timeframe;
   starting_balance?: DeploymentDetailResponseStartingBalance;
-  status: StrategyDeploymentStatus;
+  status: DeploymentStatus;
   error_message: DeploymentDetailResponseErrorMessage;
   created_at: string;
   updated_at: string;
   stopped_at: DeploymentDetailResponseStoppedAt;
   metrics: PerformanceMetrics;
-  equity_curve: [string, number][];
 }
 
 export type DeploymentResponseStartingBalance = number | null;
@@ -153,15 +131,37 @@ export interface DeploymentResponse {
   deployment_id: string;
   strategy_id: string;
   broker_connection_id: string;
-  market_type: MarketType;
   symbol: string;
-  timeframe: string;
+  timeframe: Timeframe;
   starting_balance?: DeploymentResponseStartingBalance;
-  status: StrategyDeploymentStatus;
+  status: DeploymentStatus;
   error_message: DeploymentResponseErrorMessage;
   created_at: string;
   updated_at: string;
   stopped_at: DeploymentResponseStoppedAt;
+}
+
+/**
+ * Deployment status for a strategy.
+ */
+export type DeploymentStatus =
+  (typeof DeploymentStatus)[keyof typeof DeploymentStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const DeploymentStatus = {
+  pending: "pending",
+  running: "running",
+  stopped: "stopped",
+  error: "error",
+  stop_requested: "stop_requested",
+} as const;
+
+/**
+ * Represents a point in the equity curve.
+ */
+export interface EquityCurvePoint {
+  timestamp: string;
+  value: number;
 }
 
 export interface GetOauthUrlResponse {
@@ -172,13 +172,9 @@ export interface HTTPValidationError {
   detail?: ValidationError[];
 }
 
-export type MarketType = (typeof MarketType)[keyof typeof MarketType];
+export type OrderResponseQuantity = number | null;
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const MarketType = {
-  stocks: "stocks",
-  crypto: "crypto",
-} as const;
+export type OrderResponseNotional = number | null;
 
 export type OrderResponseLimitPrice = number | null;
 
@@ -188,8 +184,6 @@ export type OrderResponseAverageFillPrice = number | null;
 
 export type OrderResponseFilledAt = string | null;
 
-export type OrderResponseClientOrderId = string | null;
-
 export type OrderResponseBrokerOrderId = string | null;
 
 export interface OrderResponse {
@@ -197,16 +191,15 @@ export interface OrderResponse {
   symbol: string;
   side: string;
   order_type: string;
-  quantity: number;
+  quantity: OrderResponseQuantity;
+  notional: OrderResponseNotional;
   filled_quantity: number;
   limit_price: OrderResponseLimitPrice;
   stop_price: OrderResponseStopPrice;
   average_fill_price: OrderResponseAverageFillPrice;
   status: string;
-  time_in_force: string;
   submitted_at: string;
   filled_at: OrderResponseFilledAt;
-  client_order_id: OrderResponseClientOrderId;
   broker_order_id: OrderResponseBrokerOrderId;
 }
 
@@ -217,7 +210,7 @@ export interface PerformanceMetrics {
   sharpe_ratio: number;
   max_drawdown: number;
   total_trades: number;
-  equity_curve?: [string, number][];
+  equity_curve?: EquityCurvePoint[];
 }
 
 export type PricingTierType =
@@ -242,18 +235,6 @@ export interface StrategyCreate {
   prompt: string;
 }
 
-export type StrategyDeploymentStatus =
-  (typeof StrategyDeploymentStatus)[keyof typeof StrategyDeploymentStatus];
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const StrategyDeploymentStatus = {
-  pending: "pending",
-  running: "running",
-  error: "error",
-  stop_requested: "stop_requested",
-  stopped: "stopped",
-} as const;
-
 export type StrategyDetailResponseDescription = string | null;
 
 export interface StrategyDetailResponse {
@@ -264,15 +245,6 @@ export interface StrategyDetailResponse {
   updated_at: string;
   code: string;
   prompt: string;
-}
-
-export interface StrategyMetrics {
-  realised_pnl: number;
-  unrealised_pnl: number;
-  total_return: number;
-  sharpe_ratio: number;
-  max_drawdown: number;
-  equity_curve: [string, number][];
 }
 
 export type StrategyResponseDescription = string | null;
@@ -293,7 +265,7 @@ export interface StrategySummaryResponse {
   description: StrategySummaryResponseDescription;
   created_at: string;
   updated_at: string;
-  metrics: StrategyMetrics;
+  metrics: PerformanceMetrics;
 }
 
 export type StrategyUpdateName = string | null;
@@ -319,9 +291,6 @@ export const Timeframe = {
   "1h": "1h",
   "4h": "4h",
   "1d": "1d",
-  "1w": "1w",
-  "1M": "1M",
-  "1y": "1y",
 } as const;
 
 export interface UpdateEmail {
@@ -384,6 +353,68 @@ export interface VerifyCode {
   code: string;
 }
 
+export interface ApiRoutesBacktestsModelsBacktestCreate {
+  strategy_id: string;
+  /**
+   * @minLength 1
+   * @maxLength 10
+   */
+  symbol: string;
+  /**
+   * @maximum 100000
+   */
+  starting_balance: number;
+  timeframe: Timeframe;
+  start_date: string;
+  end_date: string;
+}
+
+export interface ApiRoutesBacktestsModelsBacktestResponse {
+  backtest_id: string;
+  strategy_id: string;
+  symbol: string;
+  starting_balance: number;
+  status: BacktestStatus;
+  created_at: string;
+}
+
+/**
+ * Request body for creating a backtest.
+ */
+export interface ApiRoutesStrategiesModelsBacktestCreate {
+  /**
+   * @minLength 1
+   * @maxLength 10
+   */
+  symbol: string;
+  /**
+   * @minLength 1
+   * @maxLength 20
+   */
+  broker: string;
+  timeframe: Timeframe;
+  /** */
+  starting_balance: number;
+  start_date: string;
+  end_date: string;
+}
+
+/**
+ * Response for backtest creation.
+ */
+export interface ApiRoutesStrategiesModelsBacktestResponse {
+  backtest_id: string;
+  strategy_id: string;
+  symbol: string;
+  broker: BrokerType;
+  timeframe: Timeframe;
+  starting_balance: number;
+  start_date: string;
+  end_date: string;
+  status: BacktestStatus;
+  created_at: string;
+}
+
 export type ListBacktestsEndpointBacktestsGetParams = {
   /**
    * @minimum 0
@@ -437,7 +468,7 @@ export type ListAllDeploymentsEndpointDeploymentsGetParams = {
    * @maximum 100
    */
   limit?: number;
-  status?: StrategyDeploymentStatus | null;
+  status?: DeploymentStatus | null;
 };
 
 export type GetDeploymentOrdersEndpointDeploymentsDeploymentIdOrdersGetParams =
@@ -882,7 +913,7 @@ export const verifyActionAuthVerifyActionPost = async (
  * @summary Create Backtest Endpoint
  */
 export type createBacktestEndpointBacktestsPostResponse201 = {
-  data: BacktestResponse;
+  data: ApiRoutesBacktestsModelsBacktestResponse;
   status: 201;
 };
 
@@ -909,7 +940,7 @@ export const getCreateBacktestEndpointBacktestsPostUrl = () => {
 };
 
 export const createBacktestEndpointBacktestsPost = async (
-  backtestCreate: BacktestCreate,
+  apiRoutesBacktestsModelsBacktestCreate: ApiRoutesBacktestsModelsBacktestCreate,
   options?: RequestInit,
 ): Promise<createBacktestEndpointBacktestsPostResponse> => {
   return customFetch<createBacktestEndpointBacktestsPostResponse>(
@@ -918,7 +949,7 @@ export const createBacktestEndpointBacktestsPost = async (
       ...options,
       method: "POST",
       headers: { "Content-Type": "application/json", ...options?.headers },
-      body: JSON.stringify(backtestCreate),
+      body: JSON.stringify(apiRoutesBacktestsModelsBacktestCreate),
     },
   );
 };
@@ -928,7 +959,7 @@ export const createBacktestEndpointBacktestsPost = async (
  * @summary List Backtests Endpoint
  */
 export type listBacktestsEndpointBacktestsGetResponse200 = {
-  data: BacktestResponse[];
+  data: ApiRoutesBacktestsModelsBacktestResponse[];
   status: 200;
 };
 
@@ -1032,7 +1063,7 @@ export const getBacktestEndpointBacktestsBacktestIdGet = async (
  * @summary Update Backtest Endpoint
  */
 export type updateBacktestEndpointBacktestsBacktestIdPatchResponse200 = {
-  data: BacktestResponse;
+  data: ApiRoutesBacktestsModelsBacktestResponse;
   status: 200;
 };
 
@@ -1411,6 +1442,51 @@ export const oauthCallbackBrokersAlpacaOauthCallbackGet = async (
     {
       ...options,
       method: "GET",
+    },
+  );
+};
+
+/**
+ * @summary Connect Alpaca
+ */
+export type connectAlpacaBrokersAlpacaConnectPostResponse200 = {
+  data: unknown;
+  status: 200;
+};
+
+export type connectAlpacaBrokersAlpacaConnectPostResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type connectAlpacaBrokersAlpacaConnectPostResponseSuccess =
+  connectAlpacaBrokersAlpacaConnectPostResponse200 & {
+    headers: Headers;
+  };
+export type connectAlpacaBrokersAlpacaConnectPostResponseError =
+  connectAlpacaBrokersAlpacaConnectPostResponse422 & {
+    headers: Headers;
+  };
+
+export type connectAlpacaBrokersAlpacaConnectPostResponse =
+  | connectAlpacaBrokersAlpacaConnectPostResponseSuccess
+  | connectAlpacaBrokersAlpacaConnectPostResponseError;
+
+export const getConnectAlpacaBrokersAlpacaConnectPostUrl = () => {
+  return `/brokers/alpaca/connect`;
+};
+
+export const connectAlpacaBrokersAlpacaConnectPost = async (
+  alpacaConnectRequest: AlpacaConnectRequest,
+  options?: RequestInit,
+): Promise<connectAlpacaBrokersAlpacaConnectPostResponse> => {
+  return customFetch<connectAlpacaBrokersAlpacaConnectPostResponse>(
+    getConnectAlpacaBrokersAlpacaConnectPostUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(alpacaConnectRequest),
     },
   );
 };
@@ -1886,6 +1962,37 @@ export const contactUsPublicContactPost = async (
 };
 
 /**
+ * @summary Healthcheck
+ */
+export type healthcheckPublicHealthcheckGetResponse200 = {
+  data: unknown;
+  status: 200;
+};
+
+export type healthcheckPublicHealthcheckGetResponseSuccess =
+  healthcheckPublicHealthcheckGetResponse200 & {
+    headers: Headers;
+  };
+export type healthcheckPublicHealthcheckGetResponse =
+  healthcheckPublicHealthcheckGetResponseSuccess;
+
+export const getHealthcheckPublicHealthcheckGetUrl = () => {
+  return `/public/healthcheck`;
+};
+
+export const healthcheckPublicHealthcheckGet = async (
+  options?: RequestInit,
+): Promise<healthcheckPublicHealthcheckGetResponse> => {
+  return customFetch<healthcheckPublicHealthcheckGetResponse>(
+    getHealthcheckPublicHealthcheckGetUrl(),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+/**
  * @summary Create Strategy Endpoint
  */
 export type createStrategyEndpointStrategiesPostResponse200 = {
@@ -2231,6 +2338,64 @@ export const listStrategySummariesEndpointStrategiesSummariesGet = async (
     {
       ...options,
       method: "GET",
+    },
+  );
+};
+
+/**
+ * Create and launch a backtest for a strategy.
+
+Validates that:
+- Strategy exists and belongs to the user
+- OHLC data exists for the specified period, timeframe, symbol, and broker
+- Creates backtest record and launches backtest runner
+
+Returns 400 if data is missing for the specified parameters.
+ * @summary Create Backtest Endpoint
+ */
+export type createBacktestEndpointStrategiesStrategyIdBacktestPostResponse201 =
+  {
+    data: ApiRoutesStrategiesModelsBacktestResponse;
+    status: 201;
+  };
+
+export type createBacktestEndpointStrategiesStrategyIdBacktestPostResponse422 =
+  {
+    data: HTTPValidationError;
+    status: 422;
+  };
+
+export type createBacktestEndpointStrategiesStrategyIdBacktestPostResponseSuccess =
+  createBacktestEndpointStrategiesStrategyIdBacktestPostResponse201 & {
+    headers: Headers;
+  };
+export type createBacktestEndpointStrategiesStrategyIdBacktestPostResponseError =
+  createBacktestEndpointStrategiesStrategyIdBacktestPostResponse422 & {
+    headers: Headers;
+  };
+
+export type createBacktestEndpointStrategiesStrategyIdBacktestPostResponse =
+  | createBacktestEndpointStrategiesStrategyIdBacktestPostResponseSuccess
+  | createBacktestEndpointStrategiesStrategyIdBacktestPostResponseError;
+
+export const getCreateBacktestEndpointStrategiesStrategyIdBacktestPostUrl = (
+  strategyId: string,
+) => {
+  return `/strategies/${strategyId}/backtest`;
+};
+
+export const createBacktestEndpointStrategiesStrategyIdBacktestPost = async (
+  strategyId: string,
+  apiRoutesStrategiesModelsBacktestCreate: ApiRoutesStrategiesModelsBacktestCreate,
+  options?: RequestInit,
+): Promise<createBacktestEndpointStrategiesStrategyIdBacktestPostResponse> => {
+  return customFetch<createBacktestEndpointStrategiesStrategyIdBacktestPostResponse>(
+    getCreateBacktestEndpointStrategiesStrategyIdBacktestPostUrl(strategyId),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(apiRoutesStrategiesModelsBacktestCreate),
     },
   );
 };

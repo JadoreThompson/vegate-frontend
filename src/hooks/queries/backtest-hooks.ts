@@ -4,8 +4,8 @@ import { handleApi } from "@/lib/utils/base";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import {
-  type BacktestResponse,
   createBacktestEndpointBacktestsPost,
+  createBacktestEndpointStrategiesStrategyIdBacktestPost,
   deleteBacktestEndpointBacktestsBacktestIdDelete,
   getBacktestEndpointBacktestsBacktestIdGet,
   getBacktestOrdersEndpointBacktestsBacktestIdOrdersGet,
@@ -14,6 +14,8 @@ import {
 } from "@/openapi";
 
 import type {
+  ApiRoutesStrategiesModelsBacktestCreate,
+  ApiRoutesStrategiesModelsBacktestResponse,
   BacktestCreate,
   BacktestUpdate,
   GetBacktestOrdersEndpointBacktestsBacktestIdOrdersGetParams,
@@ -79,6 +81,27 @@ export function useCreateBacktestMutation() {
 }
 
 /**
+ * Mutation hook to create a new backtest for a specific strategy
+ */
+export function useCreateBacktestForStrategyMutation() {
+  return useMutation({
+    mutationFn: async (variables: {
+      strategyId: string;
+      payload: ApiRoutesStrategiesModelsBacktestCreate;
+    }) =>
+      handleApi(
+        await createBacktestEndpointStrategiesStrategyIdBacktestPost(
+          variables.strategyId,
+          variables.payload,
+        ),
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.backtests.all() });
+    },
+  });
+}
+
+/**
  * Mutation hook to update a backtest (status and/or metrics)
  */
 export function useUpdateBacktestMutation() {
@@ -94,7 +117,7 @@ export function useUpdateBacktestMutation() {
         ),
       ),
     onSuccess: (
-      _data: BacktestResponse,
+      _data: ApiRoutesStrategiesModelsBacktestResponse,
       variables: { backtestId: string; payload: BacktestUpdate },
     ) => {
       queryClient.invalidateQueries({

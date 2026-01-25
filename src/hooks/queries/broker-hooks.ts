@@ -8,6 +8,8 @@ import {
   getBrokerConnectionEndpointBrokersConnectionsConnectionIdGet,
   getOauthUrlBrokersAlpacaOauthGet,
   listBrokerConnectionsEndpointBrokersConnectionsGet,
+  connectAlpacaBrokersAlpacaConnectPost,
+  type AlpacaConnectRequest,
 } from "@/openapi";
 
 /**
@@ -58,6 +60,21 @@ export function useDeleteBrokerConnectionQuery() {
           connectionId,
         ),
       ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.brokers.connections(),
+      });
+    },
+  });
+}
+
+/**
+ * Mutation hook to connect Alpaca broker with API key and secret
+ */
+export function useConnectAlpacaMutation() {
+  return useMutation({
+    mutationFn: async (credentials: AlpacaConnectRequest) =>
+      handleApi(await connectAlpacaBrokersAlpacaConnectPost(credentials)),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.brokers.connections(),

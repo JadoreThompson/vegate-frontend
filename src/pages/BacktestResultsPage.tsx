@@ -26,7 +26,7 @@ import {
   useBacktestOrdersQuery,
   useBacktestQuery,
 } from "@/hooks/queries/backtest-hooks";
-import { type OrderResponse } from "@/openapi";
+import { type EquityCurvePoint, type OrderResponse } from "@/openapi";
 
 // Internal Components
 
@@ -38,7 +38,6 @@ interface BacktestResultsHeaderProps {
 
 const BacktestResultsHeader: FC<BacktestResultsHeaderProps> = memo(
   ({ symbol, startingBalance }) => {
-
     return (
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
@@ -78,7 +77,7 @@ interface BacktestStatisticsSectionProps {
   totalTrades: number;
   sharpeRatio: number;
   maxDrawdown: number;
-  equityCurve?: [string, number | string][];
+  equityCurve?: EquityCurvePoint[];
 }
 
 const BacktestStatisticsSection: FC<BacktestStatisticsSectionProps> = memo(

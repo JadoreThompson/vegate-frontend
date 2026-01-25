@@ -67,15 +67,13 @@ import {
 } from "@/hooks/queries/strategy-hooks";
 import {
   BacktestStatus,
-  MarketType,
-  StrategyDeploymentStatus,
+  DeploymentStatus,
   Timeframe,
-  type BacktestResponse,
+  type ApiRoutesStrategiesModelsBacktestResponse,
   type BrokerConnectionResponse,
   type DeploymentResponse,
-  type StrategySummaryResponse
+  type StrategySummaryResponse,
 } from "@/openapi";
-
 
 const PerformanceMetrics: FC<{
   metrics: any;
@@ -173,15 +171,15 @@ const DeploymentsTable: FC<{
     setPage(newPage);
   };
 
-  const getStatusColor = (status: StrategyDeploymentStatus) => {
+  const getStatusColor = (status: DeploymentStatus) => {
     switch (status) {
-      case StrategyDeploymentStatus.running:
+      case DeploymentStatus.running:
         return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20";
-      case StrategyDeploymentStatus.pending:
+      case DeploymentStatus.pending:
         return "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20";
-      case StrategyDeploymentStatus.error:
+      case DeploymentStatus.error:
         return "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20";
-      case StrategyDeploymentStatus.stopped:
+      case DeploymentStatus.stopped:
         return "bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20";
       default:
         return "bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20";
@@ -293,7 +291,7 @@ const DeploymentsTable: FC<{
 
 const BacktestsTable: FC<{
   strategyId: string;
-  backtests: BacktestResponse[];
+  backtests: ApiRoutesStrategiesModelsBacktestResponse[];
   selectedTickers: string[];
   symbolOptions: string[];
   onTickerToggle: (symbol: string) => void;
@@ -325,7 +323,7 @@ const BacktestsTable: FC<{
     switch (status) {
       case BacktestStatus.completed:
         return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20";
-      case BacktestStatus.in_progress:
+      case BacktestStatus.running:
         return "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20";
       case BacktestStatus.pending:
         return "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20";
@@ -353,7 +351,7 @@ const BacktestsTable: FC<{
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-48 p-1 bg-card">
+            <PopoverContent align="end" className="bg-card w-48 p-1">
               <div className="space-y-4">
                 <div>
                   {/* <h4 className="mb-3 font-semibold">Ticker</h4> */}
@@ -374,7 +372,6 @@ const BacktestsTable: FC<{
                           className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
                         />
                         <span className="text-sm">{ticker}</span>
-                        
                       </label>
                     ))}
                   </div>
@@ -517,8 +514,6 @@ const StrategyDetailPage: FC = () => {
   const [newDeploymentSymbol, setNewDeploymentTicker] = useState("");
   const [newDeploymentTimeframe, setNewDeploymentTimeframe] =
     useState<Timeframe>(Timeframe["1d"]);
-  const [newDeploymentMarketType, setNewDeploymentMarketType] =
-    useState<MarketType>(MarketType.stocks);
   const [newDeploymentBalance, setNewDeploymentBalance] = useState("10000");
 
   // Fetch strategy summary with metrics
@@ -543,14 +538,21 @@ const StrategyDetailPage: FC = () => {
 
   // Filter backtests by strategy_id
   const allBacktests =
-    (backtestsQuery.data as BacktestResponse[] | undefined) || [];
+    (backtestsQuery.data as
+      | ApiRoutesStrategiesModelsBacktestResponse[]
+      | undefined) || [];
   const strategyBacktests = allBacktests.filter(
-    (b: BacktestResponse) => b.strategy_id === strategyId,
+    (b: ApiRoutesStrategiesModelsBacktestResponse) =>
+      b.strategy_id === strategyId,
   );
 
   // Get unique tickers from backtests
   const uniqueTickers = Array.from(
-    new Set(strategyBacktests.map((b: BacktestResponse) => b.symbol)),
+    new Set(
+      strategyBacktests.map(
+        (b: ApiRoutesStrategiesModelsBacktestResponse) => b.symbol,
+      ),
+    ),
   );
   const tickerOptions = uniqueTickers as string[];
 
@@ -608,7 +610,6 @@ const StrategyDetailPage: FC = () => {
         strategyId: strategyId,
         payload: {
           broker_connection_id: newDeploymentBrokerConnectionId,
-          market_type: newDeploymentMarketType,
           symbol: newDeploymentSymbol.toUpperCase(),
           timeframe: newDeploymentTimeframe,
         },
@@ -617,7 +618,6 @@ const StrategyDetailPage: FC = () => {
       setNewDeploymentBrokerConnectionId("");
       setNewDeploymentTicker("");
       setNewDeploymentTimeframe(Timeframe["1d"]);
-      setNewDeploymentMarketType(MarketType.stocks);
       setNewDeploymentBalance("10000");
     } catch (error) {
       // Error handling is done by the mutation
@@ -1002,27 +1002,6 @@ const StrategyDetailPage: FC = () => {
                   )}
                   <p className="text-muted-foreground text-xs">
                     Select the broker account to deploy to
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="deployment-market-type">Market Type</Label>
-                  <Select
-                    value={newDeploymentMarketType}
-                    onValueChange={(value) =>
-                      setNewDeploymentMarketType(value as MarketType)
-                    }
-                  >
-                    <SelectTrigger id="deployment-market-type">
-                      <SelectValue placeholder="Select market type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={MarketType.stocks}>Stocks</SelectItem>
-                      <SelectItem value={MarketType.crypto}>Crypto</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-muted-foreground text-xs">
-                    Select the market type for this deployment
                   </p>
                 </div>
 

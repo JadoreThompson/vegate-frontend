@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { type EquityCurvePoint } from "@/openapi";
 import { BarChart3 } from "lucide-react";
 import { type FC } from "react";
 import {
@@ -11,7 +12,7 @@ import {
 } from "recharts";
 
 const EquityGraph: FC<{
-  equityData?: [string, number | string][];
+  equityData?: EquityCurvePoint[];
   title?: string;
 }> = (props) => {
   const equityData = props.equityData ?? [];
@@ -24,10 +25,10 @@ const EquityGraph: FC<{
 
   // Transform data for Recharts
   const chartData = equityData
-    .map(([timestamp, value]) => ({
-      date: new Date(timestamp).getTime(),
-      value: typeof value === "string" ? parseFloat(value) : value,
-      displayDate: new Date(timestamp).toLocaleDateString("en-US", {
+    .map((point) => ({
+      date: new Date(point.timestamp).getTime(),
+      value: point.value,
+      displayDate: new Date(point.timestamp).toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
       }),
