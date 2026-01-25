@@ -48,17 +48,6 @@ export const BacktestStatus = {
   cancelled: "cancelled",
 } as const;
 
-export type BacktestUpdateStatus = BacktestStatus | null;
-
-export type BacktestUpdateMetricsAnyOf = { [key: string]: unknown };
-
-export type BacktestUpdateMetrics = BacktestUpdateMetricsAnyOf | null;
-
-export interface BacktestUpdate {
-  status?: BacktestUpdateStatus;
-  metrics?: BacktestUpdateMetrics;
-}
-
 /**
  * Response model for broker connection details.
  */
@@ -1054,55 +1043,6 @@ export const getBacktestEndpointBacktestsBacktestIdGet = async (
     {
       ...options,
       method: "GET",
-    },
-  );
-};
-
-/**
- * Update a backtest (status and/or metrics).
- * @summary Update Backtest Endpoint
- */
-export type updateBacktestEndpointBacktestsBacktestIdPatchResponse200 = {
-  data: ApiRoutesBacktestsModelsBacktestResponse;
-  status: 200;
-};
-
-export type updateBacktestEndpointBacktestsBacktestIdPatchResponse422 = {
-  data: HTTPValidationError;
-  status: 422;
-};
-
-export type updateBacktestEndpointBacktestsBacktestIdPatchResponseSuccess =
-  updateBacktestEndpointBacktestsBacktestIdPatchResponse200 & {
-    headers: Headers;
-  };
-export type updateBacktestEndpointBacktestsBacktestIdPatchResponseError =
-  updateBacktestEndpointBacktestsBacktestIdPatchResponse422 & {
-    headers: Headers;
-  };
-
-export type updateBacktestEndpointBacktestsBacktestIdPatchResponse =
-  | updateBacktestEndpointBacktestsBacktestIdPatchResponseSuccess
-  | updateBacktestEndpointBacktestsBacktestIdPatchResponseError;
-
-export const getUpdateBacktestEndpointBacktestsBacktestIdPatchUrl = (
-  backtestId: string,
-) => {
-  return `/backtests/${backtestId}`;
-};
-
-export const updateBacktestEndpointBacktestsBacktestIdPatch = async (
-  backtestId: string,
-  backtestUpdate: BacktestUpdate,
-  options?: RequestInit,
-): Promise<updateBacktestEndpointBacktestsBacktestIdPatchResponse> => {
-  return customFetch<updateBacktestEndpointBacktestsBacktestIdPatchResponse>(
-    getUpdateBacktestEndpointBacktestsBacktestIdPatchUrl(backtestId),
-    {
-      ...options,
-      method: "PATCH",
-      headers: { "Content-Type": "application/json", ...options?.headers },
-      body: JSON.stringify(backtestUpdate),
     },
   );
 };
