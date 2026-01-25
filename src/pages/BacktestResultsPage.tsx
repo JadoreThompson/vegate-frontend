@@ -418,7 +418,7 @@ const BacktestResultsPage: FC = () => {
         <BacktestStatisticsSection
           totalPnl={metrics.realised_pnl}
           returnPercentage={metrics.total_return_pct}
-          totalTrades={metrics.total_trades}
+          totalTrades={metrics.total_orders}
           sharpeRatio={metrics.sharpe_ratio}
           maxDrawdown={metrics.max_drawdown}
           equityCurve={metrics.equity_curve}

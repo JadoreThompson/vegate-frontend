@@ -4,20 +4,15 @@ import { handleApi } from "@/lib/utils/base";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import {
-  createBacktestEndpointBacktestsPost,
   createBacktestEndpointStrategiesStrategyIdBacktestPost,
   deleteBacktestEndpointBacktestsBacktestIdDelete,
   getBacktestEndpointBacktestsBacktestIdGet,
   getBacktestOrdersEndpointBacktestsBacktestIdOrdersGet,
   listBacktestsEndpointBacktestsGet,
-  updateBacktestEndpointBacktestsBacktestIdPatch,
 } from "@/openapi";
 
 import type {
   ApiRoutesStrategiesModelsBacktestCreate,
-  ApiRoutesStrategiesModelsBacktestResponse,
-  BacktestCreate,
-  BacktestUpdate,
   GetBacktestOrdersEndpointBacktestsBacktestIdOrdersGetParams,
   ListBacktestsEndpointBacktestsGetParams,
 } from "@/openapi";
@@ -68,19 +63,6 @@ export function useBacktestOrdersQuery(
 }
 
 /**
- * Mutation hook to create a new backtest
- */
-export function useCreateBacktestMutation() {
-  return useMutation({
-    mutationFn: async (payload: BacktestCreate) =>
-      handleApi(await createBacktestEndpointBacktestsPost(payload)),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.backtests.all() });
-    },
-  });
-}
-
-/**
  * Mutation hook to create a new backtest for a specific strategy
  */
 export function useCreateBacktestForStrategyMutation() {
@@ -96,33 +78,6 @@ export function useCreateBacktestForStrategyMutation() {
         ),
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.backtests.all() });
-    },
-  });
-}
-
-/**
- * Mutation hook to update a backtest (status and/or metrics)
- */
-export function useUpdateBacktestMutation() {
-  return useMutation({
-    mutationFn: async (variables: {
-      backtestId: string;
-      payload: BacktestUpdate;
-    }) =>
-      handleApi(
-        await updateBacktestEndpointBacktestsBacktestIdPatch(
-          variables.backtestId,
-          variables.payload,
-        ),
-      ),
-    onSuccess: (
-      _data: ApiRoutesStrategiesModelsBacktestResponse,
-      variables: { backtestId: string; payload: BacktestUpdate },
-    ) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.backtests.detail(variables.backtestId),
-      });
       queryClient.invalidateQueries({ queryKey: queryKeys.backtests.all() });
     },
   });

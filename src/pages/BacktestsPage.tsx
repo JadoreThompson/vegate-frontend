@@ -32,7 +32,10 @@ import {
   useBacktestsQuery,
   useDeleteBacktestMutation,
 } from "@/hooks/queries/backtest-hooks";
-import { BacktestStatus, type ApiRoutesStrategiesModelsBacktestResponse } from "@/openapi";
+import {
+  BacktestStatus,
+  type ApiRoutesBacktestsModelsBacktestResponse,
+} from "@/openapi";
 
 const BacktestsPage: FC = () => {
   const navigate = useNavigate();
@@ -49,7 +52,9 @@ const BacktestsPage: FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [backtestToDelete, setBacktestToDelete] = useState<string | null>(null);
 
-  const [backtests, setBacktests] = useState<ApiRoutesStrategiesModelsBacktestResponse[]>([]);
+  const [backtests, setBacktests] = useState<
+    ApiRoutesBacktestsModelsBacktestResponse[]
+  >([]);
 
   const backtestQueryParams = useMemo(() => {
     let obj = {} as any;

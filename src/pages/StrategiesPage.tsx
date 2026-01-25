@@ -294,12 +294,12 @@ const StrategiesPage: FC = () => {
                       </TableCell>
                       <TableCell
                         className={`text-right font-semibold ${
-                          strategy.metrics.total_return >= 0
+                          strategy.metrics.total_return_pct >= 0
                             ? "text-emerald-600 dark:text-emerald-400"
                             : "text-red-600 dark:text-red-400"
                         }`}
                       >
-                        {formatPercentage(strategy.metrics.total_return)}
+                        {formatPercentage(strategy.metrics.total_return_pct)}
                       </TableCell>
                       <TableCell className="text-right font-semibold">
                         {strategy.metrics.sharpe_ratio.toFixed(2)}

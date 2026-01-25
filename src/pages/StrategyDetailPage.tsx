@@ -53,7 +53,7 @@ import {
 } from "@/components/ui/table";
 import {
   useBacktestsQuery,
-  useCreateBacktestMutation,
+  useCreateBacktestForStrategyMutation,
 } from "@/hooks/queries/backtest-hooks";
 import { useBrokerConnectionsQuery } from "@/hooks/queries/broker-hooks";
 import {
@@ -523,7 +523,7 @@ const StrategyDetailPage: FC = () => {
 
   // Fetch backtests for this strategy
   const backtestsQuery = useBacktestsQuery();
-  const createBacktestMutation = useCreateBacktestMutation();
+  const createBacktestMutation = useCreateBacktestForStrategyMutation();
 
   // Fetch deployments for this strategy
   const deploymentsQuery = useStrategyDeployments(strategyId || "");
@@ -641,12 +641,15 @@ const StrategyDetailPage: FC = () => {
 
     try {
       await createBacktestMutation.mutateAsync({
-        strategy_id: strategyId,
-        symbol: newBacktestTicker.toUpperCase(),
-        starting_balance: parsedBacktestBalance,
-        timeframe: newBacktestTimeframe,
-        start_date: newBacktestStartDate,
-        end_date: newBacktestEndDate,
+        strategyId: strategyId,
+        payload: {
+          symbol: newBacktestTicker.toUpperCase(),
+          broker: "alpaca",
+          starting_balance: parsedBacktestBalance,
+          timeframe: newBacktestTimeframe,
+          start_date: newBacktestStartDate,
+          end_date: newBacktestEndDate,
+        },
       });
       setCreateBacktestDialogOpen(false);
       setNewBacktestTicker("");
