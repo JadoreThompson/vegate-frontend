@@ -9,13 +9,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useMeQuery } from "@/hooks/queries/auth-hooks";
 
-import {
-  BarChart3,
-  Bot,
-  LogOutIcon,
-  SettingsIcon,
-  Wallet
-} from "lucide-react";
+import { BarChart3, Bot, LogOutIcon, SettingsIcon, Wallet } from "lucide-react";
 import { Link, useLocation } from "react-router";
 
 import {
@@ -137,11 +131,14 @@ const DashboardSidebar: FC = () => {
                     isActive("/") ? "!bg-muted" : "",
                   )}
                 >
-                  <Button onClick={() => {
-                    logoutMutation.mutateAsync();
-                    navigate("/login");
-                    }} className="bg-transparent justify-start !p-2 text-white">
-                    <LogOutIcon className="h-4 w-4 m-0" />
+                  <Button
+                    onClick={() => {
+                      logoutMutation.mutateAsync();
+                      navigate("/login");
+                    }}
+                    className="justify-start bg-transparent !p-2 text-white"
+                  >
+                    <LogOutIcon className="m-0 h-4 w-4" />
                     <span>Logout</span>
                   </Button>
                 </SidebarMenuButton>
@@ -196,9 +193,7 @@ const DashboardLayout: FC<{
           </header>
 
           {/* Page Content */}
-          <main className="flex-1 overflow-auto p-4 lg:p-6">
-            {children}
-          </main>
+          <main className="flex-1 overflow-auto p-4 lg:p-6">{children}</main>
         </div>
       </div>
     </SidebarProvider>

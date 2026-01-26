@@ -113,7 +113,8 @@ const StrategiesPage: FC = () => {
 
   // Accumulate strategies as they're fetched
   useEffect(() => {
-    if (strategiesData?.length) {
+    // Ensure strategiesData is an array before processing
+    if (Array.isArray(strategiesData) && strategiesData.length > 0) {
       setStrategies((prev) => {
         const ids = new Set(prev.map((s) => s.strategy_id));
         const newOnes = strategiesData.filter(
@@ -140,12 +141,17 @@ const StrategiesPage: FC = () => {
     }
   };
 
-  const filteredStrategies = strategies.filter((s: StrategySummaryResponse) => {
-    const matchesSearch = s.name
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    return matchesSearch;
-  });
+  // Ensure strategies is always an array
+  const safeStrategies = Array.isArray(strategies) ? strategies : [];
+
+  const filteredStrategies = safeStrategies.filter(
+    (s: StrategySummaryResponse) => {
+      const matchesSearch = s.name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      return matchesSearch;
+    },
+  );
 
   // Reset strategies and page when search changes
   const handleSearchChange = (value: string) => {

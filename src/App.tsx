@@ -36,7 +36,10 @@ function App() {
           {/* Strategy Routes */}
           <Route path="/strategies" element={<StrategiesPage />} />
           <Route path="/strategies/create" element={<StrategyCreatePage />} />
-          <Route path="/strategies/:strategyId" element={<StrategyDetailPage />} />
+          <Route
+            path="/strategies/:strategyId"
+            element={<StrategyDetailPage />}
+          />
           <Route
             path="/deployments/:deploymentId"
             element={<LiveDeploymentPage />}
