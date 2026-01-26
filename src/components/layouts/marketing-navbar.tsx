@@ -1,14 +1,12 @@
-import { Menu, Moon, Sun, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useState, type FC } from "react";
 import { Link } from "react-router";
 
 import { Button } from "@/components/ui/button";
-import { useThemeStore } from "@/stores/theme-store";
 import WebsiteLogo from "../website-logo";
 
 const MarketingNavbar: FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { theme, toggleTheme } = useThemeStore();
 
   return (
     <nav className="border-border/40 bg-background/95 supports-[backdrop-filter]:bg-background/60 fixed top-0 z-50 w-full border-b backdrop-blur">
@@ -53,18 +51,6 @@ const MarketingNavbar: FC = () => {
 
           {/* Desktop Actions */}
           <div className="hidden items-center gap-4 md:flex">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              className="h-9 w-9"
-            >
-              {theme === "dark" ? (
-                <Sun className="h-4 w-4" />
-              ) : (
-                <Moon className="h-4 w-4" />
-              )}
-            </Button>
             <Link to="/login">
               <Button variant="ghost" size="sm">
                 Log in
