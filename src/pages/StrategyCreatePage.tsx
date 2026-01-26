@@ -34,6 +34,8 @@ const StrategyCreatePage: FC = () => {
         prompt: prompt.trim(),
       });
 
+      console.log("Strategy created response:", result);
+
       navigate(`/strategies/${result.strategy_id}`);
     } catch (err: any) {
       setError(err.message || "An error occurred while creating the strategy.");
@@ -55,8 +57,7 @@ const StrategyCreatePage: FC = () => {
         </div>
 
         {/* Main Input Card */}
-        <Card className="bg-transparent border-0">
-
+        <Card className="border-0 bg-transparent">
           <CardContent className="space-y-4 p-0">
             <div className="space-y-2">
               <Label htmlFor="strategy-name">Strategy Name</Label>
@@ -178,8 +179,6 @@ const StrategyCreatePage: FC = () => {
             </ul>
           </CardContent>
         </Card>
-
-       
       </div>
     </DashboardLayout>
   );

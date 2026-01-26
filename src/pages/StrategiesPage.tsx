@@ -114,6 +114,8 @@ const StrategiesPage: FC = () => {
   // Accumulate strategies as they're fetched
   useEffect(() => {
     // Ensure strategiesData is an array before processing
+    console.log("Fetched strategies data:", strategiesData);
+    console.log("Is strategiesData an array?", Array.isArray(strategiesData));
     if (Array.isArray(strategiesData) && strategiesData.length > 0) {
       setStrategies((prev) => {
         const ids = new Set(prev.map((s) => s.strategy_id));
