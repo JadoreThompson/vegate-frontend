@@ -127,12 +127,12 @@ const PerformanceMetrics: FC<{
             <span className="text-muted-foreground text-sm">Total Return</span>
             <span
               className={`font-semibold ${
-                props.metrics.total_return >= 0
+                props.metrics.total_return_pct >= 0
                   ? "text-emerald-600 dark:text-emerald-400"
                   : "text-red-600 dark:text-red-400"
               }`}
             >
-              {formatPercentage(props.metrics.total_return)}
+              {formatPercentage(props.metrics.total_return_pct)}
             </span>
           </div>
           <Separator />

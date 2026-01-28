@@ -70,7 +70,6 @@ const BacktestsPage: FC = () => {
       obj["symbols"] = selectedSymbols;
     }
 
-    console.log("query params", obj);
     return obj;
   }, [page, selectedStatuses, selectedSymbols]);
 

@@ -134,8 +134,6 @@ const BrokersPage: FC = () => {
   ];
 
   useEffect(() => {
-    console.log("entered");
-    console.log(alpacaOAuthUrlQuery.data);
     if (alpacaOAuthUrlQuery.data?.url) {
       brokers[0].oauthUrl = alpacaOAuthUrlQuery.data.url;
     }

@@ -34,8 +34,6 @@ const StrategyCreatePage: FC = () => {
         prompt: prompt.trim(),
       });
 
-      console.log("Strategy created response:", result);
-
       navigate(`/strategies/${result.strategy_id}`);
     } catch (err: any) {
       setError(err.message || "An error occurred while creating the strategy.");

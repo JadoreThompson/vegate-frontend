@@ -288,8 +288,6 @@ const LiveDeploymentPage: FC = () => {
     setLogs([]);
   };
 
-  console.log("Metrics:", metrics);
-
   return (
     <DashboardLayout>
       <div className="space-y-6">
