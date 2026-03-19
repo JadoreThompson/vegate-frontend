@@ -4,7 +4,8 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  font-family: "Inter", sans-serif;
+  /* font-family: "Inter", sans-serif; */
+  font-family: "Manrope", sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -58,10 +59,10 @@ a {
 body {
   margin: 0;
 }
-
+/* 
 h1 {
   line-height: 1.1;
-}
+} */
 
 button {
   border-radius: 8px;
@@ -130,13 +131,12 @@ button:focus-visible {
 .dark {
   --background: #0a0a0a;
   --foreground: oklch(0.985 0.002 247.839);
-  /* --card: oklch(0.21 0.034 264.665); */
   --card: #141414;
   --card-foreground: oklch(0.985 0.002 247.839);
-  /* --popover: oklch(0.21 0.034 264.665); */
   --popover: #0a0a0a;
   --popover-foreground: oklch(0.985 0.002 247.839);
-  --primary: oklch(0.928 0.006 264.531);
+  /* --primary: oklch(0.928 0.006 264.531); */
+  --primary: #96f609;
   --primary-foreground: oklch(0.21 0.034 264.665);
   --secondary: oklch(0.278 0.033 256.848);
   --secondary-foreground: oklch(0.985 0.002 247.839);
@@ -169,5 +169,30 @@ button:focus-visible {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+.marquee {
+  overflow: hidden;
+  width: 100%;
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 3s linear infinite;
+}
+
+.marquee-item {
+  flex-shrink: 0;
+  padding: 0 1rem;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
   }
 }

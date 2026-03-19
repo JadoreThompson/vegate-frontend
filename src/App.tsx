@@ -6,6 +6,7 @@ import BrokersPage from "./pages/BrokersPage";
 import ContactPage from "./pages/ContactPage";
 import EmailVerificationPage from "./pages/EmailVerifcationPage";
 import LandingPage from "./pages/LandingPage";
+import LandingPageNew from "./pages/LandingPageNew";
 import LiveDeploymentPage from "./pages/LiveDeploymentPage";
 import LoginPage from "./pages/LoginPage";
 import PricingPage from "./pages/PricingPage";
@@ -22,6 +23,7 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/landing-new" element={<LandingPageNew />} />
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/features" element={<LandingPage />} />
