@@ -92,12 +92,212 @@ const DeleteConfirmationDialog: FC<{
   );
 };
 
+const DUMMY_STRATEGIES: StrategySummaryResponse[] = [
+  {
+    strategy_id: "strat-001",
+    name: "London Breakout",
+    description:
+      "Captures volatility expansion during the London session open.",
+    created_at: "2026-02-01T08:15:00Z",
+    updated_at: "2026-03-18T11:42:00Z",
+    metrics: {
+      realised_pnl: 4820.34,
+      unrealised_pnl: 210.12,
+      total_return_pct: 0.184,
+      sharpe_ratio: 1.92,
+      max_drawdown: -0.062,
+      total_trades: 184,
+      equity_curve: [],
+    },
+  },
+  {
+    strategy_id: "strat-002",
+    name: "BTC Momentum Pulse",
+    description: "Short-term crypto momentum strategy with trend confirmation.",
+    created_at: "2026-01-20T10:00:00Z",
+    updated_at: "2026-03-17T14:20:00Z",
+    metrics: {
+      realised_pnl: 9132.88,
+      unrealised_pnl: -120.5,
+      total_return_pct: 0.271,
+      sharpe_ratio: 2.31,
+      max_drawdown: -0.089,
+      total_trades: 126,
+      equity_curve: [],
+    },
+  },
+  {
+    strategy_id: "strat-003",
+    name: "Mean Reversion FX",
+    description:
+      "Looks for stretched intraday EUR/USD moves and fades extremes.",
+    created_at: "2025-12-11T09:30:00Z",
+    updated_at: "2026-03-12T16:00:00Z",
+    metrics: {
+      realised_pnl: -1240.9,
+      unrealised_pnl: 0,
+      total_return_pct: -0.038,
+      sharpe_ratio: 0.74,
+      max_drawdown: -0.114,
+      total_trades: 241,
+      equity_curve: [],
+    },
+  },
+  {
+    strategy_id: "strat-004",
+    name: "Gold Trend Rider",
+    description: "Follows higher-timeframe momentum on XAU/USD with ATR exits.",
+    created_at: "2026-02-07T07:10:00Z",
+    updated_at: "2026-03-19T09:05:00Z",
+    metrics: {
+      realised_pnl: 6321.45,
+      unrealised_pnl: 412.88,
+      total_return_pct: 0.193,
+      sharpe_ratio: 1.67,
+      max_drawdown: -0.071,
+      total_trades: 97,
+      equity_curve: [],
+    },
+  },
+  {
+    strategy_id: "strat-005",
+    name: "Opening Range Nasdaq",
+    description: "Trades breakout confirmation during the first 30 minutes.",
+    created_at: "2026-01-04T13:00:00Z",
+    updated_at: "2026-03-16T18:30:00Z",
+    metrics: {
+      realised_pnl: 2245.22,
+      unrealised_pnl: -54.1,
+      total_return_pct: 0.081,
+      sharpe_ratio: 1.18,
+      max_drawdown: -0.095,
+      total_trades: 143,
+      equity_curve: [],
+    },
+  },
+  {
+    strategy_id: "strat-006",
+    name: "ETH Swing Engine",
+    description: "Multi-day Ethereum swing strategy using structure and RSI.",
+    created_at: "2026-02-12T12:45:00Z",
+    updated_at: "2026-03-18T20:10:00Z",
+    metrics: {
+      realised_pnl: 11882.04,
+      unrealised_pnl: 980.22,
+      total_return_pct: 0.352,
+      sharpe_ratio: 2.64,
+      max_drawdown: -0.102,
+      total_trades: 62,
+      equity_curve: [],
+    },
+  },
+  {
+    strategy_id: "strat-007",
+    name: "Scalp Grid Alpha",
+    description: "High-frequency micro-scalping model for liquid pairs.",
+    created_at: "2025-11-21T06:50:00Z",
+    updated_at: "2026-03-10T10:15:00Z",
+    metrics: {
+      realised_pnl: -842.11,
+      unrealised_pnl: 33.47,
+      total_return_pct: -0.021,
+      sharpe_ratio: 0.58,
+      max_drawdown: -0.131,
+      total_trades: 418,
+      equity_curve: [],
+    },
+  },
+  {
+    strategy_id: "strat-008",
+    name: "Daily Pullback Pro",
+    description: "Enters strong daily trends on measured pullbacks.",
+    created_at: "2026-01-28T15:40:00Z",
+    updated_at: "2026-03-19T07:25:00Z",
+    metrics: {
+      realised_pnl: 5310.67,
+      unrealised_pnl: 120.8,
+      total_return_pct: 0.149,
+      sharpe_ratio: 1.54,
+      max_drawdown: -0.057,
+      total_trades: 88,
+      equity_curve: [],
+    },
+  },
+  {
+    strategy_id: "strat-009",
+    name: "Volatility Snapback",
+    description: "Trades sharp dislocations after volatility spikes.",
+    created_at: "2026-02-03T11:12:00Z",
+    updated_at: "2026-03-15T13:48:00Z",
+    metrics: {
+      realised_pnl: 1740.5,
+      unrealised_pnl: 0,
+      total_return_pct: 0.061,
+      sharpe_ratio: 1.03,
+      max_drawdown: -0.083,
+      total_trades: 154,
+      equity_curve: [],
+    },
+  },
+  {
+    strategy_id: "strat-010",
+    name: "Session Bias Trader",
+    description: "Builds directional bias from prior session structure.",
+    created_at: "2025-12-30T05:25:00Z",
+    updated_at: "2026-03-11T17:35:00Z",
+    metrics: {
+      realised_pnl: 3898.93,
+      unrealised_pnl: -18.2,
+      total_return_pct: 0.124,
+      sharpe_ratio: 1.41,
+      max_drawdown: -0.069,
+      total_trades: 132,
+      equity_curve: [],
+    },
+  },
+  {
+    strategy_id: "strat-011",
+    name: "Macro Drift",
+    description:
+      "Slow trend-following portfolio strategy across major markets.",
+    created_at: "2025-10-14T09:00:00Z",
+    updated_at: "2026-03-18T12:00:00Z",
+    metrics: {
+      realised_pnl: 15442.77,
+      unrealised_pnl: 1204.56,
+      total_return_pct: 0.427,
+      sharpe_ratio: 2.12,
+      max_drawdown: -0.076,
+      total_trades: 49,
+      equity_curve: [],
+    },
+  },
+  {
+    strategy_id: "strat-012",
+    name: "Reversal Hunter",
+    description: "Countertrend model tuned for exhausted intraday moves.",
+    created_at: "2026-01-09T14:05:00Z",
+    updated_at: "2026-03-14T08:55:00Z",
+    metrics: {
+      realised_pnl: -2310.4,
+      unrealised_pnl: -140.25,
+      total_return_pct: -0.072,
+      sharpe_ratio: 0.43,
+      max_drawdown: -0.156,
+      total_trades: 206,
+      equity_curve: [],
+    },
+  },
+];
+
 const StrategiesPage: FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [strategyToDelete, setStrategyToDelete] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const [strategies, setStrategies] = useState<StrategySummaryResponse[]>([]);
+  // const [strategies, setStrategies] = useState<StrategySummaryResponse[]>([]);
+  const [strategies, setStrategies] =
+    useState<StrategySummaryResponse[]>(DUMMY_STRATEGIES);
 
   const itemsPerPage = 10;
 
@@ -181,7 +381,7 @@ const StrategiesPage: FC = () => {
             </p>
           </div>
           <Link to="/strategies/create">
-            <Button className="bg-emerald-600 hover:bg-emerald-700">
+            <Button className="bg-primary hover:bg-primary">
               <Plus className="mr-2 h-4 w-4" />
               New Strategy
             </Button>
@@ -204,7 +404,7 @@ const StrategiesPage: FC = () => {
 
         {/* Strategies Table */}
         {strategySummariesQuery.isLoading ? (
-          <Card>
+          <Card className="border-none bg-transparent">
             <CardContent className="p-6">
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
@@ -216,7 +416,7 @@ const StrategiesPage: FC = () => {
             </CardContent>
           </Card>
         ) : strategySummariesQuery.error ? (
-          <Card>
+          <Card className="border-none bg-transparent">
             <CardContent className="flex flex-col items-center justify-center py-16">
               <Bot className="text-muted-foreground mb-4 h-12 w-12" />
               <h3 className="mb-2 text-lg font-semibold">
@@ -241,7 +441,7 @@ const StrategiesPage: FC = () => {
                   : "Get started by creating your first strategy"}
               </p>
               <Link to="/strategies/create">
-                <Button className="bg-emerald-600 hover:bg-emerald-700">
+                <Button className="bg-primary hover:bg-primary">
                   <Plus className="mr-2 h-4 w-4" />
                   Create Strategy
                 </Button>
@@ -291,7 +491,7 @@ const StrategiesPage: FC = () => {
                       <TableCell
                         className={`text-right font-semibold ${
                           strategy.metrics.realised_pnl >= 0
-                            ? "text-emerald-600 dark:text-emerald-400"
+                            ? "text-primary dark:text-primary"
                             : "text-red-600 dark:text-red-400"
                         }`}
                       >
@@ -300,7 +500,7 @@ const StrategiesPage: FC = () => {
                       <TableCell
                         className={`text-right font-semibold ${
                           strategy.metrics.total_return_pct >= 0
-                            ? "text-emerald-600 dark:text-emerald-400"
+                            ? "text-primary dark:text-primary"
                             : "text-red-600 dark:text-red-400"
                         }`}
                       >

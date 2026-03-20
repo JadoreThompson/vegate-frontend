@@ -16,6 +16,7 @@ import SettingsPage from "./pages/SettingsPage";
 import StrategiesPage from "./pages/StrategiesPage";
 import StrategyCreatePage from "./pages/StrategyCreatePage";
 import StrategyDetailPage from "./pages/StrategyDetailPage";
+import PricingPage from "./pages/PricingPage";
 
 function App() {
   return (
@@ -25,13 +26,10 @@ function App() {
           {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/landing-new" element={<LandingPageNew />} />
-          {/* <Route path="/pricing" element={<PricingPage />} /> */}
+          <Route path="/pricing" element={<PricingPage />} />
           <Route path="/pricing-new" element={<PricingPageNew />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/contact-new" element={<ContactNew />} />
-          <Route path="/features" element={<LandingPage />} />
-          <Route path="/docs" element={<LandingPage />} />
-          <Route path="/blog" element={<LandingPage />} />
 
           {/* Auth Routes */}
           <Route path="/register" element={<RegisterPage />} />

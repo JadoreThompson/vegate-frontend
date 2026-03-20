@@ -35,7 +35,6 @@ const SettingRow: FC<SettingRowProps> = (props) => {
   return (
     <div className="flex flex-col items-start gap-3 px-6 py-5 transition-colors sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <div className="flex items-start gap-4 sm:items-center">
-        
         <div className="flex flex-col">
           <h3 className="font-medium">{props.title}</h3>
           <p className="text-muted-foreground text-sm">{props.description}</p>
@@ -345,7 +344,7 @@ const SettingsPage: FC = () => {
         )} */}
 
         {/* Account Settings */}
-        <Card className="bg-transparent border-none">
+        <Card className="border-none bg-transparent">
           {/* <CardHeader>
             <CardTitle>Account Settings</CardTitle>
           </CardHeader> */}
