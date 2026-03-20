@@ -25,7 +25,7 @@ const Header: FC = () => {
   return (
     <header className="bg-background relative border-b">
       <div className="flex h-12 items-center justify-between px-4 sm:justify-normal sm:px-5">
-        <div className="w-full h-full flex">
+        <div className="flex h-full w-full">
           <Link to="/" className="mr-6 flex items-center gap-2 sm:mr-12">
             <div className="flex h-8 w-8 items-center justify-center">
               <WebsiteLogo />
