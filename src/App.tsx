@@ -3,6 +3,7 @@ import ThemeProvider from "./components/providers/theme-provider";
 import BacktestResultsPage from "./pages/BacktestResultsPage";
 import BacktestsPage from "./pages/BacktestsPage";
 import BrokersPage from "./pages/BrokersPage";
+import ContactNew from "./pages/ContactNew";
 import ContactPage from "./pages/ContactPage";
 import EmailVerificationPage from "./pages/EmailVerifcationPage";
 import LandingPage from "./pages/LandingPage";
@@ -26,6 +27,7 @@ function App() {
           <Route path="/landing-new" element={<LandingPageNew />} />
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/contact-new" element={<ContactNew />} />
           <Route path="/features" element={<LandingPage />} />
           <Route path="/docs" element={<LandingPage />} />
           <Route path="/blog" element={<LandingPage />} />
