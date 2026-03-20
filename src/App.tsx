@@ -10,7 +10,7 @@ import LandingPage from "./pages/LandingPage";
 import LandingPageNew from "./pages/LandingPageNew";
 import LiveDeploymentPage from "./pages/LiveDeploymentPage";
 import LoginPage from "./pages/LoginPage";
-import PricingPage from "./pages/PricingPage";
+import PricingPageNew from "./pages/PricingPageNew";
 import RegisterPage from "./pages/RegisterPage";
 import SettingsPage from "./pages/SettingsPage";
 import StrategiesPage from "./pages/StrategiesPage";
@@ -25,7 +25,8 @@ function App() {
           {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/landing-new" element={<LandingPageNew />} />
-          <Route path="/pricing" element={<PricingPage />} />
+          {/* <Route path="/pricing" element={<PricingPage />} /> */}
+          <Route path="/pricing-new" element={<PricingPageNew />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/contact-new" element={<ContactNew />} />
           <Route path="/features" element={<LandingPage />} />

@@ -38,7 +38,7 @@ const AuthLayout: FC<AuthLayoutProps> = (props) => {
                 <Button
                   type="submit"
                   disabled={props.loading}
-                  className="mt-2 h-10 w-full !bg-white text-accent font-bold hover:!bg-primary md:h-9"
+                  className="text-accent hover:!bg-primary mt-2 h-10 w-full !bg-white font-bold md:h-9"
                 >
                   {props.loading && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

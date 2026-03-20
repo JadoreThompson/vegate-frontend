@@ -8,17 +8,9 @@ import XAUUSD from "@/assets/images/noir-xauusd.png";
 import { Button } from "@/components/ui/button";
 
 import Layout from "@/components/layouts/layout";
-import WebsiteLogo from "@/components/website-logo";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@radix-ui/react-accordion";
-import { Menu, Plus, X } from "lucide-react";
+
+import FAQ from "@/components/faq";
 import type { FC } from "react";
-import { useState } from "react";
-import { Link } from "react-router";
 
 const InstrumentsMarquee: FC = () => (
   <div className="marquee">
@@ -210,51 +202,11 @@ const FAQSection: FC = () => {
   ];
 
   return (
-    <section className="px-4 py-20 sm:px-6 sm:py-24 lg:px-20">
-      <div className="mx-auto max-w-5xl">
-        <div className="mb-10 flex flex-col items-center text-center sm:mb-12">
-          <div className="mb-5 rounded-full border px-4 py-1.5 text-sm tracking-wide uppercase">
-            FAQ
-          </div>
-
-          <h2 className="heading-2 mb-4 max-w-3xl text-balance">
-            Questions, answered in the same clean way the product works
-          </h2>
-
-          <p className="text-muted-foreground max-w-2xl text-base sm:text-lg">
-            Everything you need to know about turning ideas into live trading
-            strategies with Vegate.
-          </p>
-        </div>
-
-        <div className="from-primary/8 via-primary/4 to-primary/8 rounded-[2rem] border bg-gradient-to-br p-2 sm:p-3">
-          <div className="bg-background rounded-[1.5rem] border p-2 sm:p-3">
-            <Accordion type="single" collapsible className="w-full">
-              {faqs.map((faq) => (
-                <AccordionItem
-                  key={faq.value}
-                  value={faq.value}
-                  className="border-border/70 mb-2 overflow-hidden rounded-3xl border px-4 last:mb-0 sm:px-5"
-                >
-                  <AccordionTrigger className="group w-full !bg-transparent py-4 text-left text-base font-medium hover:no-underline sm:py-5 sm:text-lg">
-                    <div className="flex w-full items-center justify-between gap-4">
-                      <span className="pr-2 sm:pr-4">{faq.question}</span>
-                      <span className="text-muted-foreground group-data-[state=open]:text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-colors">
-                        <Plus className="h-4 w-4 transition-transform duration-300 group-data-[state=open]:rotate-45" />
-                      </span>
-                    </div>
-                  </AccordionTrigger>
-
-                  <AccordionContent className="text-muted-foreground max-w-3xl pb-4 text-sm leading-7 sm:pb-5 sm:text-base">
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </div>
-        </div>
-      </div>
-    </section>
+    <FAQ
+      items={faqs}
+      title="Questions, answered in the same clean way the product works"
+      description="Everything you need to know about turning ideas into live trading strategies with Vegate."
+    />
   );
 };
 
