@@ -18,6 +18,7 @@ import StrategiesPage from "./pages/StrategiesPage";
 import StrategyCreatePage from "./pages/StrategyCreatePage";
 import StrategyCreatePageNew from "./pages/StrategyCreatePageNew";
 import StrategyDetailPage from "./pages/StrategyDetailPage";
+import StrategyDetailPageNew from "./pages/StrategyDetailPageNew";
 
 function App() {
   return (
@@ -47,6 +48,10 @@ function App() {
           <Route
             path="/strategies/:strategyId"
             element={<StrategyDetailPage />}
+          />
+          <Route
+            path="/strategies-new/:strategyId"
+            element={<StrategyDetailPageNew />}
           />
           <Route
             path="/deployments/:deploymentId"

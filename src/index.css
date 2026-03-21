@@ -141,9 +141,9 @@ button:focus-visible {
   --primary: #96f609;
   --primary-foreground: oklch(0.21 0.034 264.665);
   --secondary: #111111;
-  --tertiary: red;
   /* --secondary-foreground: oklch(0.985 0.002 247.839); */
-  --secondary-foreground: #121212;
+  /* --secondary-foreground: #121212; */
+  --secondary-foreground: #171717;
   --muted: oklch(0.278 0.033 256.848);
   --muted-foreground: oklch(0.707 0.022 261.325);
   --accent: oklch(0.278 0.033 256.848);
