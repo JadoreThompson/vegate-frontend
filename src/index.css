@@ -140,8 +140,10 @@ button:focus-visible {
   /* --primary: oklch(0.928 0.006 264.531); */
   --primary: #96f609;
   --primary-foreground: oklch(0.21 0.034 264.665);
-  --secondary: oklch(0.278 0.033 256.848);
-  --secondary-foreground: oklch(0.985 0.002 247.839);
+  --secondary: #111111;
+  --tertiary: red;
+  /* --secondary-foreground: oklch(0.985 0.002 247.839); */
+  --secondary-foreground: #121212;
   --muted: oklch(0.278 0.033 256.848);
   --muted-foreground: oklch(0.707 0.022 261.325);
   --accent: oklch(0.278 0.033 256.848);
@@ -155,7 +157,8 @@ button:focus-visible {
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: #0a0a0a;
+  /* --sidebar: #0a0a0a; */
+  --sidebar: var(--secondary);
   --sidebar-foreground: oklch(0.985 0.002 247.839);
   --sidebar-primary: oklch(0.488 0.243 264.376);
   --sidebar-primary-foreground: oklch(0.985 0.002 247.839);
@@ -172,6 +175,11 @@ button:focus-visible {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(120, 120, 120, 0.4) transparent;
 }
 
 .heading-1 {

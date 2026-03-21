@@ -10,13 +10,14 @@ import LandingPage from "./pages/LandingPage";
 import LandingPageNew from "./pages/LandingPageNew";
 import LiveDeploymentPage from "./pages/LiveDeploymentPage";
 import LoginPage from "./pages/LoginPage";
+import PricingPage from "./pages/PricingPage";
 import PricingPageNew from "./pages/PricingPageNew";
 import RegisterPage from "./pages/RegisterPage";
 import SettingsPage from "./pages/SettingsPage";
 import StrategiesPage from "./pages/StrategiesPage";
 import StrategyCreatePage from "./pages/StrategyCreatePage";
+import StrategyCreatePageNew from "./pages/StrategyCreatePageNew";
 import StrategyDetailPage from "./pages/StrategyDetailPage";
-import PricingPage from "./pages/PricingPage";
 
 function App() {
   return (
@@ -39,6 +40,10 @@ function App() {
           {/* Strategy Routes */}
           <Route path="/strategies" element={<StrategiesPage />} />
           <Route path="/strategies/create" element={<StrategyCreatePage />} />
+          <Route
+            path="/strategies/create-new"
+            element={<StrategyCreatePageNew />}
+          />
           <Route
             path="/strategies/:strategyId"
             element={<StrategyDetailPage />}

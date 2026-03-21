@@ -7,7 +7,6 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { useMeQuery } from "@/hooks/queries/auth-hooks";
 
 import { BarChart3, Bot, LogOutIcon, SettingsIcon, Wallet } from "lucide-react";
 import { Link, useLocation } from "react-router";
@@ -33,7 +32,6 @@ import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import WebsiteLogo from "../website-logo";
 
-
 const DashboardSidebar: FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -58,7 +56,7 @@ const DashboardSidebar: FC = () => {
         className="w-20 min-w-16"
         variant="floating"
       >
-        <SidebarHeader className="border-border border-b p-4">
+        <SidebarHeader className="border-border border- p-4">
           <Link to="/dashboard" className="flex items-center justify-center">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg">
               <WebsiteLogo />
@@ -66,7 +64,7 @@ const DashboardSidebar: FC = () => {
           </Link>
         </SidebarHeader>
 
-        <SidebarContent>
+        <SidebarContent className="">
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
@@ -188,8 +186,8 @@ const DashboardSidebar: FC = () => {
 const DashboardLayout: FC<{
   children: ReactNode;
 }> = ({ children }) => {
-  const navigate = useNavigate();
-  const meQuery = useMeQuery();
+  // const navigate = useNavigate();
+  // const meQuery = useMeQuery();
 
   // useEffect(() => {
   //   if (!meQuery.isLoading && (meQuery.isError || !meQuery.data)) {
