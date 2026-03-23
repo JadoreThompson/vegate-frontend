@@ -1,0 +1,659 @@
+import { AlertCircle, ExternalLink, Loader2, Plus, Trash2 } from "lucide-react";
+import { useEffect, useState, type FC } from "react";
+
+import DashboardLayout from "@/components/layouts/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  useAlpacaOAuthUrlQuery,
+  useBrokerConnectionsQuery,
+  useConnectAlpacaMutation,
+  useDeleteBrokerConnectionQuery,
+} from "@/hooks/queries/broker-hooks";
+import type { BrokerConnectionResponse } from "@/openapi";
+import { toast, Toaster } from "sonner";
+
+const MOCKS_ENABLED = true;
+
+const MOCK_BROKER_CONNECTIONS: BrokerConnectionResponse[] = [
+  {
+    connection_id: "conn_alpaca_live_01f84c91a2b3",
+    broker: "alpaca",
+    broker_account_id: "PA3J7K9L2M8N4Q1R",
+  },
+  {
+    connection_id: "conn_alpaca_paper_02c95d12b4e6",
+    broker: "alpaca",
+    broker_account_id: "PA7X2V5B8N1M3K9L",
+  },
+];
+
+const MOCK_ALPACA_OAUTH_URL = {
+  url: "https://app.alpaca.markets/oauth/authorize?client_id=vegate_demo_client&response_type=code&scope=account:write%20trading&redirect_uri=https%3A%2F%2Fapp.vegate.dev%2Fbrokers%2Fcallback",
+};
+
+const MOCK_ALPACA_CONNECT_SUCCESS_PAYLOAD = {
+  message: "Broker connected successfully",
+};
+
+const MOCK_BROKER_QUERY_STATE = {
+  data: MOCK_BROKER_CONNECTIONS,
+  isLoading: false,
+  error: null,
+};
+
+const MOCK_ALPACA_OAUTH_URL_QUERY_STATE = {
+  data: MOCK_ALPACA_OAUTH_URL,
+  isLoading: false,
+  error: null,
+};
+
+const MOCK_CONNECT_ALPACA_MUTATION_STATE = {
+  isPending: false,
+  error: null,
+  mutateAsync: async (_payload: { api_key: string; secret_key: string }) => {
+    return MOCK_ALPACA_CONNECT_SUCCESS_PAYLOAD;
+  },
+};
+
+const MOCK_DELETE_BROKER_CONNECTION_MUTATION_STATE = {
+  isPending: false,
+  error: null,
+  mutateAsync: async (_connectionId: string) => {
+    return undefined;
+  },
+};
+
+type Broker = {
+  id: string;
+  name: string;
+  logo: string;
+  description: string;
+  authType: "oauth" | "api_key";
+  oauthUrl?: string;
+  status: "available" | "coming_soon";
+  connectedAccount?: {
+    accountId: string;
+    balance: number;
+    lastSync: string;
+  };
+};
+
+const brokers: Broker[] = [
+  {
+    id: "alpaca",
+    name: "Alpaca",
+    logo: "🦙",
+    description: "Commission-free trading API",
+    authType: "api_key",
+    status: "available",
+  },
+  {
+    id: "ig",
+    name: "IG Markets",
+    logo: "🏦",
+    description: "Global multi-asset broker",
+    authType: "api_key",
+    status: "coming_soon",
+  },
+  {
+    id: "interactive",
+    name: "Interactive Brokers",
+    logo: "📊",
+    description: "Professional trading platform",
+    authType: "oauth",
+    status: "coming_soon",
+  },
+  {
+    id: "tradier",
+    name: "Tradier",
+    logo: "📈",
+    description: "Cloud-based brokerage API",
+    authType: "api_key",
+    status: "coming_soon",
+  },
+  {
+    id: "robinhood",
+    name: "Robinhood",
+    logo: "🪶",
+    description: "Mobile-first trading",
+    authType: "oauth",
+    status: "coming_soon",
+  },
+  {
+    id: "etrade",
+    name: "E*TRADE",
+    logo: "💼",
+    description: "Full-service broker",
+    authType: "oauth",
+    status: "coming_soon",
+  },
+  {
+    id: "schwab",
+    name: "Charles Schwab",
+    logo: "🏛️",
+    description: "Investment services",
+    authType: "oauth",
+    status: "coming_soon",
+  },
+  {
+    id: "fidelity",
+    name: "Fidelity",
+    logo: "💎",
+    description: "Investment management",
+    authType: "oauth",
+    status: "coming_soon",
+  },
+];
+
+const BrokersPage: FC = () => {
+  const [selectedBroker, setSelectedBroker] = useState<Broker | null>(null);
+  const [connectDialogOpen, setConnectDialogOpen] = useState(false);
+  const [brokerSelectDialogOpen, setBrokerSelectDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [connectionToDelete, setConnectionToDelete] = useState<string | null>(
+    null,
+  );
+  const [apiKey, setApiKey] = useState("");
+  const [secretKey, setSecretKey] = useState("");
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+
+  const alpacaOAuthUrlQuery = useAlpacaOAuthUrlQuery();
+  const brokerConnectionsQuery = useBrokerConnectionsQuery();
+  const deleteBrokerConnectionMutation = useDeleteBrokerConnectionQuery();
+  const connectAlpacaMutation = useConnectAlpacaMutation();
+
+  const connections =
+    (brokerConnectionsQuery.data as BrokerConnectionResponse[] | undefined) ||
+    [];
+
+  // const connections = MOCK_BROKER_CONNECTIONS;
+
+  useEffect(() => {
+    if (alpacaOAuthUrlQuery.data?.url) {
+      brokers[0].oauthUrl = alpacaOAuthUrlQuery.data.url;
+    }
+  }, [alpacaOAuthUrlQuery.data]);
+
+  const handleBrokerClick = (broker: Broker) => {
+    setSelectedBroker(broker);
+    setBrokerSelectDialogOpen(false);
+    setConnectDialogOpen(true);
+    setApiKey("");
+    setSecretKey("");
+    setConnectionError(null);
+  };
+
+  const handleCreateClick = () => {
+    setBrokerSelectDialogOpen(true);
+  };
+
+  const handleOAuthConnect = () => {
+    if (selectedBroker?.id === "alpaca" && alpacaOAuthUrlQuery.data?.url) {
+      window.open(alpacaOAuthUrlQuery.data.url, "_blank");
+      setConnectDialogOpen(false);
+    }
+  };
+
+  const handleApiKeyConnect = async () => {
+    if (!apiKey || !secretKey) {
+      setConnectionError("Please provide both API key and secret key");
+      return;
+    }
+
+    try {
+      setConnectionError(null);
+      await connectAlpacaMutation.mutateAsync({
+        api_key: apiKey,
+        secret_key: secretKey,
+      });
+      setConnectDialogOpen(false);
+      setApiKey("");
+      setSecretKey("");
+    } catch (error) {
+      setConnectionError(
+        error instanceof Error ? error.message : "Failed to connect broker",
+      );
+    }
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent, connectionId: string) => {
+    e.stopPropagation();
+    setConnectionToDelete(connectionId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (connectionToDelete) {
+      deleteBrokerConnectionMutation
+        .mutateAsync(connectionToDelete)
+        .then(() => {
+          setDeleteDialogOpen(false);
+          setConnectionToDelete(null);
+        })
+        .catch((error) => {
+          // Handle error if needed
+          toast.error(error.data.error || "Failed to delete broker connection");
+        });
+    }
+  };
+
+  return (
+    <>
+      <Toaster />
+      <DashboardLayout>
+        <div className="space-y-8">
+          {/* Header */}
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">
+              Broker Connections
+            </h2>
+            <p className="text-muted-foreground">
+              Manage your broker connections for automated trading
+            </p>
+          </div>
+
+          {/* Connected Brokers Table */}
+          {connections.length > 0 && (
+            <Card className="border-none bg-transparent">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Connected Accounts</CardTitle>
+                <Button
+                  size="sm"
+                  onClick={handleCreateClick}
+                  className="!bg-primary hover:bg-primary"
+                >
+                  <Plus className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Create</span>
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-gray-500">Broker</TableHead>
+                      <TableHead className="text-gray-500">
+                        Account ID
+                      </TableHead>
+                      <TableHead className="text-gray-500">
+                        Connection ID
+                      </TableHead>
+                      <TableHead className="w-[50px]"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {connections.map((connection) => (
+                      <TableRow key={connection.connection_id}>
+                        <TableCell className="font-medium">
+                          {connection.broker.charAt(0).toUpperCase() +
+                            connection.broker.slice(1)}
+                        </TableCell>
+                        <TableCell className="font-mono text-sm">
+                          {connection.broker_account_id}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground font-mono text-xs">
+                          {connection.connection_id.substring(0, 16)}...
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-red-600 hover:bg-red-500/10 hover:text-red-700"
+                            onClick={(e) =>
+                              handleDeleteClick(e, connection.connection_id)
+                            }
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Add New Connection Section - Only show if no connections */}
+          {connections.length === 0 && (
+            <div>
+              <h3 className="mb-4 text-center text-xl font-semibold">
+                Add New Connection
+              </h3>
+              <div className="flex justify-center">
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                  {brokers.map((broker) => (
+                    <Button
+                      key={broker.id}
+                      onClick={() => handleBrokerClick(broker)}
+                      disabled={broker.status === "coming_soon"}
+                      className={`text-muted-foreground group relative flex aspect-square h-36 w-36 flex-col items-center justify-center gap-3 rounded-2xl border-2 p-6 transition-all ${
+                        broker.status === "coming_soon"
+                          ? "!border-border !bg-muted/20 cursor-not-allowed opacity-50"
+                          : "!border-border !bg-card hover:bg-accent hover:border-emerald-500/50"
+                      }`}
+                    >
+                      {/* Coming Soon Badge */}
+                      {broker.status === "coming_soon" && (
+                        <div className="absolute top-2 right-2">
+                          <span className="bg-muted rounded-full px-2 py-0.5 text-[10px] font-medium">
+                            Soon
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Logo */}
+                      <div className="text-5xl">{broker.logo}</div>
+
+                      {/* Broker Name */}
+                      <div className="text-center">
+                        <p className="text-sm font-semibold">{broker.name}</p>
+                      </div>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Help Text */}
+              <div className="text-muted-foreground mx-auto mt-6 max-w-2xl text-center text-sm">
+                <p>
+                  Your API credentials are encrypted and stored securely. We
+                  never have access to withdraw funds from your accounts.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Broker Selection Dialog */}
+        <Dialog
+          open={brokerSelectDialogOpen}
+          onOpenChange={setBrokerSelectDialogOpen}
+        >
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Select a Broker</DialogTitle>
+              <DialogDescription>
+                Choose a broker platform to connect to your account
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="broker-select">Broker Platform</Label>
+                <Select
+                  onValueChange={(value) => {
+                    const broker = brokers.find((b) => b.id === value);
+                    if (broker) handleBrokerClick(broker);
+                  }}
+                >
+                  <SelectTrigger id="broker-select" className="w-full">
+                    <SelectValue placeholder="Select a broker" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {brokers.map((broker) => (
+                      <SelectItem
+                        key={broker.id}
+                        value={broker.id}
+                        disabled={broker.status === "coming_soon"}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span>{broker.logo}</span>
+                          <span>{broker.name}</span>
+                          {broker.status === "coming_soon" && (
+                            <span className="text-muted-foreground text-xs">
+                              (Coming Soon)
+                            </span>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Connection Dialog */}
+        <Dialog open={connectDialogOpen} onOpenChange={setConnectDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]" showCloseButton={false}>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-3">
+                <span className="text-3xl">{selectedBroker?.logo}</span>
+                <span>Connect {selectedBroker?.name}</span>
+              </DialogTitle>
+              <DialogDescription className="text-left">
+                {selectedBroker?.description}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              {/* OAuth Connection */}
+              {selectedBroker?.status === "available" &&
+                selectedBroker?.authType === "oauth" && (
+                  <div className="space-y-4">
+                    {/* Show error if OAuth URL fetch failed */}
+                    {selectedBroker.id === "alpaca" &&
+                      alpacaOAuthUrlQuery.error && (
+                        <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4">
+                          <div className="flex items-start gap-2">
+                            <AlertCircle className="h-4 w-4 flex-shrink-0 text-red-600 dark:text-red-400" />
+                            <div className="text-sm text-red-600 dark:text-red-400">
+                              <p className="font-medium">Connection Error</p>
+                              <p className="mt-1">
+                                Failed to load OAuth URL. Please try again
+                                later.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                    <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-4">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="h-4 w-4 flex-shrink-0 text-blue-600 dark:text-blue-400" />
+                        <div className="text-sm text-blue-600 dark:text-blue-400">
+                          <p className="font-medium">OAuth Authentication</p>
+                          <p className="mt-1">
+                            You'll be redirected to {selectedBroker.name} to
+                            authorize vegate. We'll never have access to your
+                            password.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Button
+                      className="w-full bg-emerald-600 hover:bg-emerald-700"
+                      onClick={handleOAuthConnect}
+                      disabled={
+                        (selectedBroker.id === "alpaca" &&
+                          (alpacaOAuthUrlQuery.isLoading ||
+                            !alpacaOAuthUrlQuery.data?.url)) ||
+                        (!selectedBroker.oauthUrl &&
+                          selectedBroker.id !== "alpaca")
+                      }
+                    >
+                      {selectedBroker.id === "alpaca" &&
+                      alpacaOAuthUrlQuery.isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Loading...
+                        </>
+                      ) : (
+                        <>
+                          <ExternalLink className="mr-2 h-4 w-4" />
+                          Continue to {selectedBroker.name}
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
+
+              {/* API Key Connection */}
+              {selectedBroker?.status === "available" &&
+                selectedBroker?.authType === "api_key" && (
+                  <div className="space-y-4">
+                    {/* Connection Error */}
+                    {connectionError && (
+                      <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4">
+                        <div className="flex items-start gap-2">
+                          <AlertCircle className="h-4 w-4 flex-shrink-0 text-red-600 dark:text-red-400" />
+                          <div className="text-sm text-red-600 dark:text-red-400">
+                            <p className="font-medium">Connection Error</p>
+                            <p className="mt-1">{connectionError}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label htmlFor="api-key">API Key</Label>
+                      <Input
+                        id="api-key"
+                        placeholder="Enter your API key"
+                        type="password"
+                        value={apiKey}
+                        onChange={(e) => setApiKey(e.target.value)}
+                        disabled={connectAlpacaMutation.isPending}
+                        className="w-full"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="api-secret">API Secret</Label>
+                      <Input
+                        id="api-secret"
+                        placeholder="Enter your API secret"
+                        type="password"
+                        value={secretKey}
+                        onChange={(e) => setSecretKey(e.target.value)}
+                        disabled={connectAlpacaMutation.isPending}
+                        className="w-full"
+                      />
+                    </div>
+
+                    <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/10 p-3">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="h-4 w-4 flex-shrink-0 text-yellow-600 dark:text-yellow-400" />
+                        <div className="text-sm text-yellow-600 dark:text-yellow-400">
+                          <p className="font-medium">Important:</p>
+                          <p className="mt-1">
+                            Make sure your API keys have trading permissions. We
+                            recommend testing with paper trading first.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => setConnectDialogOpen(false)}
+                        disabled={connectAlpacaMutation.isPending}
+                        className="!bg-input/30"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        className="!bg-emerald-600 hover:!bg-emerald-700"
+                        onClick={handleApiKeyConnect}
+                        disabled={
+                          connectAlpacaMutation.isPending ||
+                          !apiKey ||
+                          !secretKey
+                        }
+                      >
+                        {connectAlpacaMutation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Connecting...
+                          </>
+                        ) : (
+                          "Connect"
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+              {/* Coming Soon */}
+              {selectedBroker?.status === "coming_soon" && (
+                <div className="border-border bg-muted/20 rounded-lg border p-4 text-center">
+                  <p className="font-semibold">Coming Soon</p>
+                  <p className="text-muted-foreground mt-1 text-sm">
+                    {selectedBroker.name} integration is under development.
+                    Check back soon!
+                  </p>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Broker Connection</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this broker connection? This
+                action cannot be undone and will stop any live deployments using
+                this connection.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setDeleteDialogOpen(false)}
+                disabled={deleteBrokerConnectionMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteConfirm}
+                disabled={deleteBrokerConnectionMutation.isPending}
+              >
+                {deleteBrokerConnectionMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </DashboardLayout>
+    </>
+  );
+};
+
+export default BrokersPage;

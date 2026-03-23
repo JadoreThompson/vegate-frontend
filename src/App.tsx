@@ -4,6 +4,7 @@ import BacktestResultsPage from "./pages/BacktestResultsPage";
 import BacktestResultsPageNew from "./pages/BacktestResultsPageNew";
 import BacktestsPage from "./pages/BacktestsPage";
 import BrokersPage from "./pages/BrokersPage";
+import BrokersPageNew from "./pages/BrokersPageNew";
 import ContactNew from "./pages/ContactNew";
 import ContactPage from "./pages/ContactPage";
 import EmailVerificationPage from "./pages/EmailVerifcationPage";
@@ -75,6 +76,7 @@ function App() {
           {/* Settings */}
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/brokers" element={<BrokersPage />} />
+          <Route path="/brokers-new" element={<BrokersPageNew />} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
