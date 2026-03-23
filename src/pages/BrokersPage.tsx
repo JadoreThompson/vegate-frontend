@@ -1,4 +1,4 @@
-import { AlertCircle, ExternalLink, Loader2, Trash2 } from "lucide-react";
+import { AlertCircle, ExternalLink, Loader2, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState, type FC } from "react";
 
 import DashboardLayout from "@/components/layouts/dashboard-layout";
@@ -14,6 +14,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -46,9 +53,77 @@ type Broker = {
   };
 };
 
+const brokers: Broker[] = [
+  {
+    id: "alpaca",
+    name: "Alpaca",
+    logo: "🦙",
+    description: "Commission-free trading API",
+    authType: "api_key",
+    status: "available",
+  },
+  {
+    id: "ig",
+    name: "IG Markets",
+    logo: "🏦",
+    description: "Global multi-asset broker",
+    authType: "api_key",
+    status: "coming_soon",
+  },
+  {
+    id: "interactive",
+    name: "Interactive Brokers",
+    logo: "📊",
+    description: "Professional trading platform",
+    authType: "oauth",
+    status: "coming_soon",
+  },
+  {
+    id: "tradier",
+    name: "Tradier",
+    logo: "📈",
+    description: "Cloud-based brokerage API",
+    authType: "api_key",
+    status: "coming_soon",
+  },
+  {
+    id: "robinhood",
+    name: "Robinhood",
+    logo: "🪶",
+    description: "Mobile-first trading",
+    authType: "oauth",
+    status: "coming_soon",
+  },
+  {
+    id: "etrade",
+    name: "E*TRADE",
+    logo: "💼",
+    description: "Full-service broker",
+    authType: "oauth",
+    status: "coming_soon",
+  },
+  {
+    id: "schwab",
+    name: "Charles Schwab",
+    logo: "🏛️",
+    description: "Investment services",
+    authType: "oauth",
+    status: "coming_soon",
+  },
+  {
+    id: "fidelity",
+    name: "Fidelity",
+    logo: "💎",
+    description: "Investment management",
+    authType: "oauth",
+    status: "coming_soon",
+  },
+];
+
 const BrokersPage: FC = () => {
   const [selectedBroker, setSelectedBroker] = useState<Broker | null>(null);
   const [connectDialogOpen, setConnectDialogOpen] = useState(false);
+  const [brokerSelectDialogOpen, setBrokerSelectDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [connectionToDelete, setConnectionToDelete] = useState<string | null>(
     null,
@@ -66,73 +141,6 @@ const BrokersPage: FC = () => {
     (brokerConnectionsQuery.data as BrokerConnectionResponse[] | undefined) ||
     [];
 
-  const brokers: Broker[] = [
-    {
-      id: "alpaca",
-      name: "Alpaca",
-      logo: "🦙",
-      description: "Commission-free trading API",
-      authType: "api_key",
-      status: "available",
-    },
-    {
-      id: "ig",
-      name: "IG Markets",
-      logo: "🏦",
-      description: "Global multi-asset broker",
-      authType: "api_key",
-      status: "coming_soon",
-    },
-    {
-      id: "interactive",
-      name: "Interactive Brokers",
-      logo: "📊",
-      description: "Professional trading platform",
-      authType: "oauth",
-      status: "coming_soon",
-    },
-    {
-      id: "tradier",
-      name: "Tradier",
-      logo: "📈",
-      description: "Cloud-based brokerage API",
-      authType: "api_key",
-      status: "coming_soon",
-    },
-    {
-      id: "robinhood",
-      name: "Robinhood",
-      logo: "🪶",
-      description: "Mobile-first trading",
-      authType: "oauth",
-      status: "coming_soon",
-    },
-    {
-      id: "etrade",
-      name: "E*TRADE",
-      logo: "💼",
-      description: "Full-service broker",
-      authType: "oauth",
-      status: "coming_soon",
-    },
-    {
-      id: "schwab",
-      name: "Charles Schwab",
-      logo: "🏛️",
-      description: "Investment services",
-      authType: "oauth",
-      status: "coming_soon",
-    },
-    {
-      id: "fidelity",
-      name: "Fidelity",
-      logo: "💎",
-      description: "Investment management",
-      authType: "oauth",
-      status: "coming_soon",
-    },
-  ];
-
   useEffect(() => {
     if (alpacaOAuthUrlQuery.data?.url) {
       brokers[0].oauthUrl = alpacaOAuthUrlQuery.data.url;
@@ -141,10 +149,15 @@ const BrokersPage: FC = () => {
 
   const handleBrokerClick = (broker: Broker) => {
     setSelectedBroker(broker);
+    setBrokerSelectDialogOpen(false);
     setConnectDialogOpen(true);
     setApiKey("");
     setSecretKey("");
     setConnectionError(null);
+  };
+
+  const handleCreateClick = () => {
+    setBrokerSelectDialogOpen(true);
   };
 
   const handleOAuthConnect = () => {
@@ -215,8 +228,16 @@ const BrokersPage: FC = () => {
           {/* Connected Brokers Table */}
           {connections.length > 0 && (
             <Card className="border-none bg-transparent">
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Connected Accounts</CardTitle>
+                <Button
+                  size="sm"
+                  onClick={handleCreateClick}
+                  className="!bg-primary hover:bg-primary"
+                >
+                  <Plus className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Create</span>
+                </Button>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -265,64 +286,115 @@ const BrokersPage: FC = () => {
             </Card>
           )}
 
-          {/* Add New Connection Section */}
-          <div>
-            <h3 className="mb-4 text-center text-xl font-semibold">
-              Add New Connection
-            </h3>
-            <div className="flex justify-center">
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                {brokers.map((broker) => (
-                  <Button
-                    key={broker.id}
-                    onClick={() => handleBrokerClick(broker)}
-                    disabled={broker.status === "coming_soon"}
-                    className={`group relative flex aspect-square h-36 w-36 flex-col items-center justify-center gap-3 rounded-2xl border-2 p-6 transition-all ${
-                      broker.status === "coming_soon"
-                        ? "border-border bg-muted/20 cursor-not-allowed opacity-50"
-                        : "border-border bg-card hover:bg-accent hover:border-emerald-500/50"
-                    }`}
-                  >
-                    {/* Coming Soon Badge */}
-                    {broker.status === "coming_soon" && (
-                      <div className="absolute top-2 right-2">
-                        <span className="bg-muted rounded-full px-2 py-0.5 text-[10px] font-medium">
-                          Soon
-                        </span>
+          {/* Add New Connection Section - Only show if no connections */}
+          {connections.length === 0 && (
+            <div>
+              <h3 className="mb-4 text-center text-xl font-semibold">
+                Add New Connection
+              </h3>
+              <div className="flex justify-center">
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                  {brokers.map((broker) => (
+                    <Button
+                      key={broker.id}
+                      onClick={() => handleBrokerClick(broker)}
+                      disabled={broker.status === "coming_soon"}
+                      className={`text-muted-foreground group relative flex aspect-square h-36 w-36 flex-col items-center justify-center gap-3 rounded-2xl border-2 p-6 transition-all ${
+                        broker.status === "coming_soon"
+                          ? "!border-border !bg-muted/20 cursor-not-allowed opacity-50"
+                          : "!border-border !bg-card hover:bg-accent hover:border-emerald-500/50"
+                      }`}
+                    >
+                      {/* Coming Soon Badge */}
+                      {broker.status === "coming_soon" && (
+                        <div className="absolute top-2 right-2">
+                          <span className="bg-muted rounded-full px-2 py-0.5 text-[10px] font-medium">
+                            Soon
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Logo */}
+                      <div className="text-5xl">{broker.logo}</div>
+
+                      {/* Broker Name */}
+                      <div className="text-center">
+                        <p className="text-sm font-semibold">{broker.name}</p>
                       </div>
-                    )}
+                    </Button>
+                  ))}
+                </div>
+              </div>
 
-                    {/* Logo */}
-                    <div className="text-5xl">{broker.logo}</div>
-
-                    {/* Broker Name */}
-                    <div className="text-center">
-                      <p className="text-sm font-semibold">{broker.name}</p>
-                    </div>
-                  </Button>
-                ))}
+              {/* Help Text */}
+              <div className="text-muted-foreground mx-auto mt-6 max-w-2xl text-center text-sm">
+                <p>
+                  Your API credentials are encrypted and stored securely. We
+                  never have access to withdraw funds from your accounts.
+                </p>
               </div>
             </div>
-
-            {/* Help Text */}
-            <div className="text-muted-foreground mx-auto mt-6 max-w-2xl text-center text-sm">
-              <p>
-                Your API credentials are encrypted and stored securely. We never
-                have access to withdraw funds from your accounts.
-              </p>
-            </div>
-          </div>
+          )}
         </div>
+
+        {/* Broker Selection Dialog */}
+        <Dialog
+          open={brokerSelectDialogOpen}
+          onOpenChange={setBrokerSelectDialogOpen}
+        >
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Select a Broker</DialogTitle>
+              <DialogDescription>
+                Choose a broker platform to connect to your account
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="broker-select">Broker Platform</Label>
+                <Select
+                  onValueChange={(value) => {
+                    const broker = brokers.find((b) => b.id === value);
+                    if (broker) handleBrokerClick(broker);
+                  }}
+                >
+                  <SelectTrigger id="broker-select" className="w-full">
+                    <SelectValue placeholder="Select a broker" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {brokers.map((broker) => (
+                      <SelectItem
+                        key={broker.id}
+                        value={broker.id}
+                        disabled={broker.status === "coming_soon"}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span>{broker.logo}</span>
+                          <span>{broker.name}</span>
+                          {broker.status === "coming_soon" && (
+                            <span className="text-muted-foreground text-xs">
+                              (Coming Soon)
+                            </span>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Connection Dialog */}
         <Dialog open={connectDialogOpen} onOpenChange={setConnectDialogOpen}>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[500px]" showCloseButton={false}>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-3">
                 <span className="text-3xl">{selectedBroker?.logo}</span>
                 <span>Connect {selectedBroker?.name}</span>
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="text-left">
                 {selectedBroker?.description}
               </DialogDescription>
             </DialogHeader>
@@ -416,6 +488,7 @@ const BrokersPage: FC = () => {
                         value={apiKey}
                         onChange={(e) => setApiKey(e.target.value)}
                         disabled={connectAlpacaMutation.isPending}
+                        className="w-full"
                       />
                     </div>
                     <div className="space-y-2">
@@ -427,6 +500,7 @@ const BrokersPage: FC = () => {
                         value={secretKey}
                         onChange={(e) => setSecretKey(e.target.value)}
                         disabled={connectAlpacaMutation.isPending}
+                        className="w-full"
                       />
                     </div>
 
@@ -448,11 +522,12 @@ const BrokersPage: FC = () => {
                         variant="outline"
                         onClick={() => setConnectDialogOpen(false)}
                         disabled={connectAlpacaMutation.isPending}
+                        className="!bg-input/30"
                       >
                         Cancel
                       </Button>
                       <Button
-                        className="bg-emerald-600 hover:bg-emerald-700"
+                        className="!bg-emerald-600 hover:!bg-emerald-700"
                         onClick={handleApiKeyConnect}
                         disabled={
                           connectAlpacaMutation.isPending ||

@@ -1,7 +1,7 @@
 import { Mail, Send } from "lucide-react";
 import { useState, type FC } from "react";
 
-import MarketingNavbar from "@/components/layouts/marketing-navbar";
+import Layout from "@/components/layouts/layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -50,22 +50,10 @@ const ContactPage: FC = () => {
   };
 
   return (
-    <div className="bg-background min-h-screen">
-      <MarketingNavbar />
-
+    <Layout>
       <section className="border-border/40 relative overflow-hidden border-b pt-24 pb-16 sm:pt-32 sm:pb-24">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
-          <div className="from-background absolute inset-0 bg-gradient-to-t via-transparent to-transparent" />
-        </div>
-
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400">
-              <Mail className="h-4 w-4" />
-              Get in Touch
-            </div>
             <h1 className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl">
               Contact Us
             </h1>
@@ -75,17 +63,17 @@ const ContactPage: FC = () => {
           </div>
 
           {/* Contact Form */}
-          <Card className="border-border/40 mx-auto mt-12 max-w-2xl">
+          <Card className="mx-auto mt-12 max-w-2xl border-none bg-transparent">
             <CardContent className="p-8">
               {showSuccess && (
-                <div className="mb-6 rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-4">
+                <div className="border-primary/20 bg-primary/10 mb-6 rounded-lg border p-4">
                   <div className="flex items-start gap-3">
-                    <Mail className="h-5 w-5 flex-shrink-0 text-emerald-600 dark:text-emerald-400" />
+                    <Mail className="text-primary dark:text-primary h-5 w-5 flex-shrink-0" />
                     <div>
-                      <p className="font-semibold text-emerald-600 dark:text-emerald-400">
+                      <p className="text-primary dark:text-primary font-semibold">
                         Message Sent Successfully!
                       </p>
-                      <p className="mt-1 text-sm text-emerald-600/80 dark:text-emerald-400/80">
+                      <p className="text-primary/80 dark:text-primary/80 mt-1 text-sm">
                         Thank you for contacting us. We'll get back to you as
                         soon as possible.
                       </p>
@@ -154,7 +142,7 @@ const ContactPage: FC = () => {
 
                 <Button
                   type="submit"
-                  className="w-full bg-emerald-600 hover:bg-emerald-700"
+                  className="hover:bg-primary w-full bg-white"
                   disabled={isPending}
                 >
                   {isPending ? (
@@ -179,7 +167,7 @@ const ContactPage: FC = () => {
               You can also reach us at{" "}
               <a
                 href="mailto:support@vegate.com"
-                className="font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400"
+                className="text-primary hover:text-primary dark:text-primary font-medium"
               >
                 support@vegate.com
               </a>
@@ -187,7 +175,7 @@ const ContactPage: FC = () => {
           </div>
         </div>
       </section>
-    </div>
+    </Layout>
   );
 };
 

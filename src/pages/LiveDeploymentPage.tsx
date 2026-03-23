@@ -9,10 +9,10 @@ import {
 import { useEffect, useState, type FC } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 
-import EquityGraph from "@/components/equity-graph";
+import EquityGraphNew from "@/components/equity-graph-new";
 import DashboardLayout from "@/components/layouts/dashboard-layout";
 import LiveLogs from "@/components/live-logs";
-import PerformanceMetrics from "@/components/performance-metrics";
+import PerformanceMetricsCard from "@/components/performance-metrics-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -96,7 +96,7 @@ const DeploymentTradesTable: FC<{
       <CardContent>
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="hover:bg-transparent">
               <TableHead className="text-gray-500">Symbol</TableHead>
               <TableHead className="text-gray-500">Side</TableHead>
               <TableHead className="text-gray-500">Type</TableHead>
@@ -153,7 +153,7 @@ const DeploymentTradesTable: FC<{
           <Button
             variant="ghost"
             size="sm"
-            className="hover:!bg-transparent"
+            className="!bg-transparent hover:!bg-transparent"
             onClick={() => handlePageChange(page - 1)}
             disabled={page === 1}
           >
@@ -165,7 +165,7 @@ const DeploymentTradesTable: FC<{
           <Button
             variant="ghost"
             size="sm"
-            className="hover:!bg-transparent"
+            className="!bg-transparent hover:!bg-transparent"
             onClick={() => handlePageChange(page + 1)}
             disabled={orders.length <= page * itemsPerPage}
           >
@@ -311,22 +311,24 @@ const LiveDeploymentPage: FC = () => {
               <span className="text-muted-foreground">/</span>
               <span className="text-sm">Live Deployment</span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
               <h2 className="text-3xl font-bold tracking-tight">
                 Live Deployment
               </h2>
-              <Badge variant={getStatusBadgeVariant(deployment.status)}>
-                {deployment.status.toUpperCase()}
-              </Badge>
-              {/* Broker Connection Badge */}
-              {brokerConnection && (
-                <Badge variant="outline" className="gap-1">
-                  {brokerConnection.broker.toUpperCase()}
-                  <span className="text-muted-foreground">
-                    • {brokerConnection.broker_account_id.slice(0, 8)}
-                  </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant={getStatusBadgeVariant(deployment.status)}>
+                  {deployment.status.toUpperCase()}
                 </Badge>
-              )}
+                {/* Broker Connection Badge */}
+                {brokerConnection && (
+                  <Badge variant="outline" className="gap-1">
+                    {brokerConnection.broker.toUpperCase()}
+                    <span className="text-muted-foreground">
+                      • {brokerConnection.broker_account_id.slice(0, 8)}
+                    </span>
+                  </Badge>
+                )}
+              </div>
             </div>
             <p className="text-muted-foreground mt-1 text-sm">
               {deployment.symbol} • {deployment.timeframe} • Started{" "}
@@ -365,6 +367,7 @@ const LiveDeploymentPage: FC = () => {
                 )}
                 <Button
                   variant="ghost"
+                  disabled
                   className="hover:!bg-input/30 w-full justify-start"
                 >
                   <PlayCircle className="mr-2 h-4 w-4" />
@@ -378,15 +381,15 @@ const LiveDeploymentPage: FC = () => {
         {/* Equity Curve with Statistics */}
         {typeof metrics?.total_return_pct === "number" ? (
           <div className="flex flex-col gap-4 lg:flex-row">
-            <PerformanceMetrics
-              totalPnl={metrics?.realised_pnl ?? 0}
-              returnPercentage={metrics?.total_return_pct}
-              totalTrades={metrics?.total_trades}
+            <PerformanceMetricsCard
+              realisedPnl={metrics?.realised_pnl ?? 0}
+              unrealisedPnl={metrics?.unrealised_pnl ?? 0}
+              totalReturnPct={metrics?.total_return_pct / 100}
               sharpeRatio={metrics?.sharpe_ratio}
-              maxDrawdown={metrics?.max_drawdown}
+              maxDrawdown={metrics?.max_drawdown / 100}
             />
 
-            <EquityGraph equityData={equityCurve} title="Equity Curve" />
+            <EquityGraphNew equityData={equityCurve} title="Equity Curve" />
           </div>
         ) : (
           <div className="flex flex-col gap-4 lg:flex-row">
@@ -402,9 +405,11 @@ const LiveDeploymentPage: FC = () => {
 
         {/* Trades and Logs Tabs */}
         <Tabs defaultValue="trades" className="space-y-4">
-          <TabsList className="bg-card">
+          <TabsList className="!bg-card">
             <TabsTrigger value="trades">Trade History</TabsTrigger>
-            <TabsTrigger value="logs">Live Logs</TabsTrigger>
+            <TabsTrigger value="logs" disabled>
+              Live Logs
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent

@@ -13,11 +13,12 @@ import {
 import { useState, type FC } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 
-import EquityGraph from "@/components/equity-graph";
+import EquityGraphNew from "@/components/equity-graph-new";
 import DashboardLayout from "@/components/layouts/dashboard-layout";
+import PerformanceMetricsCard from "@/components/performance-metrics-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -41,7 +42,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -75,86 +75,6 @@ import {
   type StrategySummaryResponse,
 } from "@/openapi";
 
-const PerformanceMetrics: FC<{
-  metrics: any;
-}> = (props) => {
-  const formatPnL = (pnl: number) => {
-    const formatted = `$${Math.abs(pnl).toFixed(2)}`;
-    return pnl >= 0 ? `+${formatted}` : `-${formatted}`;
-  };
-
-  const formatPercentage = (value: number) => {
-    const formatted = `${Math.abs(value * 100).toFixed(1)}%`;
-    return value >= 0 ? `+${formatted}` : `-${formatted}`;
-  };
-
-  return (
-    <Card className="lg:w-1/5 lg:flex-shrink-0">
-      <CardHeader>
-        <CardTitle>Performance Metrics</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-sm">Realized P&L</span>
-            <span
-              className={`text-lg font-bold ${
-                props.metrics.realised_pnl >= 0
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-red-600 dark:text-red-400"
-              }`}
-            >
-              {formatPnL(props.metrics.realised_pnl)}
-            </span>
-          </div>
-          <Separator />
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-sm">
-              Unrealized P&L
-            </span>
-            <span
-              className={`font-semibold ${
-                props.metrics.unrealised_pnl >= 0
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-red-600 dark:text-red-400"
-              }`}
-            >
-              {formatPnL(props.metrics.unrealised_pnl)}
-            </span>
-          </div>
-          <Separator />
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-sm">Total Return</span>
-            <span
-              className={`font-semibold ${
-                props.metrics.total_return_pct >= 0
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-red-600 dark:text-red-400"
-              }`}
-            >
-              {formatPercentage(props.metrics.total_return_pct)}
-            </span>
-          </div>
-          <Separator />
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-sm">Sharpe Ratio</span>
-            <span className="font-semibold">
-              {props.metrics.sharpe_ratio.toFixed(2)}
-            </span>
-          </div>
-          <Separator />
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-sm">Max Drawdown</span>
-            <span className="font-semibold text-red-600 dark:text-red-400">
-              {formatPercentage(props.metrics.max_drawdown)}
-            </span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
 const DeploymentsTable: FC<{
   deployments: DeploymentResponse[];
   onCreateClick: () => void;
@@ -174,7 +94,7 @@ const DeploymentsTable: FC<{
   const getStatusColor = (status: DeploymentStatus) => {
     switch (status) {
       case DeploymentStatus.running:
-        return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20";
+        return "bg-primary/10 text-primary dark:text-primary border-primary/20";
       case DeploymentStatus.pending:
         return "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20";
       case DeploymentStatus.error:
@@ -194,20 +114,24 @@ const DeploymentsTable: FC<{
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-xl font-semibold">Live Deployments</h3>
-        <Button
-          size="sm"
-          onClick={props.onCreateClick}
-          className="bg-emerald-600 hover:bg-emerald-700"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Create Deployment
-        </Button>
+      <div className="flex flex-col items-center justify-between sm:flex-row">
+        <h3 className="w-full text-left text-xl font-semibold sm:w-auto">
+          Live Deployments
+        </h3>
+        <div className="flex w-full justify-end sm:w-auto sm:flex-none">
+          <Button
+            size="sm"
+            onClick={props.onCreateClick}
+            className="!bg-primary hover:bg-primary"
+          >
+            <Plus className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:block">Create Deployment</span>
+          </Button>
+        </div>
       </div>
       <Table>
         <TableHeader>
-          <TableRow>
+          <TableRow className="hover:bg-transparent">
             <TableHead className="text-gray-500">ID</TableHead>
             <TableHead className="text-gray-500">Symbol</TableHead>
             <TableHead className="text-gray-500">Timeframe</TableHead>
@@ -322,7 +246,7 @@ const BacktestsTable: FC<{
   const getStatusColor = (status: BacktestStatus) => {
     switch (status) {
       case BacktestStatus.completed:
-        return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20";
+        return "bg-primary/10 text-primary dark:text-primary border-primary/20";
       case BacktestStatus.running:
         return "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20";
       case BacktestStatus.pending:
@@ -336,16 +260,22 @@ const BacktestsTable: FC<{
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-xl font-semibold">Backtests</h3>
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col items-center justify-between sm:flex-row">
+        <h3 className="w-full text-left text-xl font-semibold sm:w-fit">
+          Backtests
+        </h3>
+        <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-normal">
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm">
+              <Button
+                variant="outline"
+                size="sm"
+                className="!bg-secondary-foreground"
+              >
                 <Filter className="mr-2 h-4 w-4" />
                 Ticker
                 {props.selectedTickers.length < props.symbolOptions.length && (
-                  <span className="ml-2 rounded-full bg-emerald-500 px-1.5 py-0.5 text-xs text-white">
+                  <span className="bg-primary ml-2 rounded-full px-1.5 py-0.5 text-xs text-white">
                     {props.selectedTickers.length}
                   </span>
                 )}
@@ -369,7 +299,7 @@ const BacktestsTable: FC<{
                             props.selectedTickers.includes(ticker) &&
                             props.selectedTickers.length === 1
                           }
-                          className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                          className="text-primary focus:ring-primary h-4 w-4 rounded border-gray-300"
                         />
                         <span className="text-sm">{ticker}</span>
                       </label>
@@ -382,16 +312,16 @@ const BacktestsTable: FC<{
           <Button
             size="sm"
             onClick={props.onCreateClick}
-            className="bg-emerald-600 hover:bg-emerald-700"
+            className="!bg-primary hover:bg-primary"
           >
-            <Plus className="mr-2 h-4 w-4" />
-            Create Backtest
+            <Plus className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:block">Create Backtest</span>
           </Button>
         </div>
       </div>
       <Table>
         <TableHeader>
-          <TableRow>
+          <TableRow className="hover:bg-transparent">
             <TableHead className="text-gray-500">Symbol</TableHead>
             <TableHead className="text-gray-500">Starting Balance</TableHead>
             <TableHead className="text-gray-500">Status</TableHead>
@@ -746,7 +676,7 @@ const StrategyDetailPage: FC = () => {
             <Button
               variant="outline"
               size="icon"
-              className="flex w-auto items-center justify-start p-2"
+              className="!bg-secondary flex w-auto items-center justify-start border p-2"
               onClick={handleViewPrompt}
             >
               <NotepadTextIcon className="h-6 w-6" />
@@ -755,7 +685,7 @@ const StrategyDetailPage: FC = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="text-red-600 hover:!bg-red-600/10 hover:text-red-700"
+              className="!bg-transparent text-red-600 hover:!bg-red-600/10 hover:text-red-700"
               onClick={handleDeleteClick}
             >
               <Trash2 className="h-4 w-4" />
@@ -764,8 +694,14 @@ const StrategyDetailPage: FC = () => {
         </div>
 
         <div className="flex flex-col gap-6 lg:flex-row">
-          <PerformanceMetrics metrics={strategy.metrics} />
-          <EquityGraph />
+          <PerformanceMetricsCard
+            realisedPnl={strategy.metrics.realised_pnl}
+            unrealisedPnl={strategy.metrics.unrealised_pnl}
+            totalReturnPct={strategy.metrics.total_return_pct}
+            sharpeRatio={strategy.metrics.sharpe_ratio}
+            maxDrawdown={strategy.metrics.max_drawdown}
+          />
+          <EquityGraphNew equityData={strategy.metrics.equity_curve} />
         </div>
 
         <BacktestsTable
@@ -823,19 +759,25 @@ const StrategyDetailPage: FC = () => {
           open={createBacktestDialogOpen}
           onOpenChange={setCreateBacktestDialogOpen}
         >
-          <DialogContent>
+          <DialogContent
+            className="h-[80vh] w-100 overflow-y-auto sm:h-auto"
+            showCloseButton={false}
+          >
             <DialogHeader>
-              <DialogTitle>Create New Backtest</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="text-left">
+                Create New Backtest
+              </DialogTitle>
+              <DialogDescription className="text-left">
                 Configure and run a backtest for this strategy
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleCreateBacktest}>
-              <div className="space-y-4 py-4">
+            <form onSubmit={handleCreateBacktest} className="w-full">
+              <div className="w-full space-y-4 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="ticker">Symbol</Label>
                   <Input
                     id="ticker"
+                    className="w-full"
                     placeholder="AAPL"
                     value={newBacktestTicker}
                     onChange={(e) => setNewBacktestTicker(e.target.value)}
@@ -850,6 +792,7 @@ const StrategyDetailPage: FC = () => {
                   <Label htmlFor="balance">Starting Balance ($)</Label>
                   <Input
                     id="balance"
+                    className="w-full"
                     type="number"
                     placeholder="10000"
                     value={newBacktestBalance}
@@ -870,7 +813,10 @@ const StrategyDetailPage: FC = () => {
                       setNewBacktestTimeframe(value as Timeframe)
                     }
                   >
-                    <SelectTrigger id="timeframe">
+                    <SelectTrigger
+                      id="timeframe"
+                      className="!bg-card !border-input w-full border"
+                    >
                       <SelectValue placeholder="Select timeframe" />
                     </SelectTrigger>
                     <SelectContent>
@@ -890,31 +836,36 @@ const StrategyDetailPage: FC = () => {
                     The time interval for the backtest data
                   </p>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="start-date">Start Date</Label>
-                  <Input
-                    id="start-date"
-                    type="date"
-                    value={newBacktestStartDate}
-                    onChange={(e) => setNewBacktestStartDate(e.target.value)}
-                    required
-                  />
-                  <p className="text-muted-foreground text-xs">
-                    The start date for the backtest period
-                  </p>
+
+                <div className="relative flex h-20 w-full flex-col space-y-2">
+                  <div className="absolute inset-0 flex h-full w-full flex-col space-y-2">
+                    <Label htmlFor="start-date">Start Date</Label>
+                    <Input
+                      id="start-date"
+                      type="date"
+                      value={newBacktestStartDate}
+                      onChange={(e) => setNewBacktestStartDate(e.target.value)}
+                      required
+                    />
+                    <p className="text-muted-foreground text-xs">
+                      The start date for the backtest period
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="end-date">End Date</Label>
-                  <Input
-                    id="end-date"
-                    type="date"
-                    value={newBacktestEndDate}
-                    onChange={(e) => setNewBacktestEndDate(e.target.value)}
-                    required
-                  />
-                  <p className="text-muted-foreground text-xs">
-                    The end date for the backtest period
-                  </p>
+                <div className="relative flex h-20 w-full flex-col space-y-2">
+                  <div className="absolute inset-0 flex h-full w-full flex-col space-y-2">
+                    <Label htmlFor="end-date">End Date</Label>
+                    <Input
+                      id="end-date"
+                      type="date"
+                      value={newBacktestEndDate}
+                      onChange={(e) => setNewBacktestEndDate(e.target.value)}
+                      required
+                    />
+                    <p className="text-muted-foreground text-xs">
+                      The end date for the backtest period
+                    </p>
+                  </div>
                 </div>
               </div>
               <DialogFooter>
@@ -923,12 +874,13 @@ const StrategyDetailPage: FC = () => {
                   variant="outline"
                   onClick={() => setCreateBacktestDialogOpen(false)}
                   disabled={createBacktestMutation.isPending}
+                  className="!bg-card"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
-                  className="bg-emerald-600 hover:bg-emerald-700"
+                  className="!bg-primary hover:bg-primary"
                   disabled={createBacktestMutation.isPending}
                 >
                   {createBacktestMutation.isPending ? (
@@ -1063,7 +1015,7 @@ const StrategyDetailPage: FC = () => {
                 </Button>
                 <Button
                   type="submit"
-                  className="bg-emerald-600 hover:bg-emerald-700"
+                  className="bg-primary hover:bg-primary"
                   disabled={
                     deployStrategyMutation.isPending ||
                     !brokerConnectionsQuery.data ||
@@ -1094,7 +1046,7 @@ const StrategyDetailPage: FC = () => {
                 The prompt used to generate this strategy
               </DialogDescription>
             </DialogHeader>
-            <ScrollArea className="h-[60vh] w-full rounded-md border p-4">
+            <ScrollArea className="h-[60vh] w-full rounded-md border border-none p-4">
               {strategyDetailsQuery.isLoading ? (
                 <div className="flex h-full items-center justify-center">
                   <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />

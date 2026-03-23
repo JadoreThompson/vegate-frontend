@@ -1,8 +1,9 @@
-import { ArrowRight, Check, TrendingUp } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { type FC } from "react";
 import { Link } from "react-router";
 
-import MarketingNavbar from "@/components/layouts/marketing-navbar";
+import FAQ from "@/components/faq";
+import Layout from "@/components/layouts/layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
@@ -63,44 +64,78 @@ const PricingPage: FC = () => {
     },
   ];
 
+  const faqs = [
+    {
+      value: "item-1",
+      question: "Can I switch plans later?",
+      answer:
+        "Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately, and we'll prorate any differences.",
+    },
+    {
+      value: "item-2",
+      question: "What payment methods do you accept?",
+      answer:
+        "We accept all major credit cards and PayPal. Enterprise customers can also pay via invoice.",
+    },
+    {
+      value: "item-3",
+      question: "Is there a long-term contract?",
+      answer:
+        "No, all plans are month-to-month. You can cancel anytime with no penalties or fees.",
+    },
+    {
+      value: "item-4",
+      question: "What happens after my free trial?",
+      answer:
+        "After your 14-day free trial, you'll be charged for your selected plan. You can cancel anytime during the trial at no cost.",
+    },
+    {
+      value: "item-5",
+      question: "Do you offer discounts for annual plans?",
+      answer:
+        "Yes. Save 20% when you pay annually. Contact our sales team for annual pricing details.",
+    },
+    {
+      value: "item-6",
+      question: "What brokers do you support?",
+      answer:
+        "We currently support Alpaca and IG Markets, with additional brokers being added regularly. Check our documentation for the latest list.",
+    },
+  ];
   return (
-    <div className="bg-background min-h-screen">
-      <MarketingNavbar />
-
-      <section className="pt-24 pb-16 sm:pt-32 sm:pb-24">
+    <Layout>
+      <section className="border-border/40 relative overflow-hidden border-b pt-24 pb-16 sm:pt-32 sm:pb-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          {/* Header */}
           <div className="mx-auto max-w-2xl text-center">
-            <h1 className="mb-4 text-4xl font-bold tracking-tight sm:text-5xl">
+            <h1 className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl">
               Simple, transparent pricing
             </h1>
             <p className="text-muted-foreground text-lg">
-              Choose the plan that's right for you. All plans include a 14-day
-              free trial.
+              Choose the plan that&apos;s right for you. All plans include a
+              14-day free trial.
             </p>
           </div>
 
-          {/* Pricing Cards */}
-          <div className="mt-16 grid gap-8 lg:grid-cols-3">
+          <div className="mt-12 grid gap-6 lg:grid-cols-3">
             {plans.map((plan) => (
               <Card
                 key={plan.name}
-                className={`relative flex flex-col ${
+                className={
                   plan.highlighted
-                    ? "border-emerald-500 shadow-lg shadow-emerald-500/20 dark:shadow-emerald-500/10"
+                    ? "border-primary/30 bg-primary/5 relative"
                     : "border-border/40"
-                }`}
+                }
               >
                 {plan.highlighted && (
-                  <div className="absolute -top-4 right-0 left-0 flex justify-center">
-                    <span className="rounded-full bg-emerald-500 px-4 py-1 text-sm font-medium text-white">
+                  <div className="absolute -top-3 right-0 left-0 flex justify-center">
+                    <span className="bg-primary text-primary-foreground rounded-full px-4 py-1 text-sm font-medium">
                       Most Popular
                     </span>
                   </div>
                 )}
 
-                <CardHeader className="pt-6 pb-8">
-                  <h3 className="text-2xl font-bold">{plan.name}</h3>
+                <CardHeader className="pb-6">
+                  <h2 className="text-2xl font-bold">{plan.name}</h2>
                   <div className="mt-4 flex items-baseline gap-2">
                     <span className="text-4xl font-bold">{plan.price}</span>
                     <span className="text-muted-foreground">{plan.period}</span>
@@ -110,23 +145,26 @@ const PricingPage: FC = () => {
                   </p>
                 </CardHeader>
 
-                <CardContent className="flex flex-1 flex-col">
+                <CardContent className="flex flex-col">
                   <ul className="mb-8 flex-1 space-y-3">
                     {plan.features.map((feature) => (
                       <li key={feature} className="flex items-start gap-3">
-                        <Check className="h-5 w-5 flex-shrink-0 text-emerald-500" />
+                        <Check className="text-primary mt-0.5 h-4 w-4 flex-shrink-0" />
                         <span className="text-sm">{feature}</span>
                       </li>
                     ))}
                   </ul>
 
-                  <Link to="/register" className="w-full">
+                  <Link
+                    to={plan.name === "Enterprise" ? "/contact" : "/register"}
+                    className="w-full"
+                  >
                     <Button
-                      className={`w-full ${
+                      className={
                         plan.highlighted
-                          ? "bg-emerald-600 hover:bg-emerald-700"
-                          : ""
-                      }`}
+                          ? "bg-primary hover:bg-primary/90 w-full"
+                          : "w-full"
+                      }
                       variant={plan.highlighted ? "default" : "outline"}
                       size="lg"
                     >
@@ -141,80 +179,18 @@ const PricingPage: FC = () => {
             ))}
           </div>
 
-          {/* FAQ Section */}
-          <div className="mx-auto mt-24 max-w-3xl">
+          <div className="mx-auto mt-24 max-w-4xl">
             <h2 className="mb-12 text-center text-3xl font-bold">
               Frequently asked questions
             </h2>
 
-            <div className="space-y-8">
-              <div>
-                <h3 className="mb-2 text-lg font-semibold">
-                  Can I switch plans later?
-                </h3>
-                <p className="text-muted-foreground">
-                  Yes, you can upgrade or downgrade your plan at any time.
-                  Changes take effect immediately, and we'll prorate any
-                  differences.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="mb-2 text-lg font-semibold">
-                  What payment methods do you accept?
-                </h3>
-                <p className="text-muted-foreground">
-                  We accept all major credit cards (Visa, Mastercard, American
-                  Express) and PayPal. Enterprise customers can also pay via
-                  invoice.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="mb-2 text-lg font-semibold">
-                  Is there a long-term contract?
-                </h3>
-                <p className="text-muted-foreground">
-                  No, all plans are month-to-month. You can cancel anytime with
-                  no penalties or fees.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="mb-2 text-lg font-semibold">
-                  What happens after my free trial?
-                </h3>
-                <p className="text-muted-foreground">
-                  After your 14-day free trial, you'll be charged for your
-                  selected plan. You can cancel anytime during the trial at no
-                  cost.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="mb-2 text-lg font-semibold">
-                  Do you offer discounts for annual plans?
-                </h3>
-                <p className="text-muted-foreground">
-                  Yes! Save 20% when you pay annually. Contact our sales team
-                  for annual pricing details.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="mb-2 text-lg font-semibold">
-                  What brokers do you support?
-                </h3>
-                <p className="text-muted-foreground">
-                  We currently support Alpaca and IG Markets, with additional
-                  brokers being added regularly. Check our documentation for the
-                  latest list.
-                </p>
-              </div>
-            </div>
+            <FAQ
+              items={faqs}
+              title="Frequently asked questions"
+              description="Everything you need to know about pricing, billing, and plan changes."
+            />
           </div>
 
-          {/* CTA Section */}
           <div className="mt-24 text-center">
             <h2 className="mb-4 text-3xl font-bold">Still have questions?</h2>
             <p className="text-muted-foreground mb-8 text-lg">
@@ -228,88 +204,7 @@ const PricingPage: FC = () => {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="border-border/40 border-t py-12">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-8 md:grid-cols-4">
-            <div>
-              <div className="mb-4 flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500">
-                  <TrendingUp className="h-5 w-5 text-white" />
-                </div>
-                <span className="text-xl font-bold">vegate</span>
-              </div>
-              <p className="text-muted-foreground text-sm">
-                AI-powered algorithmic trading for everyone.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="mb-4 font-semibold">Product</h3>
-              <ul className="text-muted-foreground space-y-2 text-sm">
-                <li>
-                  <Link to="/features" className="hover:text-foreground">
-                    Features
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/pricing" className="hover:text-foreground">
-                    Pricing
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/docs" className="hover:text-foreground">
-                    Documentation
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="mb-4 font-semibold">Company</h3>
-              <ul className="text-muted-foreground space-y-2 text-sm">
-                <li>
-                  <Link to="/about" className="hover:text-foreground">
-                    About
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/blog" className="hover:text-foreground">
-                    Blog
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/contact" className="hover:text-foreground">
-                    Contact
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="mb-4 font-semibold">Legal</h3>
-              <ul className="text-muted-foreground space-y-2 text-sm">
-                <li>
-                  <Link to="/privacy" className="hover:text-foreground">
-                    Privacy
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/terms" className="hover:text-foreground">
-                    Terms
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="border-border/40 text-muted-foreground mt-12 border-t pt-8 text-center text-sm">
-            © 2024 vegate. All rights reserved.
-          </div>
-        </div>
-      </footer>
-    </div>
+    </Layout>
   );
 };
 

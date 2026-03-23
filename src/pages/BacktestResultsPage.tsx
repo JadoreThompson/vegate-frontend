@@ -8,9 +8,9 @@ import {
 import { memo, useEffect, useState, type FC } from "react";
 import { Link, useParams } from "react-router";
 
-import EquityGraph from "@/components/equity-graph";
+import EquityGraphNew from "@/components/equity-graph-new";
 import DashboardLayout from "@/components/layouts/dashboard-layout";
-import PerformanceMetrics from "@/components/performance-metrics";
+import PerformanceMetricsCard from "@/components/performance-metrics-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -59,7 +59,7 @@ const BacktestResultsHeader: FC<BacktestResultsHeaderProps> = memo(
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">
+          <Button variant="outline" disabled>
             <CirclePlay className="mr-2 h-4 w-4" />
             Replay
           </Button>
@@ -74,31 +74,23 @@ BacktestResultsHeader.displayName = "BacktestResultsHeader";
 interface BacktestStatisticsSectionProps {
   totalPnl: number;
   returnPercentage: number;
-  totalTrades: number;
   sharpeRatio: number;
   maxDrawdown: number;
   equityCurve?: EquityCurvePoint[];
 }
 
 const BacktestStatisticsSection: FC<BacktestStatisticsSectionProps> = memo(
-  ({
-    totalPnl,
-    returnPercentage,
-    totalTrades,
-    sharpeRatio,
-    maxDrawdown,
-    equityCurve,
-  }) => {
+  ({ totalPnl, returnPercentage, sharpeRatio, maxDrawdown, equityCurve }) => {
     return (
       <div className="flex flex-col gap-4 lg:flex-row">
-        <PerformanceMetrics
-          totalPnl={totalPnl}
-          returnPercentage={returnPercentage}
-          totalTrades={totalTrades}
+        <PerformanceMetricsCard
+          realisedPnl={totalPnl}
+          unrealisedPnl={0}
+          totalReturnPct={returnPercentage / 100}
           sharpeRatio={sharpeRatio}
-          maxDrawdown={maxDrawdown}
+          maxDrawdown={maxDrawdown / 100}
         />
-        <EquityGraph equityData={equityCurve} title="Equity Curve" />
+        <EquityGraphNew equityData={equityCurve} title="Equity Curve" />
       </div>
     );
   },
@@ -209,7 +201,7 @@ const BacktestTradesTable: FC<BacktestTradesTableProps> = memo(
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="hover:bg-transparent">
                 <TableHead className="text-gray-500">Symbol</TableHead>
                 <TableHead className="text-gray-500">Side</TableHead>
                 <TableHead className="text-gray-500">Type</TableHead>
@@ -418,7 +410,6 @@ const BacktestResultsPage: FC = () => {
         <BacktestStatisticsSection
           totalPnl={metrics.realised_pnl}
           returnPercentage={metrics.total_return_pct}
-          totalTrades={metrics.total_orders}
           sharpeRatio={metrics.sharpe_ratio}
           maxDrawdown={metrics.max_drawdown}
           equityCurve={metrics.equity_curve}

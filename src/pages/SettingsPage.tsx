@@ -1,9 +1,9 @@
-import { Lock, Mail, User } from "lucide-react";
+import { AlertCircle, CheckCircle2, Lock, Mail, User } from "lucide-react";
 import { type FC, useState } from "react";
 
 import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import {
   useChangeEmailMutation,
   useChangePasswordMutation,
@@ -32,9 +33,13 @@ type SettingRowProps = {
 };
 
 const SettingRow: FC<SettingRowProps> = (props) => {
+  const Icon = props.icon;
   return (
-    <div className="flex flex-col items-start gap-3 px-6 py-5 transition-colors sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-      <div className="flex items-start gap-4 sm:items-center">
+    <div className="flex flex-col items-start gap-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+      <div className="flex items-start gap-3 sm:items-center">
+        <div className="bg-secondary flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
+          <Icon className="text-muted-foreground h-5 w-5" />
+        </div>
         <div className="flex flex-col">
           <h3 className="font-medium">{props.title}</h3>
           <p className="text-muted-foreground text-sm">{props.description}</p>
@@ -43,7 +48,7 @@ const SettingRow: FC<SettingRowProps> = (props) => {
       <Button
         variant="outline"
         onClick={props.onClick}
-        className="w-full shrink-0 sm:w-auto"
+        className="!bg-input/30 w-full shrink-0 sm:w-auto"
       >
         {props.buttonText}
       </Button>
@@ -123,16 +128,19 @@ const SettingsPage: FC = () => {
     if (showSuccess) {
       return (
         <div className="py-4 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-            <Mail className="h-8 w-8" />
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10">
+            <CheckCircle2 className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
           </div>
+          <h3 className="mb-2 text-lg font-semibold">
+            Verification Email Sent
+          </h3>
           <p className="text-muted-foreground mb-4 text-sm">
             We've sent a verification email to your account. Please check your
             inbox to confirm the change.
           </p>
           <Button
             onClick={handleCloseModal}
-            className="bg-emerald-600 hover:bg-emerald-700"
+            className="!bg-primary hover:bg-primary"
           >
             Close
           </Button>
@@ -143,8 +151,14 @@ const SettingsPage: FC = () => {
     if (error) {
       return (
         <div className="py-4">
-          <div className="mb-4 rounded-lg bg-red-500/10 p-3 text-sm text-red-600 dark:text-red-400">
-            {error}
+          <div className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 p-4">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-4 w-4 flex-shrink-0 text-red-600 dark:text-red-400" />
+              <div className="text-sm text-red-600 dark:text-red-400">
+                <p className="font-medium">Error</p>
+                <p className="mt-1">{error}</p>
+              </div>
+            </div>
           </div>
           <Button
             onClick={() => setError(null)}
@@ -176,17 +190,22 @@ const SettingsPage: FC = () => {
                   placeholder="Enter new username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
+                  className="w-full"
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={handleCloseModal}>
+              <Button
+                variant="outline"
+                onClick={handleCloseModal}
+                className="!bg-input/30"
+              >
                 Cancel
               </Button>
               <Button
                 onClick={handleSubmit}
                 disabled={isLoading || !username}
-                className="bg-emerald-600 hover:bg-emerald-700"
+                className="!bg-primary hover:bg-primary"
               >
                 {isLoading ? "Processing..." : "Confirm"}
               </Button>
@@ -213,17 +232,22 @@ const SettingsPage: FC = () => {
                   placeholder="Enter new email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  className="w-full"
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={handleCloseModal}>
+              <Button
+                variant="outline"
+                onClick={handleCloseModal}
+                className="!bg-input/30"
+              >
                 Cancel
               </Button>
               <Button
                 onClick={handleSubmit}
                 disabled={isLoading || !email}
-                className="bg-emerald-600 hover:bg-emerald-700"
+                className="!bg-primary hover:bg-primary"
               >
                 {isLoading ? "Processing..." : "Confirm"}
               </Button>
@@ -250,6 +274,7 @@ const SettingsPage: FC = () => {
                   placeholder="Enter current password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="w-full"
                 />
               </div>
               <div className="space-y-2">
@@ -260,6 +285,7 @@ const SettingsPage: FC = () => {
                   placeholder="Enter new password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full"
                 />
               </div>
               <div className="space-y-2">
@@ -270,11 +296,16 @@ const SettingsPage: FC = () => {
                   placeholder="Confirm new password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full"
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={handleCloseModal}>
+              <Button
+                variant="outline"
+                onClick={handleCloseModal}
+                className="!bg-input/30"
+              >
                 Cancel
               </Button>
               <Button
@@ -286,7 +317,7 @@ const SettingsPage: FC = () => {
                   !confirmPassword ||
                   newPassword !== confirmPassword
                 }
-                className="bg-emerald-600 hover:bg-emerald-700"
+                className="!bg-primary hover:bg-primary"
               >
                 {isLoading ? "Processing..." : "Confirm"}
               </Button>
@@ -303,72 +334,41 @@ const SettingsPage: FC = () => {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
-            <p className="text-muted-foreground">
-              Manage your account settings and preferences
-            </p>
-          </div>
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
+          <p className="text-muted-foreground mt-1">
+            Manage your account settings and preferences
+          </p>
         </div>
 
-        {/* Current User Info Card */}
-        {/* {currentUser && (
-          <Card className="border-emerald-500/20 bg-emerald-500/5">
-            <CardContent className="p-6">
-              <h3 className="mb-3 font-semibold">Current Account</h3>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
-                    <User className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs">Username</p>
-                    <p className="font-medium">{currentUser.username}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
-                    <Lock className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs">Tier</p>
-                    <p className="font-medium capitalize">
-                      {currentUser.pricing_tier}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )} */}
-
         {/* Account Settings */}
-        <Card className="border-none bg-transparent">
-          {/* <CardHeader>
+        <Card className="bg-secondary gap-0 overflow-hidden border p-1">
+          <CardHeader className="p-3">
             <CardTitle>Account Settings</CardTitle>
-          </CardHeader> */}
-          <CardContent className="p-0">
-            <div className="">
+          </CardHeader>
+          <CardContent className="bg-secondary-foreground rounded-lg border p-4">
+            <div className="space-y-4">
               <SettingRow
                 icon={User}
                 title="Username"
                 description={`Current: ${currentUser?.username || "Not set"}`}
-                buttonText="Change username"
+                buttonText="Change"
                 onClick={() => handleOpenModal("username")}
               />
+              <Separator />
               <SettingRow
                 icon={Mail}
                 title="Email"
                 description="Update your email address"
-                buttonText="Change email"
+                buttonText="Change"
                 onClick={() => handleOpenModal("email")}
               />
+              <Separator />
               <SettingRow
                 icon={Lock}
                 title="Password"
                 description="Update your password"
-                buttonText="Change password"
+                buttonText="Change"
                 onClick={() => handleOpenModal("password")}
               />
             </div>
