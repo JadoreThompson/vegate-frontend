@@ -40,171 +40,6 @@ import {
 } from "@/hooks/queries/deployment-hooks";
 import { DeploymentStatus, type OrderResponse } from "@/openapi";
 
-const MOCKS_ENABLED = true;
-
-const MOCK_DEPLOYMENT = {
-  deployment_id: "dep_live_01",
-  strategy_id: "strat_momentum_01",
-  broker_connection_id: "conn_alpaca_01",
-  symbol: "AAPL",
-  timeframe: "15m",
-  starting_balance: 25000,
-  status: DeploymentStatus.running,
-  error_message: null,
-  created_at: "2026-03-18T13:45:00Z",
-  updated_at: "2026-03-23T14:12:00Z",
-  stopped_at: null,
-};
-
-const MOCK_EQUITY_CURVE = [
-  { timestamp: "2026-03-18T14:00:00Z", value: 25000 },
-  { timestamp: "2026-03-18T16:00:00Z", value: 25080 },
-  { timestamp: "2026-03-19T10:00:00Z", value: 25140 },
-  { timestamp: "2026-03-19T12:00:00Z", value: 25095 },
-  { timestamp: "2026-03-19T15:30:00Z", value: 25220 },
-  { timestamp: "2026-03-20T10:30:00Z", value: 25290 },
-  { timestamp: "2026-03-20T13:00:00Z", value: 25210 },
-  { timestamp: "2026-03-20T16:00:00Z", value: 25385 },
-  { timestamp: "2026-03-21T11:00:00Z", value: 25410 },
-  { timestamp: "2026-03-21T14:30:00Z", value: 25340 },
-  { timestamp: "2026-03-21T16:00:00Z", value: 25495 },
-  { timestamp: "2026-03-22T10:00:00Z", value: 25580 },
-  { timestamp: "2026-03-22T12:30:00Z", value: 25510 },
-  { timestamp: "2026-03-22T15:45:00Z", value: 25660 },
-  { timestamp: "2026-03-23T09:45:00Z", value: 25720 },
-  { timestamp: "2026-03-23T11:15:00Z", value: 25835 },
-  { timestamp: "2026-03-23T12:45:00Z", value: 25790 },
-  { timestamp: "2026-03-23T14:00:00Z", value: 25910 },
-];
-
-const MOCK_DEPLOYMENT_DETAILS = {
-  deployment_id: "dep_live_01",
-  strategy_id: "strat_momentum_01",
-  broker_connection_id: "conn_alpaca_01",
-  symbol: "AAPL",
-  timeframe: "15m",
-  starting_balance: 25000,
-  status: DeploymentStatus.running,
-  error_message: null,
-  created_at: "2026-03-18T13:45:00Z",
-  updated_at: "2026-03-23T14:12:00Z",
-  stopped_at: null,
-  metrics: {
-    realised_pnl: 684.5,
-    unrealised_pnl: 225.75,
-    total_return_pct: 3.64,
-    sharpe_ratio: 1.87,
-    max_drawdown: 1.92,
-    total_trades: 24,
-    equity_curve: MOCK_EQUITY_CURVE,
-  },
-};
-
-const MOCK_BROKER_CONNECTION = {
-  connection_id: "conn_alpaca_01",
-  broker: "alpaca",
-  broker_account_id: "PA83K2Q9LMN4X7T1",
-};
-
-const MOCK_ORDERS: OrderResponse[] = [
-  {
-    order_id: "ord_001",
-    symbol: "AAPL",
-    side: "buy",
-    order_type: "market",
-    quantity: 10,
-    notional: null,
-    filled_quantity: 10,
-    limit_price: null,
-    stop_price: null,
-    average_fill_price: 171.24,
-    status: "filled",
-    submitted_at: "2026-03-18T14:05:00Z",
-    filled_at: "2026-03-18T14:05:02Z",
-    broker_order_id: "alp_001",
-  },
-  {
-    order_id: "ord_002",
-    symbol: "AAPL",
-    side: "sell",
-    order_type: "market",
-    quantity: 10,
-    notional: null,
-    filled_quantity: 10,
-    limit_price: null,
-    stop_price: null,
-    average_fill_price: 172.01,
-    status: "filled",
-    submitted_at: "2026-03-18T15:40:00Z",
-    filled_at: "2026-03-18T15:40:01Z",
-    broker_order_id: "alp_002",
-  },
-  {
-    order_id: "ord_003",
-    symbol: "AAPL",
-    side: "buy",
-    order_type: "limit",
-    quantity: 12,
-    notional: null,
-    filled_quantity: 12,
-    limit_price: 171.8,
-    stop_price: null,
-    average_fill_price: 171.8,
-    status: "filled",
-    submitted_at: "2026-03-19T10:12:00Z",
-    filled_at: "2026-03-19T10:13:10Z",
-    broker_order_id: "alp_003",
-  },
-  {
-    order_id: "ord_024",
-    symbol: "AAPL",
-    side: "buy",
-    order_type: "limit",
-    quantity: 12,
-    notional: null,
-    filled_quantity: 0,
-    limit_price: 174.6,
-    stop_price: null,
-    average_fill_price: null,
-    status: "new",
-    submitted_at: "2026-03-23T14:05:00Z",
-    filled_at: null,
-    broker_order_id: "alp_024",
-  },
-];
-
-const MOCK_LOGS: LogEntry[] = [
-  {
-    id: 1,
-    timestamp: "2026-03-23T09:30:01Z",
-    level: "INFO",
-    message: "Strategy started successfully for AAPL 15m deployment",
-  },
-  {
-    id: 2,
-    timestamp: "2026-03-23T09:30:04Z",
-    level: "INFO",
-    message: "Broker connection authenticated with Alpaca paper account",
-  },
-  {
-    id: 3,
-    timestamp: "2026-03-23T09:45:18Z",
-    level: "INFO",
-    message: "Momentum breakout signal detected above intraday VWAP",
-  },
-  {
-    id: 4,
-    timestamp: "2026-03-23T11:40:00Z",
-    level: "WARNING",
-    message: "Spread widened during entry, slippage tolerance increased",
-  },
-  {
-    id: 5,
-    timestamp: "2026-03-23T14:05:00Z",
-    level: "ERROR",
-    message: "Open limit order remains unfilled after timeout window",
-  },
-];
 
 type LogEntry = {
   id: number;
@@ -217,8 +52,7 @@ const DeploymentTradesTable: FC<{
   deploymentId: string;
 }> = (props) => {
   const [page, setPage] = useState(1);
-  // const [orders, setOrders] = useState<OrderResponse[]>([]);
-  const [orders, setOrders] = useState<OrderResponse[]>(MOCK_ORDERS);
+  const [orders, setOrders] = useState<OrderResponse[]>([]);
 
   const ordersQuery = useDeploymentOrders(props.deploymentId, {
     skip: (page - 1) * 90,
@@ -387,17 +221,14 @@ const LiveDeploymentPageNew: FC = () => {
   const deploymentDetailsQuery = useDeploymentDetailsQuery(deploymentId);
   const stopDeploymentMutation = useStopDeploymentMutation();
 
-  // const deployment = deploymentQuery.data;
-  const deployment = MOCK_DEPLOYMENT;
-  // const deploymentDetails = deploymentDetailsQuery.data;
-  const deploymentDetails = MOCK_DEPLOYMENT_DETAILS;
+  const deployment = deploymentQuery.data;
+  const deploymentDetails = deploymentDetailsQuery.data;
 
   // Fetch broker connection details
   const brokerConnectionQuery = useBrokerConnectionQuery(
     deployment?.broker_connection_id || "",
   );
-  // const brokerConnection = brokerConnectionQuery.data;
-  const brokerConnection = MOCK_BROKER_CONNECTION;
+  const brokerConnection = brokerConnectionQuery.data;
 
   const getStatusBadgeVariant = (status: DeploymentStatus) => {
     switch (status) {
@@ -424,10 +255,7 @@ const LiveDeploymentPageNew: FC = () => {
     }
   };
 
-  if (
-    !MOCKS_ENABLED &&
-    (deploymentQuery.isLoading || deploymentDetailsQuery.isLoading)
-  ) {
+  if (deploymentQuery.isLoading || deploymentDetailsQuery.isLoading) {
     return (
       <DashboardLayout>
         <div className="flex h-96 items-center justify-center">
@@ -437,7 +265,7 @@ const LiveDeploymentPageNew: FC = () => {
     );
   }
 
-  if (!MOCKS_ENABLED && (deploymentQuery.error || !deployment)) {
+  if (deploymentQuery.error || !deployment) {
     return (
       <DashboardLayout>
         <div className="flex h-96 flex-col items-center justify-center gap-4">
