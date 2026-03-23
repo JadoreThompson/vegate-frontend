@@ -28,266 +28,6 @@ import {
 } from "@/hooks/queries/backtest-hooks";
 import { type EquityCurvePoint, type OrderResponse } from "@/openapi";
 
-const MOCKS_ENABLED = true;
-
-const MOCK_BACKTEST = {
-  backtest_id: "bt_01JX9YQ8K7M4N2P6R8S1T3U5V",
-  strategy_id: "strat_01JX9Y9C4D6E7F8G9H0J1K2L3",
-  symbol: "AAPL",
-  starting_balance: 10000,
-  status: "completed",
-  created_at: "2026-03-01T09:30:00.000Z",
-  metrics: {
-    realised_pnl: 1842.67,
-    unrealised_pnl: 0,
-    total_return_pct: 18.43,
-    sharpe_ratio: 1.72,
-    max_drawdown: -6.81,
-    total_orders: 24,
-    equity_curve: [
-      { timestamp: "2026-03-01T09:30:00.000Z", value: 10000 },
-      { timestamp: "2026-03-02T09:30:00.000Z", value: 10085 },
-      { timestamp: "2026-03-03T09:30:00.000Z", value: 10140 },
-      { timestamp: "2026-03-04T09:30:00.000Z", value: 10090 },
-      { timestamp: "2026-03-05T09:30:00.000Z", value: 10235 },
-      { timestamp: "2026-03-06T09:30:00.000Z", value: 10310 },
-      { timestamp: "2026-03-07T09:30:00.000Z", value: 10260 },
-      { timestamp: "2026-03-08T09:30:00.000Z", value: 10420 },
-      { timestamp: "2026-03-09T09:30:00.000Z", value: 10510 },
-      { timestamp: "2026-03-10T09:30:00.000Z", value: 10470 },
-      { timestamp: "2026-03-11T09:30:00.000Z", value: 10640 },
-      { timestamp: "2026-03-12T09:30:00.000Z", value: 10720 },
-      { timestamp: "2026-03-13T09:30:00.000Z", value: 10810 },
-      { timestamp: "2026-03-14T09:30:00.000Z", value: 10755 },
-      { timestamp: "2026-03-15T09:30:00.000Z", value: 10920 },
-      { timestamp: "2026-03-16T09:30:00.000Z", value: 11035 },
-      { timestamp: "2026-03-17T09:30:00.000Z", value: 11110 },
-      { timestamp: "2026-03-18T09:30:00.000Z", value: 11040 },
-      { timestamp: "2026-03-19T09:30:00.000Z", value: 11225 },
-      { timestamp: "2026-03-20T09:30:00.000Z", value: 11310 },
-      { timestamp: "2026-03-21T09:30:00.000Z", value: 11455 },
-      { timestamp: "2026-03-22T09:30:00.000Z", value: 11842.67 },
-    ],
-  },
-} satisfies {
-  backtest_id: string;
-  strategy_id: string;
-  symbol: string;
-  starting_balance: number;
-  status: string;
-  created_at: string;
-  metrics: {
-    realised_pnl: number;
-    unrealised_pnl: number;
-    total_return_pct: number;
-    sharpe_ratio: number;
-    max_drawdown: number;
-    total_orders: number;
-    equity_curve: EquityCurvePoint[];
-  };
-};
-
-const MOCK_BACKTEST_ORDERS: OrderResponse[] = [
-  {
-    order_id: "ord_001",
-    symbol: "AAPL",
-    side: "buy",
-    order_type: "market",
-    quantity: 10,
-    notional: null,
-    filled_quantity: 10,
-    limit_price: null,
-    stop_price: null,
-    average_fill_price: 182.45,
-    status: "filled",
-    submitted_at: "2026-03-01T14:35:00.000Z",
-    filled_at: "2026-03-01T14:35:02.000Z",
-    broker_order_id: null,
-  },
-  {
-    order_id: "ord_002",
-    symbol: "AAPL",
-    side: "sell",
-    order_type: "market",
-    quantity: 10,
-    notional: null,
-    filled_quantity: 10,
-    limit_price: null,
-    stop_price: null,
-    average_fill_price: 186.2,
-    status: "filled",
-    submitted_at: "2026-03-02T15:10:00.000Z",
-    filled_at: "2026-03-02T15:10:01.000Z",
-    broker_order_id: null,
-  },
-  {
-    order_id: "ord_003",
-    symbol: "AAPL",
-    side: "buy",
-    order_type: "limit",
-    quantity: 12,
-    notional: null,
-    filled_quantity: 12,
-    limit_price: 184.1,
-    stop_price: null,
-    average_fill_price: 184.1,
-    status: "filled",
-    submitted_at: "2026-03-04T13:20:00.000Z",
-    filled_at: "2026-03-04T13:22:10.000Z",
-    broker_order_id: null,
-  },
-  {
-    order_id: "ord_004",
-    symbol: "AAPL",
-    side: "sell",
-    order_type: "market",
-    quantity: 12,
-    notional: null,
-    filled_quantity: 12,
-    limit_price: null,
-    stop_price: null,
-    average_fill_price: 187.95,
-    status: "filled",
-    submitted_at: "2026-03-05T18:05:00.000Z",
-    filled_at: "2026-03-05T18:05:01.000Z",
-    broker_order_id: null,
-  },
-  {
-    order_id: "ord_005",
-    symbol: "AAPL",
-    side: "buy",
-    order_type: "market",
-    quantity: 8,
-    notional: null,
-    filled_quantity: 8,
-    limit_price: null,
-    stop_price: null,
-    average_fill_price: 188.55,
-    status: "filled",
-    submitted_at: "2026-03-07T14:00:00.000Z",
-    filled_at: "2026-03-07T14:00:01.000Z",
-    broker_order_id: null,
-  },
-  {
-    order_id: "ord_006",
-    symbol: "AAPL",
-    side: "sell",
-    order_type: "stop",
-    quantity: 8,
-    notional: null,
-    filled_quantity: 8,
-    limit_price: null,
-    stop_price: 186.4,
-    average_fill_price: 186.4,
-    status: "filled",
-    submitted_at: "2026-03-08T16:45:00.000Z",
-    filled_at: "2026-03-08T16:45:00.000Z",
-    broker_order_id: null,
-  },
-  {
-    order_id: "ord_007",
-    symbol: "AAPL",
-    side: "buy",
-    order_type: "market",
-    quantity: 15,
-    notional: null,
-    filled_quantity: 15,
-    limit_price: null,
-    stop_price: null,
-    average_fill_price: 189.25,
-    status: "filled",
-    submitted_at: "2026-03-09T14:50:00.000Z",
-    filled_at: "2026-03-09T14:50:01.000Z",
-    broker_order_id: null,
-  },
-  {
-    order_id: "ord_008",
-    symbol: "AAPL",
-    side: "sell",
-    order_type: "limit",
-    quantity: 15,
-    notional: null,
-    filled_quantity: 15,
-    limit_price: 193.8,
-    stop_price: null,
-    average_fill_price: 193.8,
-    status: "filled",
-    submitted_at: "2026-03-11T15:25:00.000Z",
-    filled_at: "2026-03-11T15:40:20.000Z",
-    broker_order_id: null,
-  },
-  {
-    order_id: "ord_009",
-    symbol: "AAPL",
-    side: "buy",
-    order_type: "market",
-    quantity: 20,
-    notional: null,
-    filled_quantity: 20,
-    limit_price: null,
-    stop_price: null,
-    average_fill_price: 191.15,
-    status: "filled",
-    submitted_at: "2026-03-13T14:10:00.000Z",
-    filled_at: "2026-03-13T14:10:01.000Z",
-    broker_order_id: null,
-  },
-  {
-    order_id: "ord_010",
-    symbol: "AAPL",
-    side: "sell",
-    order_type: "market",
-    quantity: 20,
-    notional: null,
-    filled_quantity: 20,
-    limit_price: null,
-    stop_price: null,
-    average_fill_price: 195.05,
-    status: "filled",
-    submitted_at: "2026-03-15T19:00:00.000Z",
-    filled_at: "2026-03-15T19:00:01.000Z",
-    broker_order_id: null,
-  },
-  {
-    order_id: "ord_011",
-    symbol: "AAPL",
-    side: "buy",
-    order_type: "limit",
-    quantity: 14,
-    notional: null,
-    filled_quantity: 14,
-    limit_price: 194.2,
-    stop_price: null,
-    average_fill_price: 194.2,
-    status: "filled",
-    submitted_at: "2026-03-16T13:40:00.000Z",
-    filled_at: "2026-03-16T13:42:45.000Z",
-    broker_order_id: null,
-  },
-  {
-    order_id: "ord_012",
-    symbol: "AAPL",
-    side: "sell",
-    order_type: "market",
-    quantity: 14,
-    notional: null,
-    filled_quantity: 14,
-    limit_price: null,
-    stop_price: null,
-    average_fill_price: 198.65,
-    status: "filled",
-    submitted_at: "2026-03-18T17:15:00.000Z",
-    filled_at: "2026-03-18T17:15:01.000Z",
-    broker_order_id: null,
-  },
-];
-
-const MOCK_MONTHLY_RETURNS = [
-  { month: "Jan", return: 4.2 },
-  { month: "Feb", return: 6.8 },
-  { month: "Mar", return: 7.43 },
-];
-
 // Internal Components
 
 interface BacktestResultsHeaderProps {
@@ -423,8 +163,7 @@ interface BacktestTradesTableProps {
 const BacktestTradesTable: FC<BacktestTradesTableProps> = memo(
   ({ backtestId }) => {
     const [page, setPage] = useState(1);
-    // const [orders, setOrders] = useState<OrderResponse[]>([]);
-    const [orders, setOrders] = useState<OrderResponse[]>(MOCK_BACKTEST_ORDERS);
+    const [orders, setOrders] = useState<OrderResponse[]>([]);
 
     const backtestOrdersQuery = useBacktestOrdersQuery(backtestId, {
       skip: (page - 1) * 90,
@@ -565,11 +304,10 @@ const BacktestResultsPageNew: FC = () => {
 
   const backtestQuery = useBacktestQuery(id || "");
 
-  //   const backtest = backtestQuery?.data;
-  const backtest = MOCK_BACKTEST;
+  const backtest = backtestQuery?.data;
   const metrics = backtest?.metrics;
 
-  if (!MOCKS_ENABLED && backtestQuery.isLoading) {
+  if (backtestQuery.isLoading) {
     return (
       <DashboardLayout>
         <div className="space-y-6">
@@ -591,7 +329,7 @@ const BacktestResultsPageNew: FC = () => {
     );
   }
 
-  if ((!MOCKS_ENABLED && backtestQuery.error) || !backtest) {
+  if (backtestQuery.error || !backtest) {
     return (
       <DashboardLayout>
         <div className="space-y-6">

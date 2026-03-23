@@ -48,7 +48,9 @@ const PerformanceMetricsCard: FC<PerformanceMetricsCardProps> = ({
           </div>
           <Separator />
           <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-sm">Unrealized P&L</span>
+            <span className="text-muted-foreground text-sm">
+              Unrealized P&L
+            </span>
             <span
               className={`font-semibold ${
                 unrealisedPnl >= 0
