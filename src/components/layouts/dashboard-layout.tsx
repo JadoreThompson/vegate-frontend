@@ -1,4 +1,10 @@
-import { type FC, type ReactNode } from "react";
+import {
+  useEffect,
+  type FC,
+  type ForwardRefExoticComponent,
+  type ReactNode,
+  type RefAttributes,
+} from "react";
 import { useNavigate } from "react-router";
 
 import {
@@ -8,7 +14,14 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 
-import { BarChart3, Bot, LogOutIcon, SettingsIcon, Wallet } from "lucide-react";
+import {
+  BarChart3,
+  Bot,
+  LogOutIcon,
+  SettingsIcon,
+  Wallet,
+  type LucideProps,
+} from "lucide-react";
 import { Link, useLocation } from "react-router";
 
 import {
@@ -27,27 +40,71 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useLogoutMutation } from "@/hooks/queries/auth-hooks";
+import { useLogoutMutation, useMeQuery } from "@/hooks/queries/auth-hooks";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import WebsiteLogo from "../website-logo";
 
-const DashboardSidebar: FC = () => {
+type SidebarItem = {
+  name: string;
+  href: string;
+  icon: ForwardRefExoticComponent<
+    Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>
+  >;
+};
+
+const SidebarRow: FC<{ item: SidebarItem }> = (props) => {
   const location = useLocation();
+  const isActive = (path: string) => location.pathname === path;
+
+  return (
+    <>
+      <SidebarMenuItem key={props.item.name}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <SidebarMenuButton
+              asChild
+              isActive={isActive(props.item.href)}
+              className={cn(
+                "hidden justify-center sm:flex",
+                isActive(props.item.href) && "!bg-muted",
+              )}
+            >
+              <Link to={props.item.href}>
+                <props.item.icon size={1} />
+              </Link>
+            </SidebarMenuButton>
+          </TooltipTrigger>
+          <TooltipContent side="right">{props.item.name}</TooltipContent>
+        </Tooltip>
+        <Link
+          to={props.item.href}
+          className={cn(
+            "flex items-center gap-2 rounded-md p-2 sm:hidden",
+            isActive(props.item.href) && "bg-muted",
+          )}
+        >
+          <props.item.icon size={15} />
+          {props.item.name}
+        </Link>
+      </SidebarMenuItem>
+    </>
+  );
+};
+
+const DashboardSidebar: FC = () => {
   const navigate = useNavigate();
 
   const logoutMutation = useLogoutMutation();
 
-  const navigation = [
+  const navigation: SidebarItem[] = [
     { name: "Strategies", href: "/strategies", icon: Bot },
     { name: "Backtests", href: "/backtests", icon: BarChart3 },
   ];
 
-  const secondaryNavigation = [
+  const secondaryNavigation: SidebarItem[] = [
     { name: "Brokers", href: "/brokers", icon: Wallet },
   ];
-
-  const isActive = (path: string) => location.pathname === path;
 
   return (
     <TooltipProvider delayDuration={100}>
@@ -72,35 +129,7 @@ const DashboardSidebar: FC = () => {
             <SidebarGroupContent>
               <SidebarMenu>
                 {navigation.map((item) => (
-                  <SidebarMenuItem key={item.name}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <SidebarMenuButton
-                          asChild
-                          isActive={isActive(item.href)}
-                          className={cn(
-                            "hidden justify-center sm:flex",
-                            isActive(item.href) && "!bg-muted",
-                          )}
-                        >
-                          <Link to={item.href}>
-                            <item.icon size={1} />
-                          </Link>
-                        </SidebarMenuButton>
-                      </TooltipTrigger>
-                      <TooltipContent side="right">{item.name}</TooltipContent>
-                    </Tooltip>
-                    <Link
-                      to={item.href}
-                      className={cn(
-                        "flex items-center gap-2 rounded-md p-2 sm:hidden",
-                        isActive(item.href) && "bg-muted",
-                      )}
-                    >
-                      <item.icon size={15} />
-                      {item.name}
-                    </Link>
-                  </SidebarMenuItem>
+                  <SidebarRow item={item} />
                 ))}
               </SidebarMenu>
             </SidebarGroupContent>
@@ -113,62 +142,9 @@ const DashboardSidebar: FC = () => {
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
-                {secondaryNavigation.map((item) => {
-                  const Icon = item.icon;
-
-                  return (
-                    <SidebarMenuItem key={item.name}>
-                      {/* <Tooltip>
-                        <TooltipTrigger asChild>
-                          <SidebarMenuButton
-                            asChild
-                            isActive={isActive(item.href)}
-                            className={cn(
-                              "justify-center px-2",
-                              isActive(item.href) && "!bg-muted",
-                            )}
-                          >
-                            <Link to={item.href}>
-                              <Icon className="h-4 w-4" />
-                            </Link>
-                          </SidebarMenuButton>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">
-                          {item.name}
-                        </TooltipContent>
-                      </Tooltip> */}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <SidebarMenuButton
-                            asChild
-                            isActive={isActive(item.href)}
-                            className={cn(
-                              "hidden justify-center sm:flex",
-                              isActive(item.href) && "!bg-muted",
-                            )}
-                          >
-                            <Link to={item.href}>
-                              <item.icon size={1} />
-                            </Link>
-                          </SidebarMenuButton>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">
-                          {item.name}
-                        </TooltipContent>
-                      </Tooltip>
-                      <Link
-                        to={item.href}
-                        className={cn(
-                          "flex items-center gap-2 rounded-md p-2 sm:hidden",
-                          isActive(item.href) && "bg-muted",
-                        )}
-                      >
-                        <item.icon size={15} />
-                        {item.name}
-                      </Link>
-                    </SidebarMenuItem>
-                  );
-                })}
+                {secondaryNavigation.map((item) => (
+                  <SidebarRow item={item} />
+                ))}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -179,50 +155,13 @@ const DashboardSidebar: FC = () => {
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
-                  {/* <Tooltip>
-                    <TooltipTrigger asChild>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={isActive("/settings")}
-                        className={cn(
-                          "justify-center px-2",
-                          isActive("/settings") && "!bg-muted",
-                        )}
-                      >
-                        <Link to="/settings">
-                          <SettingsIcon className="h-4 w-4" />
-                        </Link>
-                      </SidebarMenuButton>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">Settings</TooltipContent>
-                  </Tooltip> */}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={isActive("/settings")}
-                        className={cn(
-                          "hidden justify-center sm:flex",
-                          isActive("/settings") && "!bg-muted",
-                        )}
-                      >
-                        <Link to={"/settings"}>
-                          <SettingsIcon size={1} />
-                        </Link>
-                      </SidebarMenuButton>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">{"Settings"}</TooltipContent>
-                  </Tooltip>
-                  <Link
-                    to={"/settings"}
-                    className={cn(
-                      "flex items-center gap-2 rounded-md p-2 sm:hidden",
-                      isActive("/settings") && "bg-muted",
-                    )}
-                  >
-                    <SettingsIcon size={15} />
-                    {"Settings"}
-                  </Link>
+                  <SidebarRow
+                    item={{
+                      name: "Settings",
+                      href: "/settings",
+                      icon: SettingsIcon,
+                    }}
+                  />
                 </SidebarMenuItem>
 
                 <SidebarMenuItem>
@@ -265,29 +204,29 @@ const DashboardSidebar: FC = () => {
 const DashboardLayout: FC<{
   children: ReactNode;
 }> = ({ children }) => {
-  // const navigate = useNavigate();
-  // const meQuery = useMeQuery();
+  const navigate = useNavigate();
+  const meQuery = useMeQuery();
 
-  // useEffect(() => {
-  //   if (!meQuery.isLoading && (meQuery.isError || !meQuery.data)) {
-  //     navigate("/login", { replace: true });
-  //   }
-  // }, [meQuery.data, meQuery.isError, meQuery.isLoading, navigate]);
+  useEffect(() => {
+    if (!meQuery.isLoading && (meQuery.isError || !meQuery.data)) {
+      navigate("/login", { replace: true });
+    }
+  }, [meQuery.data, meQuery.isError, meQuery.isLoading, navigate]);
 
-  // if (meQuery.isLoading) {
-  //   return (
-  //     <div className="flex h-screen w-full items-center justify-center">
-  //       <div className="text-center">
-  //         <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent"></div>
-  //         <p className="text-muted-foreground">Loading...</p>
-  //       </div>
-  //     </div>
-  //   );
-  // }
+  if (meQuery.isLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
-  // if (!meQuery.data) {
-  //   return null;
-  // }
+  if (!meQuery.data) {
+    return null;
+  }
 
   return (
     <SidebarProvider>
