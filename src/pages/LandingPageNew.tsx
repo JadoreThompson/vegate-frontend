@@ -1,3 +1,5 @@
+import CreateBacktestImg from "@/assets/images/create-backtest.png";
+import ManageStrategiesImg from "@/assets/images/manage-strategies.png";
 import Bitcoin from "@/assets/images/noir-bitcoin.png";
 import Dogecoin from "@/assets/images/noir-dogecoin.png";
 import Ethereum from "@/assets/images/noir-ethereum.png";
@@ -11,6 +13,7 @@ import Layout from "@/components/layouts/layout";
 
 import FAQ from "@/components/faq";
 import type { FC } from "react";
+import { Link } from "react-router";
 
 const InstrumentsMarquee: FC = () => (
   <div className="marquee">
@@ -135,25 +138,53 @@ const FeatureSnippetSection: FC = () => {
       <div className="flex w-full flex-col-reverse gap-6 md:flex-col lg:h-100 lg:flex-row lg:gap-10">
         <div className="flex w-full flex-col justify-center lg:w-1/2">
           <div>
-            <h1 className="heading-1">Lorem Ipsumppp</h1>
-            <p>alka hdhd hf jjajaj jf fjdj djdj dj aj a a fjfjf</p>
-            <Button className="mt-4 !rounded-full bg-white">Try Now</Button>
+            <h1 className="heading-1">Manage Your Strategies</h1>
+            <p className="text-muted-foreground mt-4 text-base sm:text-lg">
+              Create, organize, and monitor all your trading strategies in one
+              place. Track performance metrics, view equity curves, and manage
+              live deployments with a clean, intuitive interface.
+            </p>
+            <Link to="/register">
+              <Button className="mt-6 !rounded-full bg-white text-black hover:bg-white/90">
+                Get Started
+              </Button>
+            </Link>
           </div>
         </div>
         <div className="w-full lg:w-1/2 lg:py-3">
-          <div className="bg-secondary aspect-[4/3] w-full rounded-4xl lg:aspect-auto lg:h-full" />
+          <div className="bg-secondary aspect-[4/3] w-full overflow-hidden rounded-4xl lg:aspect-auto lg:h-full">
+            <img
+              src={ManageStrategiesImg}
+              alt="Manage Strategies Dashboard"
+              className="h-full object-cover"
+            />
+          </div>
         </div>
       </div>
 
       <div className="flex w-full flex-col gap-6 lg:h-100 lg:flex-row lg:gap-10">
         <div className="w-full lg:w-1/2 lg:py-3">
-          <div className="bg-secondary aspect-[4/3] w-full rounded-4xl lg:aspect-auto lg:h-full" />
+          <div className="bg-secondary aspect-[4/3] w-full overflow-hidden rounded-4xl lg:aspect-auto lg:h-full">
+            <img
+              src={CreateBacktestImg}
+              alt="Backtest Your Strategy"
+              className="h-full object-cover"
+            />
+          </div>
         </div>
         <div className="flex w-full flex-col justify-center lg:w-1/2">
           <div>
-            <h1 className="heading-1">Lorem Ipsum</h1>
-            <p>alka hdhd hf jjajaj jf fjdj djdj dj aj a a fjfjf</p>
-            <Button className="mt-4 !rounded-full bg-white">Try Now</Button>
+            <h1 className="heading-1">Backtest Your Strategy</h1>
+            <p className="text-muted-foreground mt-4 text-base sm:text-lg">
+              Validate your ideas against historical data before risking
+              capital. Run comprehensive backtests, analyze performance metrics,
+              and refine your approach with confidence.
+            </p>
+            <Link to="/register">
+              <Button className="mt-6 !rounded-full bg-white text-black hover:bg-white/90">
+                Start Testing
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
