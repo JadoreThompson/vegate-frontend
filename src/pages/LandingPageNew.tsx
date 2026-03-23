@@ -7,6 +7,7 @@ import EURUSD from "@/assets/images/noir-eurusd.png";
 import GBPUSD from "@/assets/images/noir-gbpusd.png";
 import USDJPY from "@/assets/images/noir-usdjpy.png";
 import XAUUSD from "@/assets/images/noir-xauusd.png";
+import DashboardPreviewVideo from "@/assets/videos/preview.mp4";
 import { Button } from "@/components/ui/button";
 
 import Layout from "@/components/layouts/layout";
@@ -122,11 +123,18 @@ const DashboardPreviewSection: FC = () => {
           From idea to deployment
         </h2>
         <div
-          className="bg-secondary shadow-primary aspect-video w-full rounded-lg"
+          className="bg-secondary shadow-primary aspect-video w-full overflow-hidden rounded-lg"
           style={{
             boxShadow: "0 0 64px 2px #6a6a6a",
           }}
-        />
+        >
+          <video
+            className="h-full w-full"
+            src={DashboardPreviewVideo}
+            autoPlay
+            muted
+          ></video>
+        </div>
       </div>
     </div>
   );
