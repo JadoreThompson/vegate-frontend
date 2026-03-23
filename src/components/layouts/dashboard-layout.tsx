@@ -56,8 +56,11 @@ const DashboardSidebar: FC = () => {
         className="w-20 min-w-16"
         variant="floating"
       >
-        <SidebarHeader className="border-border border- p-4">
-          <Link to="/dashboard" className="flex items-center justify-center">
+        <SidebarHeader className="border-border border- justify-start p-4">
+          <Link
+            to="/dashboard"
+            className="flex items-center justify-start sm:justify-center"
+          >
             <div className="flex h-7 w-7 items-center justify-center rounded-lg">
               <WebsiteLogo />
             </div>
@@ -76,7 +79,7 @@ const DashboardSidebar: FC = () => {
                           asChild
                           isActive={isActive(item.href)}
                           className={cn(
-                            "justify-center",
+                            "hidden justify-center sm:flex",
                             isActive(item.href) && "!bg-muted",
                           )}
                         >
@@ -87,6 +90,16 @@ const DashboardSidebar: FC = () => {
                       </TooltipTrigger>
                       <TooltipContent side="right">{item.name}</TooltipContent>
                     </Tooltip>
+                    <Link
+                      to={item.href}
+                      className={cn(
+                        "flex items-center gap-2 rounded-md p-2 sm:hidden",
+                        isActive(item.href) && "bg-muted",
+                      )}
+                    >
+                      <item.icon size={15} />
+                      {item.name}
+                    </Link>
                   </SidebarMenuItem>
                 ))}
               </SidebarMenu>
@@ -105,7 +118,7 @@ const DashboardSidebar: FC = () => {
 
                   return (
                     <SidebarMenuItem key={item.name}>
-                      <Tooltip>
+                      {/* <Tooltip>
                         <TooltipTrigger asChild>
                           <SidebarMenuButton
                             asChild
@@ -123,7 +136,36 @@ const DashboardSidebar: FC = () => {
                         <TooltipContent side="right">
                           {item.name}
                         </TooltipContent>
+                      </Tooltip> */}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <SidebarMenuButton
+                            asChild
+                            isActive={isActive(item.href)}
+                            className={cn(
+                              "hidden justify-center sm:flex",
+                              isActive(item.href) && "!bg-muted",
+                            )}
+                          >
+                            <Link to={item.href}>
+                              <item.icon size={1} />
+                            </Link>
+                          </SidebarMenuButton>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">
+                          {item.name}
+                        </TooltipContent>
                       </Tooltip>
+                      <Link
+                        to={item.href}
+                        className={cn(
+                          "flex items-center gap-2 rounded-md p-2 sm:hidden",
+                          isActive(item.href) && "bg-muted",
+                        )}
+                      >
+                        <item.icon size={15} />
+                        {item.name}
+                      </Link>
                     </SidebarMenuItem>
                   );
                 })}
@@ -137,7 +179,7 @@ const DashboardSidebar: FC = () => {
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <Tooltip>
+                  {/* <Tooltip>
                     <TooltipTrigger asChild>
                       <SidebarMenuButton
                         asChild
@@ -153,13 +195,40 @@ const DashboardSidebar: FC = () => {
                       </SidebarMenuButton>
                     </TooltipTrigger>
                     <TooltipContent side="right">Settings</TooltipContent>
+                  </Tooltip> */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive("/settings")}
+                        className={cn(
+                          "hidden justify-center sm:flex",
+                          isActive("/settings") && "!bg-muted",
+                        )}
+                      >
+                        <Link to={"/settings"}>
+                          <SettingsIcon size={1} />
+                        </Link>
+                      </SidebarMenuButton>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">{"Settings"}</TooltipContent>
                   </Tooltip>
+                  <Link
+                    to={"/settings"}
+                    className={cn(
+                      "flex items-center gap-2 rounded-md p-2 sm:hidden",
+                      isActive("/settings") && "bg-muted",
+                    )}
+                  >
+                    <SettingsIcon size={15} />
+                    {"Settings"}
+                  </Link>
                 </SidebarMenuItem>
 
                 <SidebarMenuItem>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <SidebarMenuButton className="justify-center px-2 hover:text-red-500">
+                      <SidebarMenuButton className="hidden justify-center px-2 hover:text-red-500 sm:flex">
                         <Button
                           onClick={() => {
                             logoutMutation.mutateAsync();
@@ -173,6 +242,16 @@ const DashboardSidebar: FC = () => {
                     </TooltipTrigger>
                     <TooltipContent side="right">Logout</TooltipContent>
                   </Tooltip>
+                  <Button
+                    onClick={() => {
+                      logoutMutation.mutateAsync();
+                      navigate("/login");
+                    }}
+                    className="h-8 w-full justify-start !bg-red-500 p-0 text-white sm:hidden"
+                  >
+                    <LogOutIcon className="h-4 w-4" />
+                    Logout
+                  </Button>
                 </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
