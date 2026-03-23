@@ -17,6 +17,7 @@ import PricingPage from "./pages/PricingPage";
 import PricingPageNew from "./pages/PricingPageNew";
 import RegisterPage from "./pages/RegisterPage";
 import SettingsPage from "./pages/SettingsPage";
+import SettingsPageNew from "./pages/SettingsPageNew";
 import StrategiesPage from "./pages/StrategiesPage";
 import StrategyCreatePage from "./pages/StrategyCreatePage";
 import StrategyCreatePageNew from "./pages/StrategyCreatePageNew";
@@ -75,6 +76,7 @@ function App() {
 
           {/* Settings */}
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/settings-new" element={<SettingsPageNew />} />
           <Route path="/brokers" element={<BrokersPage />} />
           <Route path="/brokers-new" element={<BrokersPageNew />} />
 
