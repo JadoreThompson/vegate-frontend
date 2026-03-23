@@ -21,7 +21,14 @@ const PerformanceMetrics: FC<PerformanceMetricsProps> = (props) => {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground text-sm">Total P&L</span>
-            <span className={cn("text-lg font-bold ", props.totalPnl >= 0 ? "text-emerald-600 dark:text-emerald-400": "text-red-600 dark:text-red-400")}>
+            <span
+              className={cn(
+                "text-lg font-bold",
+                props.totalPnl >= 0
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-red-600 dark:text-red-400",
+              )}
+            >
               {props.totalPnl >= 0
                 ? `+$${props.totalPnl.toFixed(2)}`
                 : `-$${props.totalPnl.toFixed(2).toString().slice(1)}`}

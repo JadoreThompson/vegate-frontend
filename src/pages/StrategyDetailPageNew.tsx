@@ -15,9 +15,10 @@ import { Link, useNavigate, useParams } from "react-router";
 
 import EquityGraphNew from "@/components/equity-graph-new";
 import DashboardLayout from "@/components/layouts/dashboard-layout";
+import PerformanceMetricsCard from "@/components/performance-metrics-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -41,7 +42,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -273,86 +273,6 @@ const MOCK_BROKER_CONNECTIONS: BrokerConnectionResponse[] = [
     broker_account_id: "PA-77420",
   },
 ];
-
-const PerformanceMetrics: FC<{
-  metrics: any;
-}> = (props) => {
-  const formatPnL = (pnl: number) => {
-    const formatted = `$${Math.abs(pnl).toFixed(2)}`;
-    return pnl >= 0 ? `+${formatted}` : `-${formatted}`;
-  };
-
-  const formatPercentage = (value: number) => {
-    const formatted = `${Math.abs(value * 100).toFixed(1)}%`;
-    return value >= 0 ? `+${formatted}` : `-${formatted}`;
-  };
-
-  return (
-    <Card className="bg-secondary gap-0 overflow-hidden border p-1 lg:w-1/5 lg:flex-shrink-0">
-      <CardHeader className="p-3">
-        <CardTitle>Performance Metrics</CardTitle>
-      </CardHeader>
-      <CardContent className="bg-secondary-foreground flex-1 rounded-lg border p-3">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-sm">Realized P&L</span>
-            <span
-              className={`text-lg font-bold ${
-                props.metrics.realised_pnl >= 0
-                  ? "text-emerald-600 dark:text-emerald-600"
-                  : "text-red-600 dark:text-red-400"
-              }`}
-            >
-              {formatPnL(props.metrics.realised_pnl)}
-            </span>
-          </div>
-          <Separator />
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-sm">
-              Unrealized P&L
-            </span>
-            <span
-              className={`font-semibold ${
-                props.metrics.unrealised_pnl >= 0
-                  ? "text-emerald-600 dark:text-emerald-600"
-                  : "text-red-600 dark:text-red-400"
-              }`}
-            >
-              {formatPnL(props.metrics.unrealised_pnl)}
-            </span>
-          </div>
-          <Separator />
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-sm">Total Return</span>
-            <span
-              className={`font-semibold ${
-                props.metrics.total_return_pct >= 0
-                  ? "text-emerald-600 dark:text-emerald-600"
-                  : "text-red-600 dark:text-red-400"
-              }`}
-            >
-              {formatPercentage(props.metrics.total_return_pct)}
-            </span>
-          </div>
-          <Separator />
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-sm">Sharpe Ratio</span>
-            <span className="font-semibold">
-              {props.metrics.sharpe_ratio.toFixed(2)}
-            </span>
-          </div>
-          <Separator />
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-sm">Max Drawdown</span>
-            <span className="font-semibold text-red-600 dark:text-red-400">
-              {formatPercentage(props.metrics.max_drawdown)}
-            </span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
 
 const DeploymentsTable: FC<{
   deployments: DeploymentResponse[];
@@ -978,7 +898,13 @@ const StrategyDetailPageNew: FC = () => {
         </div>
 
         <div className="flex flex-col gap-6 lg:flex-row">
-          <PerformanceMetrics metrics={strategy.metrics} />
+          <PerformanceMetricsCard
+            realisedPnl={strategy.metrics.realised_pnl}
+            unrealisedPnl={strategy.metrics.unrealised_pnl}
+            totalReturnPct={strategy.metrics.total_return_pct}
+            sharpeRatio={strategy.metrics.sharpe_ratio}
+            maxDrawdown={strategy.metrics.max_drawdown}
+          />
           <EquityGraphNew equityData={strategy.metrics.equity_curve} />
         </div>
 

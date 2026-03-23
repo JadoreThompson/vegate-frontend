@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import ThemeProvider from "./components/providers/theme-provider";
 import BacktestResultsPage from "./pages/BacktestResultsPage";
+import BacktestResultsPageNew from "./pages/BacktestResultsPageNew";
 import BacktestsPage from "./pages/BacktestsPage";
 import BrokersPage from "./pages/BrokersPage";
 import ContactNew from "./pages/ContactNew";
@@ -61,6 +62,10 @@ function App() {
           {/* Backtest Routes */}
           <Route path="/backtests" element={<BacktestsPage />} />
           <Route path="/backtests/:id" element={<BacktestResultsPage />} />
+          <Route
+            path="/backtests-new/:id"
+            element={<BacktestResultsPageNew />}
+          />
 
           {/* Settings */}
           <Route path="/settings" element={<SettingsPage />} />
