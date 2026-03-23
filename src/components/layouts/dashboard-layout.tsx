@@ -1,5 +1,4 @@
 import {
-  useEffect,
   type FC,
   type ForwardRefExoticComponent,
   type ReactNode,
@@ -40,7 +39,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useLogoutMutation, useMeQuery } from "@/hooks/queries/auth-hooks";
+import { useLogoutMutation } from "@/hooks/queries/auth-hooks";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import WebsiteLogo from "../website-logo";
@@ -204,29 +203,29 @@ const DashboardSidebar: FC = () => {
 const DashboardLayout: FC<{
   children: ReactNode;
 }> = ({ children }) => {
-  const navigate = useNavigate();
-  const meQuery = useMeQuery();
+  // const navigate = useNavigate();
+  // const meQuery = useMeQuery();
 
-  useEffect(() => {
-    if (!meQuery.isLoading && (meQuery.isError || !meQuery.data)) {
-      navigate("/login", { replace: true });
-    }
-  }, [meQuery.data, meQuery.isError, meQuery.isLoading, navigate]);
+  // useEffect(() => {
+  //   if (!meQuery.isLoading && (meQuery.isError || !meQuery.data)) {
+  //     navigate("/login", { replace: true });
+  //   }
+  // }, [meQuery.data, meQuery.isError, meQuery.isLoading, navigate]);
 
-  if (meQuery.isLoading) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <div className="text-center">
-          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  // if (meQuery.isLoading) {
+  //   return (
+  //     <div className="flex h-screen w-full items-center justify-center">
+  //       <div className="text-center">
+  //         <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent"></div>
+  //         <p className="text-muted-foreground">Loading...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
-  if (!meQuery.data) {
-    return null;
-  }
+  // if (!meQuery.data) {
+  //   return null;
+  // }
 
   return (
     <SidebarProvider>

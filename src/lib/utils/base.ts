@@ -5,7 +5,6 @@ export function handleApi<T>(
     | { status: 200 | 201 | 202 | 204; data: T; headers: Headers }
     | { status: number; data: HTTPValidationError; headers: Headers },
 ): T {
-
   if (
     response.status === 200 ||
     response.status === 201 ||
@@ -14,6 +13,6 @@ export function handleApi<T>(
   ) {
     return response.data as T;
   }
-  
+
   throw response.data;
 }
