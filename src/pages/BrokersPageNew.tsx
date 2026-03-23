@@ -38,56 +38,6 @@ import {
 import type { BrokerConnectionResponse } from "@/openapi";
 import { toast, Toaster } from "sonner";
 
-const MOCKS_ENABLED = true;
-
-const MOCK_BROKER_CONNECTIONS: BrokerConnectionResponse[] = [
-  {
-    connection_id: "conn_alpaca_live_01f84c91a2b3",
-    broker: "alpaca",
-    broker_account_id: "PA3J7K9L2M8N4Q1R",
-  },
-  {
-    connection_id: "conn_alpaca_paper_02c95d12b4e6",
-    broker: "alpaca",
-    broker_account_id: "PA7X2V5B8N1M3K9L",
-  },
-];
-
-const MOCK_ALPACA_OAUTH_URL = {
-  url: "https://app.alpaca.markets/oauth/authorize?client_id=vegate_demo_client&response_type=code&scope=account:write%20trading&redirect_uri=https%3A%2F%2Fapp.vegate.dev%2Fbrokers%2Fcallback",
-};
-
-const MOCK_ALPACA_CONNECT_SUCCESS_PAYLOAD = {
-  message: "Broker connected successfully",
-};
-
-const MOCK_BROKER_QUERY_STATE = {
-  data: MOCK_BROKER_CONNECTIONS,
-  isLoading: false,
-  error: null,
-};
-
-const MOCK_ALPACA_OAUTH_URL_QUERY_STATE = {
-  data: MOCK_ALPACA_OAUTH_URL,
-  isLoading: false,
-  error: null,
-};
-
-const MOCK_CONNECT_ALPACA_MUTATION_STATE = {
-  isPending: false,
-  error: null,
-  mutateAsync: async (_payload: { api_key: string; secret_key: string }) => {
-    return MOCK_ALPACA_CONNECT_SUCCESS_PAYLOAD;
-  },
-};
-
-const MOCK_DELETE_BROKER_CONNECTION_MUTATION_STATE = {
-  isPending: false,
-  error: null,
-  mutateAsync: async (_connectionId: string) => {
-    return undefined;
-  },
-};
 
 type Broker = {
   id: string;
@@ -191,8 +141,6 @@ const BrokersPage: FC = () => {
   const connections =
     (brokerConnectionsQuery.data as BrokerConnectionResponse[] | undefined) ||
     [];
-
-  // const connections = MOCK_BROKER_CONNECTIONS;
 
   useEffect(() => {
     if (alpacaOAuthUrlQuery.data?.url) {
