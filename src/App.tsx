@@ -10,6 +10,7 @@ import EmailVerificationPage from "./pages/EmailVerifcationPage";
 import LandingPage from "./pages/LandingPage";
 import LandingPageNew from "./pages/LandingPageNew";
 import LiveDeploymentPage from "./pages/LiveDeploymentPage";
+import LiveDeploymentPageNew from "./pages/LiveDeploymentPageNew";
 import LoginPage from "./pages/LoginPage";
 import PricingPage from "./pages/PricingPage";
 import PricingPageNew from "./pages/PricingPageNew";
@@ -57,6 +58,10 @@ function App() {
           <Route
             path="/deployments/:deploymentId"
             element={<LiveDeploymentPage />}
+          />
+          <Route
+            path="/deployments-new/:deploymentId"
+            element={<LiveDeploymentPageNew />}
           />
 
           {/* Backtest Routes */}
