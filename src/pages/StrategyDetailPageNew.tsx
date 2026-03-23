@@ -75,205 +75,6 @@ import {
   type StrategySummaryResponse,
 } from "@/openapi";
 
-const USE_MOCK_DATA = true;
-
-const MOCK_STRATEGY_ID = "strat_01hxytradealpha";
-
-const MOCK_STRATEGY_SUMMARY: StrategySummaryResponse = {
-  strategy_id: MOCK_STRATEGY_ID,
-  name: "Momentum Breakout AI",
-  description:
-    "Breakout strategy that enters on high-volume momentum and exits on trailing weakness.",
-  created_at: "2026-02-10T09:15:00Z",
-  updated_at: "2026-03-18T14:42:00Z",
-  metrics: {
-    realised_pnl: 4287.52,
-    unrealised_pnl: 312.18,
-    total_return_pct: 0.184,
-    sharpe_ratio: 1.73,
-    max_drawdown: -0.086,
-    total_trades: 47,
-    equity_curve: [
-      { timestamp: "2026-02-10T00:00:00Z", value: 10000 },
-      { timestamp: "2026-02-14T00:00:00Z", value: 10240 },
-      { timestamp: "2026-02-18T00:00:00Z", value: 10110 },
-      { timestamp: "2026-02-22T00:00:00Z", value: 10590 },
-      { timestamp: "2026-02-26T00:00:00Z", value: 10840 },
-      { timestamp: "2026-03-02T00:00:00Z", value: 10720 },
-      { timestamp: "2026-03-06T00:00:00Z", value: 11080 },
-      { timestamp: "2026-03-10T00:00:00Z", value: 11340 },
-      { timestamp: "2026-03-14T00:00:00Z", value: 11620 },
-      { timestamp: "2026-03-18T00:00:00Z", value: 11840 },
-    ],
-  },
-};
-
-const MOCK_STRATEGY_DETAILS = {
-  strategy_id: MOCK_STRATEGY_ID,
-  name: "Momentum Breakout AI",
-  description:
-    "Breakout strategy that enters on high-volume momentum and exits on trailing weakness.",
-  created_at: "2026-02-10T09:15:00Z",
-  updated_at: "2026-03-18T14:42:00Z",
-  code: `def generate_signal(data):
-    close = data["close"]
-    volume = data["volume"]
-    high_20 = close.rolling(20).max()
-    avg_volume = volume.rolling(20).mean()
-
-    breakout = close.iloc[-1] >= high_20.iloc[-2]
-    strong_volume = volume.iloc[-1] > avg_volume.iloc[-1] * 1.5
-
-    if breakout and strong_volume:
-        return "buy"
-
-    if close.iloc[-1] < close.rolling(10).mean().iloc[-1]:
-        return "sell"
-
-    return "hold"`,
-  prompt: `Build a momentum breakout strategy for large-cap US equities.
-
-Rules:
-- Trade liquid stocks only
-- Buy when price breaks above the 20-day high
-- Confirm with volume at least 1.5x the 20-day average
-- Use 1D candles
-- Exit when price closes below the 10-day moving average
-- Keep risk conservative
-- Optimize for steady returns and low drawdown`,
-};
-
-const MOCK_BACKTESTS: ApiRoutesStrategiesModelsBacktestResponse[] = [
-  {
-    backtest_id: "bt_01hxy_aapl_001",
-    strategy_id: MOCK_STRATEGY_ID,
-    symbol: "AAPL",
-    broker: "alpaca",
-    timeframe: Timeframe["1d"],
-    starting_balance: 10000,
-    start_date: "2025-01-01",
-    end_date: "2025-12-31",
-    status: BacktestStatus.completed,
-    created_at: "2026-03-01T10:00:00Z",
-  },
-  {
-    backtest_id: "bt_01hxy_tsla_002",
-    strategy_id: MOCK_STRATEGY_ID,
-    symbol: "TSLA",
-    broker: "alpaca",
-    timeframe: Timeframe["1d"],
-    starting_balance: 15000,
-    start_date: "2025-01-01",
-    end_date: "2025-12-31",
-    status: BacktestStatus.completed,
-    created_at: "2026-03-03T12:30:00Z",
-  },
-  {
-    backtest_id: "bt_01hxy_nvda_003",
-    strategy_id: MOCK_STRATEGY_ID,
-    symbol: "NVDA",
-    broker: "alpaca",
-    timeframe: Timeframe["1h"],
-    starting_balance: 20000,
-    start_date: "2025-06-01",
-    end_date: "2025-12-31",
-    status: BacktestStatus.running,
-    created_at: "2026-03-05T08:45:00Z",
-  },
-  {
-    backtest_id: "bt_01hxy_msft_004",
-    strategy_id: MOCK_STRATEGY_ID,
-    symbol: "MSFT",
-    broker: "alpaca",
-    timeframe: Timeframe["1d"],
-    starting_balance: 12000,
-    start_date: "2024-01-01",
-    end_date: "2024-12-31",
-    status: BacktestStatus.failed,
-    created_at: "2026-03-07T16:20:00Z",
-  },
-  {
-    backtest_id: "bt_01hxy_meta_005",
-    strategy_id: MOCK_STRATEGY_ID,
-    symbol: "META",
-    broker: "alpaca",
-    timeframe: Timeframe["4h"],
-    starting_balance: 18000,
-    start_date: "2025-03-01",
-    end_date: "2025-11-30",
-    status: BacktestStatus.pending,
-    created_at: "2026-03-09T09:10:00Z",
-  },
-];
-
-const MOCK_DEPLOYMENTS: DeploymentResponse[] = [
-  {
-    deployment_id: "dep_01hxy_live_001",
-    strategy_id: MOCK_STRATEGY_ID,
-    broker_connection_id: "conn_01hxy_alpaca_001",
-    symbol: "AAPL",
-    timeframe: Timeframe["1d"],
-    starting_balance: 10000,
-    status: DeploymentStatus.running,
-    error_message: null,
-    created_at: "2026-03-10T13:00:00Z",
-    updated_at: "2026-03-20T10:15:00Z",
-    stopped_at: null,
-  },
-  {
-    deployment_id: "dep_01hxy_live_002",
-    strategy_id: MOCK_STRATEGY_ID,
-    broker_connection_id: "conn_01hxy_alpaca_001",
-    symbol: "NVDA",
-    timeframe: Timeframe["1h"],
-    starting_balance: 15000,
-    status: DeploymentStatus.pending,
-    error_message: null,
-    created_at: "2026-03-16T09:20:00Z",
-    updated_at: "2026-03-16T09:20:00Z",
-    stopped_at: null,
-  },
-  {
-    deployment_id: "dep_01hxy_live_003",
-    strategy_id: MOCK_STRATEGY_ID,
-    broker_connection_id: "conn_01hxy_alpaca_002",
-    symbol: "TSLA",
-    timeframe: Timeframe["15m"],
-    starting_balance: 8000,
-    status: DeploymentStatus.error,
-    error_message: "Market data stream disconnected",
-    created_at: "2026-03-08T11:40:00Z",
-    updated_at: "2026-03-08T12:05:00Z",
-    stopped_at: null,
-  },
-  {
-    deployment_id: "dep_01hxy_live_004",
-    strategy_id: MOCK_STRATEGY_ID,
-    broker_connection_id: "conn_01hxy_alpaca_002",
-    symbol: "MSFT",
-    timeframe: Timeframe["1d"],
-    starting_balance: 11000,
-    status: DeploymentStatus.stopped,
-    error_message: null,
-    created_at: "2026-02-25T07:30:00Z",
-    updated_at: "2026-03-02T18:00:00Z",
-    stopped_at: "2026-03-02T18:00:00Z",
-  },
-];
-
-const MOCK_BROKER_CONNECTIONS: BrokerConnectionResponse[] = [
-  {
-    connection_id: "conn_01hxy_alpaca_001",
-    broker: "alpaca",
-    broker_account_id: "PA-38291",
-  },
-  {
-    connection_id: "conn_01hxy_alpaca_002",
-    broker: "alpaca",
-    broker_account_id: "PA-77420",
-  },
-];
-
 const DeploymentsTable: FC<{
   deployments: DeploymentResponse[];
   onCreateClick: () => void;
@@ -661,23 +462,19 @@ const StrategyDetailPageNew: FC = () => {
   const brokerConnectionsQuery = useBrokerConnectionsQuery();
   const deployStrategyMutation = useDeployStrategy();
 
-  // const strategy = strategySummaryQuery.data as
-  //   | StrategySummaryResponse
-  //   | undefined;
-
-  const strategy = MOCK_STRATEGY_SUMMARY;
+  const strategy = strategySummaryQuery.data as
+    | StrategySummaryResponse
+    | undefined;
 
   // Filter backtests by strategy_id
-  // const allBacktests =
-  //   (backtestsQuery.data as
-  //     | ApiRoutesStrategiesModelsBacktestResponse[]
-  //     | undefined) || [];
-  const allBacktests = MOCK_BACKTESTS;
-  // const strategyBacktests = allBacktests.filter(
-  //   (b: ApiRoutesStrategiesModelsBacktestResponse) =>
-  //     b.strategy_id === strategyId,
-  // );
-  const strategyBacktests = allBacktests;
+  const allBacktests =
+    (backtestsQuery.data as
+      | ApiRoutesStrategiesModelsBacktestResponse[]
+      | undefined) || [];
+  const strategyBacktests = allBacktests.filter(
+    (b: ApiRoutesStrategiesModelsBacktestResponse) =>
+      b.strategy_id === strategyId,
+  );
 
   // Get unique tickers from backtests
   const uniqueTickers = Array.from(
@@ -695,9 +492,8 @@ const StrategyDetailPageNew: FC = () => {
   }
 
   // Get deployments from API
-  // const deployments =
-  //   (deploymentsQuery.data as DeploymentResponse[] | undefined) || [];
-  const deployments = MOCK_DEPLOYMENTS;
+  const deployments =
+    (deploymentsQuery.data as DeploymentResponse[] | undefined) || [];
 
   const handleTickerToggle = (ticker: string) => {
     if (selectedTickers.includes(ticker)) {
@@ -796,7 +592,7 @@ const StrategyDetailPageNew: FC = () => {
     }
   };
 
-  if (!USE_MOCK_DATA && strategySummaryQuery.isLoading) {
+  if (strategySummaryQuery.isLoading) {
     return (
       <DashboardLayout>
         <div className="space-y-6">
@@ -825,7 +621,7 @@ const StrategyDetailPageNew: FC = () => {
     );
   }
 
-  if ((!USE_MOCK_DATA && strategySummaryQuery.error) || !strategy) {
+  if (strategySummaryQuery.error || !strategy) {
     return (
       <DashboardLayout>
         <div className="space-y-6">
@@ -1251,10 +1047,7 @@ const StrategyDetailPageNew: FC = () => {
               </DialogDescription>
             </DialogHeader>
             <ScrollArea className="h-[60vh] w-full rounded-md border border-none p-4">
-              <pre className="font-mono text-sm whitespace-pre-wrap">
-                {new Array(5).fill(MOCK_STRATEGY_DETAILS.prompt)}
-              </pre>
-              {/* {strategyDetailsQuery.isLoading ? (
+              {strategyDetailsQuery.isLoading ? (
                 <div className="flex h-full items-center justify-center">
                   <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
                 </div>
@@ -1266,7 +1059,7 @@ const StrategyDetailPageNew: FC = () => {
                 <p className="text-muted-foreground text-center">
                   No code available
                 </p>
-              )} */}
+              )}
             </ScrollArea>
             <DialogFooter>
               <Button variant="outline" onClick={handleClosePromptModal}>

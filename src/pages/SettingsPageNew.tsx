@@ -48,7 +48,7 @@ const SettingRow: FC<SettingRowProps> = (props) => {
       <Button
         variant="outline"
         onClick={props.onClick}
-        className="w-full shrink-0 !bg-input/30 sm:w-auto"
+        className="!bg-input/30 w-full shrink-0 sm:w-auto"
       >
         {props.buttonText}
       </Button>
@@ -195,7 +195,11 @@ const SettingsPageNew: FC = () => {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={handleCloseModal} className="!bg-input/30">
+              <Button
+                variant="outline"
+                onClick={handleCloseModal}
+                className="!bg-input/30"
+              >
                 Cancel
               </Button>
               <Button
@@ -233,7 +237,11 @@ const SettingsPageNew: FC = () => {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={handleCloseModal} className="!bg-input/30">
+              <Button
+                variant="outline"
+                onClick={handleCloseModal}
+                className="!bg-input/30"
+              >
                 Cancel
               </Button>
               <Button
@@ -293,7 +301,11 @@ const SettingsPageNew: FC = () => {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={handleCloseModal} className="!bg-input/30">
+              <Button
+                variant="outline"
+                onClick={handleCloseModal}
+                className="!bg-input/30"
+              >
                 Cancel
               </Button>
               <Button
